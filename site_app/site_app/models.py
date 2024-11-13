@@ -2,6 +2,7 @@ from django.db import models
 
 class Usuario(models.Model):
     user_id = models.AutoField(primary_key=True)
+    dni = models.CharField(max_length=150, unique=True)
     fullname = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
@@ -17,6 +18,8 @@ class Usuario(models.Model):
 
 class Perfil(models.Model):
     profile_id = models.AutoField(primary_key=True)
+    dni = models.CharField(max_length=150, unique=True)
+    password = models.CharField(max_length=128)
     user = models.OneToOneField(Usuario, on_delete=models.CASCADE)
     fullname = models.CharField(max_length=150)
     birth_date = models.DateField()
@@ -27,7 +30,7 @@ class Perfil(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Perfil de {self.user.username}"
+        return f"Perfil de {self.user.fullname}"
 
 class Factura(models.Model):
     invoice_id = models.AutoField(primary_key=True)
