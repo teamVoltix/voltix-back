@@ -84,11 +84,11 @@ WSGI_APPLICATION = 'site_app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'voltix',
-        'USER': 'eiahrjay',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '',
+        'NAME': 'defaultdb',
+        'USER': 'avnadmin',
+        'PASSWORD': 'AVNS_KMlR6yxJcuqiTSYfkny',
+        'HOST': 'miluz-i004-voltix-back.e.aivencloud.com',
+        'PORT': '22219',
     }
 }
 
