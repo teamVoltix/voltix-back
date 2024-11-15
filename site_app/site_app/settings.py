@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os from dotenv import load_dotenv
+
+# Load the .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -86,22 +90,13 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'defaultdb',
         'USER': 'avnadmin',
-        'PASSWORD': 'AVNS_KMlR6yxJcuqiTSYfkny',
+        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
         'HOST': 'miluz-i004-voltix-back.e.aivencloud.com',
         'PORT': '22219',
     }
 }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'MiLuz',          # Nombre de tu base de datos
-#         'USER': 'postgres',        # Tu usuario de PostgreSQL
-#         'PASSWORD': 'voltix',      # La contraseña de PostgreSQL
-#         'HOST': 'localhost',       # Dirección del servidor de PostgreSQL
-#         'PORT': '5432',            # Puerto de PostgreSQL (por defecto 5432)
-#     }
-# }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
