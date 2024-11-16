@@ -11,11 +11,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-import os 
-from dotenv import load_dotenv
-
-# Load the .env file
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,16 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'voltix',
-    'authentication',
-    'invoices',
-    'measurements',
-    'notifications',
-    'userprofile',
-
 ]
 
 MIDDLEWARE = [
-    'djannotificationsgo.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -92,6 +81,14 @@ WSGI_APPLICATION = 'site_app.wsgi.application'
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+
+from pathlib import Path
+import os 
+from dotenv import load_dotenv
+
+# Load the .env file
+load_dotenv()
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -104,6 +101,16 @@ DATABASES = {
 }
 
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'MiLuz',          # Nombre de tu base de datos
+#         'USER': 'postgres',        # Tu usuario de PostgreSQL
+#         'PASSWORD': 'voltix',      # La contraseña de PostgreSQL
+#         'HOST': 'localhost',       # Dirección del servidor de PostgreSQL
+#         'PORT': '5432',            # Puerto de PostgreSQL (por defecto 5432)
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
