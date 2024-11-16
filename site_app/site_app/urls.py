@@ -16,15 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from voltix.views import index
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('voltix/', include('voltix.urls')),  # La ruta actual de voltix
+    # path('voltix/', include('voltix.urls')),
+    path('', index),  # La ruta actual de voltix
     #path('', include('voltix.urls')),  # Redirigir la raíz hacia voltix
     path("auth/", include("authentication.urls")),
-    # path('auth/', include('authentication.urls')),
-    # path('invoices/', include('invoices.urls')),
-    # path('measurements/', include('measurements.urls')),
-    # path('notifications/', include('notifications.urls')),
-    # path('userprofile/', include('userprofile.urls')),
+    path("invoices/", include("invoices.urls")),
+    path('measurements/', include('measurements.urls')),
+    path('notifications/', include('notifications.urls')),
+    path('userprofile/', include('userprofile.urls')),
 ]
+
+
