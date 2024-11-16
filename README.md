@@ -78,4 +78,3 @@ A continuación, se presenta una tabla con comandos útiles para explorar y admi
 - **Documentación Oficial:** Consulta la [documentación oficial de PostgreSQL](https://www.postgresql.org/docs/current/app-psql.html) para obtener una referencia más completa.
 
 Este conjunto de comandos puede facilitar tareas como explorar bases de datos, analizar estructuras de tablas, y obtener detalles sobre roles y permisos.
-```bash
