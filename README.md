@@ -28,9 +28,14 @@ Primero, crea y activa un entorno virtual para gestionar las dependencias del pr
     sudo service postgresql start
     sudo service postgresql status
 
+# Nota Importante
+    #acuedase del punto .ENV
+    #Asegúrate de que tu archivo .env esté configurado correctamente con las variables de entorno necesarias. Este archivo debe contener credenciales de base de datos, claves secretas y otras configuraciones esenciales.
+
+
     #Ruta de nuestra base de datos
-    #Conectar con nuestra base de datos
-    psql 'postgres://avnadmin:AVNS_KMlR6yxJcuqiTSYfkny@miluz-i004-voltix-back.e.aivencloud.com:22219/defaultdb?sslmode=require'
+    #Conectar con nuestra base de datos, <PASSWORD> que tenemos en archivo .env
+    psql 'postgres://avnadmin:<PASSWORD>@miluz-i004-voltix-back.e.aivencloud.com:22219/defaultdb?sslmode=require'
     
         #Para listar todas las bases de datos: 
         \l
@@ -47,9 +52,6 @@ Primero, crea y activa un entorno virtual para gestionar las dependencias del pr
 
 
 
-# Notas Importantes
-    #acuedase del punto .ENV
-    #Asegúrate de que tu archivo .env esté configurado correctamente con las variables de entorno necesarias. Este archivo debe contener credenciales de base de datos, claves secretas y otras configuraciones esenciales.
 
 # Comandos Útiles para PostgreSQL en `psql`
 
