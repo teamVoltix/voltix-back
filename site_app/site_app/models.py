@@ -107,3 +107,4 @@ class BaseMiLuz(models.Model):
         return f"BaseMiLuz ID: {self.id} - Cliente: {self.client.username}"
 
     
+
