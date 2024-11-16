@@ -38,6 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'voltix',
+    'authentication',
+    'invoices',
+    'measurements',
+    'notifications',
+    'userprofile',
 ]
 
 MIDDLEWARE = [
