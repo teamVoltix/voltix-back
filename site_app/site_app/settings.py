@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'measurements',
     'notifications',
     'userprofile',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
