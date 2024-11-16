@@ -1,4 +1,3 @@
-# Create your models here.
 from django.db import models
 
 class Usuario(models.Model):
@@ -108,4 +107,3 @@ class BaseMiLuz(models.Model):
         return f"BaseMiLuz ID: {self.id} - Cliente: {self.client.username}"
 
     
-

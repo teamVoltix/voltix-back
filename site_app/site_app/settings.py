@@ -37,6 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'voltix',
+    'authentication',
+    'invoices',
+    'measurements',
+    'notifications',
+    'userprofile',
 ]
 
 MIDDLEWARE = [
@@ -73,6 +79,7 @@ WSGI_APPLICATION = 'site_app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
@@ -80,18 +87,35 @@ WSGI_APPLICATION = 'site_app.wsgi.application'
 #     }
 # }
 
+from pathlib import Path
+import os 
+from dotenv import load_dotenv
+
+# Load the .env file
+load_dotenv()
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'MiLuz',          # Nombre de tu base de datos
-        'USER': 'postgres',        # Tu usuario de PostgreSQL
-        'PASSWORD': 'voltix',      # La contraseña de PostgreSQL
-        'HOST': 'localhost',       # Dirección del servidor de PostgreSQL
-        'PORT': '5432',            # Puerto de PostgreSQL (por defecto 5432)
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'defaultdb',
+        'USER': 'avnadmin',
+        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+        'HOST': 'miluz-i004-voltix-back.e.aivencloud.com',
+        'PORT': '22219',
     }
 }
 
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'MiLuz',          # Nombre de tu base de datos
+#         'USER': 'postgres',        # Tu usuario de PostgreSQL
+#         'PASSWORD': 'voltix',      # La contraseña de PostgreSQL
+#         'HOST': 'localhost',       # Dirección del servidor de PostgreSQL
+#         'PORT': '5432',            # Puerto de PostgreSQL (por defecto 5432)
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
