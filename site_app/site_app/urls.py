@@ -29,7 +29,7 @@ urlpatterns = [
     path('measurements/', include('measurements.urls')),
     path('notifications/', include('notifications.urls')),
     path('userprofile/', include('userprofile.urls')),
-    path('voltix/', include('voltix.urls')),
+    path('users/', include('users.urls')),
 ]
 
 

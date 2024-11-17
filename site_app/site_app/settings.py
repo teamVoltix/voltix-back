@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'measurements',
     'notifications',
     'userprofile',
+    'users',
     'rest_framework',
     'rest_framework_simplejwt',
 ]
