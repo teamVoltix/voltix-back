@@ -83,3 +83,39 @@ def registro_usuario(request):
             return JsonResponse({"error": f"Ocurrió un error: {str(e)}"}, status=500)
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
+
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view
+from rest_framework_simplejwt.views import TokenObtainPairView
+# Login View (JWT)
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth.hashers import check_password
+from rest_framework.exceptions import AuthenticationFailed
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        token['fullname'] = user.fullname
+        return token
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        try:
+            user = Usuario.objects.get(email=email)
+        except Usuario.DoesNotExist:
+            raise AuthenticationFailed('Invalid email or password.')
+
+        if not check_password(password, user.password):
+            raise AuthenticationFailed('Invalid email or password.')
+
+        data = super().validate(attrs)
+        return data
+
+class CustomLoginView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

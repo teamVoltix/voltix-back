@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from voltix.views import index
-from authentication.views import registro_usuario
+from authentication.views import registro_usuario, CustomLoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,6 +25,7 @@ urlpatterns = [
     path('', index),  # La ruta actual de voltix
     #path('', include('voltix.urls')),  # Redirigir la raíz hacia voltix
     path("auth/",  include("authentication.urls")),
+    path('api/auth/', CustomLoginView.as_view(), name='login'),
     path("invoices/", include("invoices.urls")),
     path('measurements/', include('measurements.urls')),
     path('notifications/', include('notifications.urls')),
