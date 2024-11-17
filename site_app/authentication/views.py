@@ -28,8 +28,12 @@ def index(request):
 def inicio(request):
     return render(request, 'auth/inicio.html')  
 
-# Endponit de registro desde linia 31 a la 85 aprox.
+from rest_framework.permissions import AllowAny
+
 @csrf_exempt
+@permission_classes([AllowAny])  # Allow unauthenticated access
+# Endponit de registro desde linia 31 a la 85 aprox.
+# @csrf_exempt
 def registro_usuario(request):
     if request.method == 'POST':
         try:
@@ -84,38 +88,3 @@ def registro_usuario(request):
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
-from rest_framework.permissions import AllowAny
-from rest_framework.decorators import api_view
-from rest_framework_simplejwt.views import TokenObtainPairView
-# Login View (JWT)
-
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.contrib.auth.hashers import check_password
-from rest_framework.exceptions import AuthenticationFailed
-
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-
-        token['fullname'] = user.fullname
-        return token
-
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
-
-        try:
-            user = Usuario.objects.get(email=email)
-        except Usuario.DoesNotExist:
-            raise AuthenticationFailed('Invalid email or password.')
-
-        if not check_password(password, user.password):
-            raise AuthenticationFailed('Invalid email or password.')
-
-        data = super().validate(attrs)
-        return data
-
-class CustomLoginView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
