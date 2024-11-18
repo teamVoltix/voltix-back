@@ -28,8 +28,12 @@ def index(request):
 def inicio(request):
     return render(request, 'auth/inicio.html')  
 
-# Endponit de registro desde linia 31 a la 85 aprox.
+from rest_framework.permissions import AllowAny
+
 @csrf_exempt
+@permission_classes([AllowAny])  # Allow unauthenticated access
+# Endponit de registro desde linia 31 a la 85 aprox.
+# @csrf_exempt
 def registro_usuario(request):
     if request.method == 'POST':
         try:
@@ -83,3 +87,4 @@ def registro_usuario(request):
             return JsonResponse({"error": f"Ocurrió un error: {str(e)}"}, status=500)
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
+

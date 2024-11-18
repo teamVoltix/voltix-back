@@ -24,12 +24,10 @@ urlpatterns = [
     # path('voltix/', include('voltix.urls')),
     path('', index),  # La ruta actual de voltix
     #path('', include('voltix.urls')),  # Redirigir la raíz hacia voltix
-    path("auth/",  include("authentication.urls")),
+    path("api/auth/",  include("authentication.urls")),
     path("invoices/", include("invoices.urls")),
     path('measurements/', include('measurements.urls')),
     path('notifications/', include('notifications.urls')),
     path('userprofile/', include('userprofile.urls')),
     path('users/', include('users.urls')),
 ]
-
-
