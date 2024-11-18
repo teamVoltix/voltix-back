@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from voltix.models import Usuario
+from voltix.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 
@@ -11,15 +11,15 @@ def get_all_users(request):
     if request.method == 'GET':
         try:
             # Obtener todos los usuarios
-            usuarios = Usuario.objects.all().values(
+            users = User.objects.all().values(
                 'user_id', 'fullname', 'dni', 'email', 'created_at', 'updated_at'
             )
-            usuarios_list = list(usuarios)
+            users_list = list(users)
 
             # Respuesta JSON con los usuarios
             return JsonResponse({
                 "message": "Usuarios obtenidos exitosamente",
-                "usuarios": usuarios_list
+                "usuarios": users_list
             }, status=200)
 
         except Exception as e:
