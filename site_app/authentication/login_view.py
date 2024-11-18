@@ -1,25 +1,28 @@
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
-from .login_serializer import LoginSerializer
-from .logging_config import logger
+from voltix.models import Token
+from django.utils.timezone import now
+from datetime import timedelta
 
 class LoginView(APIView):
-    """
-    Endpoint for user login using DNI and password.
-    """
-    permission_classes = [AllowAny]
-
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
+        # Aquí asumes que ya validaste las credenciales del usuario
+        user = request.user
 
-        if serializer.is_valid():
-            # Generate tokens
-            user = serializer.validated_data['user']
-            tokens = serializer.create_tokens(user)
-            return Response(tokens, status=status.HTTP_200_OK)
+        # Generar un nuevo token
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
 
-        # Log invalid login attempts
-        logger.warning(f"Invalid login attempt: {serializer.errors}")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Guardar el token en la base de datos
+        token = Token.objects.create(
+            user=user,
+            token=access_token,
+            expires_at=now() + timedelta(days=7)  # Establece una duración para el token
+        )
+
+        return Response({
+            "refresh": str(refresh),
+            "access": access_token,
+        }, status=status.HTTP_200_OK)
