@@ -1,28 +1,34 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
-from voltix.models import Profile
-from rest_framework.decorators import permission_classes, authentication_classes
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.response import Response
+from voltix.models import Profile
+from datetime import date
 
 @api_view(['GET'])
-@login_required
 @permission_classes([IsAuthenticated])
-
 def profile_view(request):
-    # Get the profile associated with the logged-in user
-    profile = get_object_or_404(Profile, user=request.user)
-    
-    # Prepare the response data
+    try:
+        # Intentar obtener el perfil asociado al usuario
+        profile = Profile.objects.get(user=request.user)
+    except Profile.DoesNotExist:
+        # Si no existe, creamos un perfil con valores predeterminados
+        profile = Profile.objects.create(
+            user=request.user,
+            birth_date=None,
+            address="",
+            phone_number="",
+            preferences={}
+        )
+
+    # Preparar los datos de respuesta
     profile_data = {
-        'fullname': profile.user.fullname,
-        'email': profile.user.email,
+        'fullname': request.user.fullname,
+        'email': request.user.email,
         'birth_date': profile.birth_date,
         'address': profile.address,
         'phone_number': profile.phone_number,
         'preferences': profile.preferences,
     }
-    
-    return JsonResponse(profile_data)
+
+    return Response(profile_data)
