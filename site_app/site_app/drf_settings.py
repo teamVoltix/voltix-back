@@ -5,21 +5,19 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',  
-        # Require authentication by default
+        'rest_framework.permissions.IsAuthenticated',
     ),
 }
 
+
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'user_id',  # Specify your custom primary key field
-    'USER_ID_CLAIM': 'user_id',  # How the user ID will be encoded in the token
+    'USER_ID_FIELD': 'user_id',  # Tell SIMPLE_JWT to use 'user_id' as the primary key
+    'USER_ID_CLAIM': 'user_id', 
 }
+
 
 import os
 

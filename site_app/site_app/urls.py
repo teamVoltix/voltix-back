@@ -19,6 +19,7 @@ from django.urls import path, include
 from voltix.views import index
 from authentication.views import registro_usuario
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     # path('voltix/', include('voltix.urls')),
@@ -30,4 +31,6 @@ urlpatterns = [
     path('notifications/', include('notifications.urls')),
     path('userprofile/', include('userprofile.urls')),
     path('users/', include('users.urls')),
+   
+
 ]
