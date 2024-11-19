@@ -29,7 +29,7 @@ urlpatterns = [
     path("invoices/", include("invoices.urls")),
     path('measurements/', include('measurements.urls')),
     path('notifications/', include('notifications.urls')),
-    path('userprofile/', include('userprofile.urls')),
+    path('api/profile/', include('userprofile.urls')),
     path('users/', include('users.urls')),
    
 

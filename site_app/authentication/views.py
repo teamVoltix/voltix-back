@@ -57,6 +57,9 @@ def registro_usuario(request):
                 password=hashed_password
             )
             user.save()
+            
+            # Create the profile for the new user
+            # Profile.objects.create(user=user)
 
             print("Usuario registrado")
 
