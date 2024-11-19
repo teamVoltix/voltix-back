@@ -1,5 +1,19 @@
 # Run the server
 
+### 0. Superuser
+DNI: B7654321A
+constraseña: 1234567@
+
+B7654321A
+Voltix
+voltix@igorwker.com
+1234567@
+
+Superuser: DNI=B7654321A, Fullname=Voltix, Email=voltix@igorwker.com, is_superuser=True, is_staff=True
+
+
+
+
 ### 1. Crear un entorno virtual
 
 Primero, crea y activa un entorno virtual para gestionar las dependencias del proyecto de manera aislada.
