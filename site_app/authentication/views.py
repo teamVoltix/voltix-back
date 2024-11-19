@@ -149,20 +149,17 @@ def protected_view(request):
 
 # LOGOUT
 
-# from rest_framework_simplejwt.tokens import RefreshToken
-# from rest_framework.decorators import api_view, permission_classes
-# from rest_framework.permissions import IsAuthenticated
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def logout_view(request):
-#     try:
-#         refresh_token = request.data.get("refresh")
-#         if not refresh_token:
-#             return Response({"error": "Refresh token is required"}, status=400)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    try:
+        refresh_token = request.data.get("refresh_token")
+        if not refresh_token:
+            return Response({"error": "Refresh token is required"}, status=400)
 
-#         token = RefreshToken(refresh_token)
-#         token.blacklist()  # Blacklist the token
-#         return Response({"message": "Successfully logged out"}, status=200)
-#     except Exception as e:
-#         return Response({"error": str(e)}, status=500)
+        token = RefreshToken(refresh_token)
+        token.blacklist()  # Blacklist the token
+        return Response({"message": "Successfully logged out"}, status=200)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
