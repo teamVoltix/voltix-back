@@ -9,6 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import permission_classes, authentication_classes
 from django.http import HttpResponse
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 def index(request):
     return HttpResponse("Authentication es aqui.")
@@ -72,3 +73,96 @@ def registro_usuario(request):
             return JsonResponse({"error": f"Ocurrió un error: {str(e)}"}, status=500)
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
+
+
+from django.http import JsonResponse
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+def login_view(request):
+    if request.method == 'POST':
+        try:
+            # Parse the incoming JSON data
+            data = json.loads(request.body)
+            dni = data.get('dni')
+            password = data.get('password')
+
+            # Validate input
+            if not dni or not password:
+                return JsonResponse({"error": "DNI and password are required."}, status=400)
+
+            # Authenticate the user
+            user = authenticate(request, username=dni, password=password)
+
+            if user is not None:
+                # Generate JWT tokens
+                refresh = RefreshToken.for_user(user)
+                return JsonResponse({
+                    "message": "Login successful",
+                    "access_token": str(refresh.access_token),
+                    "refresh_token": str(refresh),
+                    "user_id": user.user_id,
+                    "fullname": user.fullname,
+                }, status=200)
+            else:
+                return JsonResponse({"error": "Invalid credentials. Please try again."}, status=401)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid request data. Ensure it's valid JSON."}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
+
+    return JsonResponse({"error": "Method not allowed."}, status=405)
+
+# to check the TOKEN
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def protected_view(request):
+    return Response({"message": f"Hello, {request.user.fullname}! Your token is valid."})
+
+
+# USER PROFILE
+
+# from rest_framework.decorators import api_view, permission_classes
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework.response import Response
+
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def user_profile(request):
+#     user = request.user
+#     return Response({
+#         "user_id": user.user_id,
+#         "fullname": user.fullname,
+#         "email": user.email,
+#         "created_at": user.created_at,
+#         "updated_at": user.updated_at,
+#     })
+
+
+# LOGOUT
+
+# from rest_framework_simplejwt.tokens import RefreshToken
+# from rest_framework.decorators import api_view, permission_classes
+# from rest_framework.permissions import IsAuthenticated
+
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def logout_view(request):
+#     try:
+#         refresh_token = request.data.get("refresh")
+#         if not refresh_token:
+#             return Response({"error": "Refresh token is required"}, status=400)
+
+#         token = RefreshToken(refresh_token)
+#         token.blacklist()  # Blacklist the token
+#         return Response({"message": "Successfully logged out"}, status=200)
+#     except Exception as e:
+#         return Response({"error": str(e)}, status=500)
