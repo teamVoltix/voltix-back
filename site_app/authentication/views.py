@@ -154,7 +154,7 @@ def protected_view(request):
 @permission_classes([IsAuthenticated])
 def logout_view(request):
     try:
-        refresh_token = request.data.get("refresh")
+        refresh_token = request.data.get("refresh_token")
         if not refresh_token:
             return Response({"error": "Refresh token is required"}, status=400)
 
