@@ -165,3 +165,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 from .drf_settings import REST_FRAMEWORK, SIMPLE_JWT
 
+
+TEMP_FOLDER = os.path.join(BASE_DIR, 'temp_uploads')
+
