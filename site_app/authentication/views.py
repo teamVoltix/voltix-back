@@ -147,19 +147,31 @@ def protected_view(request):
 #     })
 
 
-# LOGOUT
 
+###############################################################################################################################
+########################################################### LOGOUT ############################################################
+###############################################################################################################################
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+# solo los usuarios autenticados pueden acceder a esta vista
 def logout_view(request):
     try:
         refresh_token = request.data.get("refresh_token")
+        #Obtiene el refresh_token del cuerpo de la solicitud POST. Si el refresh_token no está presente, refresh_token será None
         if not refresh_token:
             return Response({"error": "Refresh token is required"}, status=400)
+            # Verifica si el refresh_token está presente. Si no lo está, devuelve una respuesta con un mensaje de error 
+            # {"error": "Refresh token is required"} y un código de estado 400 Bad Request
 
         token = RefreshToken(refresh_token)
-        token.blacklist()  # Blacklist the token
+        token.blacklist()
+        # Llama al método blacklist() del token para agregarlo a la lista negra. Esto significa que el refresh_token 
+        # será invalidado y no podrá ser usado nuevamente para obtener un nuevo access_token. Nota: Para que esta operación 
+        # funcione, debes tener habilitada la lista negra en tu proyecto ('rest_framework_simplejwt.token_blacklist' debe estar
+        #  en INSTALLED_APPS y las migraciones aplicadas).
         return Response({"message": "Successfully logged out"}, status=200)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+    
+    ###########################################################################################################################
