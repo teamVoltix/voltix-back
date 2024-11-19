@@ -7,7 +7,7 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 from .views import registro_usuario, login_view, protected_view
-#user_profile, logout_view
+# user_profile, logout_view
 
 urlpatterns = [
     path("", views.index, name="index"),
