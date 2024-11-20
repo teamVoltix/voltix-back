@@ -90,7 +90,7 @@ class InvoiceUploadView(APIView):
                  # After processing the PDF, delete the PDF file if it's no longer needed
                 if os.path.exists(file_path):
                     os.remove(file_path)
-                    logger.info(f"Archivo PDF '{uploaded_file.name}' eliminado.")
+                    logger.info(f"PDF file '{uploaded_file.name}' deleted.")
 
 
                 logger.info("PDF successfully converted to images and processed using OpenCV.")
