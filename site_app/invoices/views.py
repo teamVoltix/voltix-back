@@ -95,8 +95,8 @@ class InvoiceUploadView(APIView):
                     'status': 'success',
                     'message': 'File uploaded successfully!',
                     'file_name': uploaded_file.name,
-                    'file_path': file_path
-                   # 'processed_images_count': len(processed_images)
+                    'file_path': file_path,
+                    'processed_images_count': len(processed_images)
                 }, status=status.HTTP_201_CREATED)
 
             except Exception as e:
