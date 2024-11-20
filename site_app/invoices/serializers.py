@@ -27,6 +27,12 @@
 
 
 
+
+    
+
+# ONLY PDF VERSION
+import mimetypes
+from rest_framework import serializers
 class InvoiceSerializer(serializers.Serializer):
     invoice_id = serializers.IntegerField()
     user_id = serializers.IntegerField()
@@ -36,12 +42,6 @@ class InvoiceSerializer(serializers.Serializer):
     provider = serializers.CharField(max_length=150)
     file_path = serializers.CharField(max_length=255)
     ocr_data = serializers.JSONField()
-
-    
-
-# ONLY PDF VERSION
-import mimetypes
-from rest_framework import serializers
 
 class InvoiceUploadSerializer(serializers.Serializer):
 
