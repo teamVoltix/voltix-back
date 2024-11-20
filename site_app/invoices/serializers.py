@@ -25,6 +25,7 @@ class InvoiceUploadSerializer(serializers.Serializer):
 
         return value
 
+
 """
 # ONLY PDF VERSION
 import mimetypes

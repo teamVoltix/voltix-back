@@ -9,11 +9,11 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from .serializers import InvoiceUploadSerializer
 import logging
-# este funcciona? hmmmmm....
+# este funcciona? hmmmmm///
 logger = logging.getLogger(__name__)
 
-TEMP_FOLDER = settings.FILE_UPLOAD_TEMP_DIR or os.path.join(settings.BASE_DIR, 'temp_uploads')
-os.makedirs(TEMP_FOLDER, exist_ok=True)
+# TEMP_FOLDER = settings.FILE_UPLOAD_TEMP_DIR or os.path.join(settings.BASE_DIR, 'temp_uploads')
+# os.makedirs(TEMP_FOLDER, exist_ok=True)
 
 def index(request):
     return HttpResponse("Invoices!")
@@ -31,16 +31,22 @@ class InvoiceUploadView(APIView):
         if serializer.is_valid():
             try:
                 uploaded_file = serializer.validated_data['file']
-                fs = FileSystemStorage(location=TEMP_FOLDER)
-                filename = fs.save(uploaded_file.name, uploaded_file)
-                file_path = fs.path(filename)
 
-                logger.info(f"File '{filename}' uploaded successfully to {file_path}.")
+                # Get TEMP_FOLDER from settings.py
+                temp_folder = settings.FILE_UPLOAD_TEMP_DIR
+
+                # Save file in chunks for memory efficiency
+                file_path = os.path.join(temp_folder, uploaded_file.name)
+                with open(file_path, 'wb+') as destination:
+                    for chunk in uploaded_file.chunks():
+                        destination.write(chunk)
+
+                logger.info(f"File '{uploaded_file.name}' uploaded successfully to {file_path}.")
 
                 return Response({
                     'status': 'success',
                     'message': 'File uploaded successfully!',
-                    'file_name': filename,
+                    'file_name': uploaded_file.name,
                     'file_path': file_path
                 }, status=status.HTTP_201_CREATED)
 
