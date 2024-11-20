@@ -1,7 +1,11 @@
 import psycopg2
+import os 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def main():
-    conn = psycopg2.connect('postgres://avnadmin:AVNS_KMlR6yxJcuqiTSYfkny@miluz-i004-voltix-back.e.aivencloud.com:22219/defaultdb?sslmode=require')
+    conn = psycopg2.connect(os.getenv('LINK_DB'))
 
     query_sql = 'SELECT VERSION()'
 
