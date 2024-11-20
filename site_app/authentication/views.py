@@ -54,6 +54,16 @@ from rest_framework.permissions import AllowAny
 #     }
 # )
 
+
+################################################################################################################################
+
+
+################################################################################################################################
+################################################# REGISTRO DE USUARIO ##########################################################
+################################################################################################################################
+
+import re  # Importar para realizar validaciones de expresiones regulares
+
 @csrf_exempt
 def registro_usuario(request):
     if request.method == 'POST':
@@ -80,7 +90,21 @@ def registro_usuario(request):
 
             if User.objects.filter(email=email).exists():
                 return JsonResponse({"error": "Este correo electrónico ya está registrado."}, status=400)
-                
+
+            # Validación de la contraseña
+            if len(password) < 8 or len(password) > 15:
+                return JsonResponse({"error": "La contraseña debe tener entre 8 y 15 caracteres."}, status=400)
+            if not re.search(r'[A-Z]', password):
+                return JsonResponse({"error": "La contraseña debe tener al menos 1 letra mayúscula."}, status=400)
+            if not re.search(r'[a-z]', password):
+                return JsonResponse({"error": "La contraseña debe tener al menos 1 letra minúscula."}, status=400)
+            if not re.search(r'[0-9]', password):
+                return JsonResponse({"error": "La contraseña debe tener al menos 1 número."}, status=400)
+            if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+                return JsonResponse({"error": "La contraseña debe tener al menos 1 carácter especial."}, status=400)
+            if re.search(r'\s', password):
+                return JsonResponse({"error": "La contraseña no debe contener espacios."}, status=400)
+
             # Hashear la contraseña
             hashed_password = make_password(password)
 
@@ -93,11 +117,6 @@ def registro_usuario(request):
             )
             user.save()
             
-            # Create the profile for the new user
-            # Profile.objects.create(user=user)
-
-            print("Usuario registrado")
-
             # Respuesta exitosa
             return JsonResponse({
                 "message": "Usuario registrado exitosamente",
@@ -111,6 +130,13 @@ def registro_usuario(request):
             return JsonResponse({"error": f"Ocurrió un error: {str(e)}"}, status=500)
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
+
+################################################################################################################################
+
+
+################################################################################################################################
+#################################################### LOGIN DE USUARIO ##########################################################
+################################################################################################################################
 
 
 from django.http import JsonResponse
@@ -154,6 +180,8 @@ def login_view(request):
             return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
 
     return JsonResponse({"error": "Method not allowed."}, status=405)
+
+################################################################################################################################
 
 # to check the TOKEN
 from rest_framework.decorators import api_view, permission_classes
