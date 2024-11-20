@@ -11,6 +11,10 @@ from rest_framework.decorators import permission_classes, authentication_classes
 from django.http import HttpResponse
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.decorators import api_view
+
 def index(request):
     return HttpResponse("Authentication es aqui.")
 
@@ -18,6 +22,37 @@ def inicio(request):
     return render(request, 'auth/inicio.html')  
 
 from rest_framework.permissions import AllowAny
+
+
+
+@api_view(['POST'])  # Especificas los métodos HTTP permitidos aquí
+@swagger_auto_schema(
+    operation_description="Registrar un nuevo usuario.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'fullname': openapi.Schema(type=openapi.TYPE_STRING, description="Nombre completo del usuario"),
+            'dni': openapi.Schema(type=openapi.TYPE_STRING, description="DNI del usuario"),
+            'email': openapi.Schema(type=openapi.TYPE_STRING, description="Correo electrónico del usuario"),
+            'password': openapi.Schema(type=openapi.TYPE_STRING, description="Contraseña del usuario"),
+        },
+    ),
+    responses={
+        201: openapi.Response(
+            description="Usuario registrado exitosamente",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(type=openapi.TYPE_STRING),
+                    'user_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'fullname': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
+        ),
+        400: "Bad Request",
+        500: "Internal Server Error",
+    }
+)
 
 @csrf_exempt
 def registro_usuario(request):
