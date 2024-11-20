@@ -86,3 +86,44 @@ class InvoiceUploadView(APIView):
     #     else:
     #         logger.warning(f"File '{file_name}' not found for deletion.")
     #         return Response({'status': 'error', 'message': 'File not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .serializers import InvoiceSerializer
+from datetime import datetime
+import random
+
+class InvoiceSearchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Datos ficticios de facturas
+        fake_invoices = [
+            {
+                "invoice_id": 1,
+                "user_id": request.user.id,
+                "upload_date": datetime.now().isoformat(),
+                "amount_due": round(random.uniform(100, 1000), 2),
+                "due_date": datetime.now().isoformat(),
+                "provider": "Proveedor A",
+                "file_path": "/fake/path/invoice1.pdf",
+                "ocr_data": {"field": "value1"},
+            },
+            {
+                "invoice_id": 2,
+                "user_id": request.user.id,
+                "upload_date": datetime.now().isoformat(),
+                "amount_due": round(random.uniform(100, 1000), 2),
+                "due_date": datetime.now().isoformat(),
+                "provider": "Proveedor B",
+                "file_path": "/fake/path/invoice2.pdf",
+                "ocr_data": {"field": "value2"},
+            },
+        ]
+
+        # Filtrar facturas por el usuario autenticado
+        user_invoices = [invoice for invoice in fake_invoices if invoice["user_id"] == request.user.id]
+
+        serializer = InvoiceSerializer(user_invoices, many=True)
+        return Response(serializer.data)
