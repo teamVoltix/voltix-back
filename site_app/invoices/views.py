@@ -9,6 +9,11 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from .serializers import InvoiceUploadSerializer
 import logging
+# Librerías para IMG
+import fitz  
+import cv2
+import numpy as np
+import uuid
 # este funcciona? hmmmmm///
 logger = logging.getLogger(__name__)
 
@@ -17,6 +22,33 @@ logger = logging.getLogger(__name__)
 
 def index(request):
     return HttpResponse("Invoices!")
+
+def pdf_to_images(pdf_path):
+    """
+    Converts a PDF file into images (one image per page).
+    """
+    images = []
+    try:
+        pdf_document = fitz.open(pdf_path)
+        for page_number in range(len(pdf_document)):
+            page = pdf_document[page_number]
+            pix = page.get_pixmap()
+            image_data = pix.tobytes("png")
+            images.append(image_data)
+        pdf_document.close()
+        return images
+    except Exception as e:
+        logger.error(f"Error al convertir PDF a imágenes: {str(e)}")
+        return []
+    
+def process_image(image_data):
+    """
+    Converts an image to grayscale using OpenCV.
+    """
+    np_array = np.frombuffer(image_data, np.uint8)
+    image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+    grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    return grayscale_image
 
 class InvoiceUploadView(APIView):
 
@@ -43,11 +75,37 @@ class InvoiceUploadView(APIView):
 
                 logger.info(f"File '{uploaded_file.name}' uploaded successfully to {file_path}.")
 
+                 # Convert PDF to images
+                images = pdf_to_images(file_path)
+                processed_images = []
+
+                #we apply OpenCV here
+                for idx, img_data in enumerate(images):
+                    grayscale_image = process_image(img_data)
+                    processed_images.append(grayscale_image)
+                        
+                        # Save the image to the temporary folder
+                    file_name_without_extension = os.path.splitext(uploaded_file.name)[0]  #Name without extension
+                    unique_id = uuid.uuid4().hex
+                    output_path = os.path.join(temp_folder, f"{file_name_without_extension}_page_{idx + 1}_{unique_id}.png")   
+                    cv2.imwrite(output_path, grayscale_image)
+                    logger.info(f"Processed image saved in: {output_path}")
+                 
+                 # After processing the PDF, delete the PDF file if it's no longer needed
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    logger.info(f"PDF file '{uploaded_file.name}' deleted.")
+
+
+                logger.info("PDF successfully converted to images and processed using OpenCV.")
+
+
                 return Response({
                     'status': 'success',
                     'message': 'File uploaded successfully!',
-                    'file_name': uploaded_file.name,
-                    'file_path': file_path
+                    #'file_name': uploaded_file.name,
+                    #'file_path': file_path,
+                    'processed_images_count': len(processed_images)
                 }, status=status.HTTP_201_CREATED)
 
             except Exception as e:
