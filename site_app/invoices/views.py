@@ -78,9 +78,15 @@ class InvoiceUploadView(APIView):
                 images = pdf_to_images(file_path)
                 processed_images = []
 
-                for img_data in images:
+                for idx, img_data in enumerate(images):
                     grayscale_image = process_image(img_data)
                     processed_images.append(grayscale_image)
+                        
+                        # Save the image to the temporary folder
+                    output_path = os.path.join(temp_folder, f"processed_page_{idx + 1}.png")
+                    cv2.imwrite(output_path, grayscale_image)
+                    logger.info(f"Imagen procesada guardada en: {output_path}")
+
 
                 logger.info("PDF successfully converted to images and processed using OpenCV.")
 
