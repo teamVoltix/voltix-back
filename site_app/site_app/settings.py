@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'notifications',
     'userprofile',
     'users',
-   
+
    #apps externas 
     'rest_framework',
     'rest_framework_simplejwt',
