@@ -168,3 +168,19 @@ from .drf_settings import REST_FRAMEWORK, SIMPLE_JWT
 
 TEMP_FOLDER = os.path.join(BASE_DIR, 'temp_uploads')
 
+
+# Base directory for the project
+# BASE_DIR = Path(__file__).resolve().parent.parent
+
+# # Media root (default to 'media/' in BASE_DIR if not set in .env)
+# MEDIA_ROOT = os.getenv('MEDIA_ROOT', os.path.join(BASE_DIR, 'media'))
+
+# # Temporary file upload directory (default to 'temp/' in MEDIA_ROOT if not set in .env)
+# FILE_UPLOAD_TEMP_DIR = os.getenv('FILE_UPLOAD_TEMP_DIR', os.path.join(MEDIA_ROOT, 'temp'))
+
+# # Ensure directories exist (automatic creation if missing)
+# os.makedirs(MEDIA_ROOT, exist_ok=True)
+# os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
+
+# # URL for serving media files in development
+# MEDIA_URL = '/media/'
