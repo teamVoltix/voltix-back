@@ -13,6 +13,7 @@ import logging
 import fitz  
 import cv2
 import numpy as np
+import uuid
 # este funcciona? hmmmmm///
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,9 @@ class InvoiceUploadView(APIView):
                     processed_images.append(grayscale_image)
                         
                         # Save the image to the temporary folder
-                    output_path = os.path.join(temp_folder, f"processed_page_{idx + 1}.png")
+                    file_name_without_extension = os.path.splitext(uploaded_file.name)[0]  #Name without extension
+                    unique_id = uuid.uuid4().hex
+                    output_path = os.path.join(temp_folder, f"{file_name_without_extension}_page_{idx + 1}_{unique_id}.png")   
                     cv2.imwrite(output_path, grayscale_image)
                     logger.info(f"Processed image saved in: {output_path}")
                  
