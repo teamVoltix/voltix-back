@@ -11,6 +11,10 @@ from rest_framework.decorators import permission_classes, authentication_classes
 from django.http import HttpResponse
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.decorators import api_view
+
 def index(request):
     return HttpResponse("Authentication es aqui.")
 
@@ -18,6 +22,37 @@ def inicio(request):
     return render(request, 'auth/inicio.html')  
 
 from rest_framework.permissions import AllowAny
+
+
+
+# @api_view(['POST'])  # Especificas los métodos HTTP permitidos aquí
+# @swagger_auto_schema(
+#     operation_description="Registrar un nuevo usuario.",
+#     request_body=openapi.Schema(
+#         type=openapi.TYPE_OBJECT,
+#         properties={
+#             'fullname': openapi.Schema(type=openapi.TYPE_STRING, description="Nombre completo del usuario"),
+#             'dni': openapi.Schema(type=openapi.TYPE_STRING, description="DNI del usuario"),
+#             'email': openapi.Schema(type=openapi.TYPE_STRING, description="Correo electrónico del usuario"),
+#             'password': openapi.Schema(type=openapi.TYPE_STRING, description="Contraseña del usuario"),
+#         },
+#     ),
+#     responses={
+#         201: openapi.Response(
+#             description="Usuario registrado exitosamente",
+#             schema=openapi.Schema(
+#                 type=openapi.TYPE_OBJECT,
+#                 properties={
+#                     'message': openapi.Schema(type=openapi.TYPE_STRING),
+#                     'user_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+#                     'fullname': openapi.Schema(type=openapi.TYPE_STRING),
+#                 }
+#             )
+#         ),
+#         400: "Bad Request",
+#         500: "Internal Server Error",
+#     }
+# )
 
 @csrf_exempt
 def registro_usuario(request):
@@ -177,10 +212,11 @@ def logout_view(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
     
-    ###########################################################################################################################
+################################################################################################################################
+
 
 ################################################################################################################################
-################################################# CHANGE PASSWORD ##############################################################
+#################################### CHANGE PASSWORD CON ENVIO DE EMAIL DE NOTIFICACION ########################################
 ################################################################################################################################
 
 from rest_framework.views import APIView
@@ -188,6 +224,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .serializers import ChangePasswordSerializer
+from django.core.mail import send_mail
+from voltix.models import User  # Importa el modelo User
 
 class change_password_view(APIView):
     permission_classes = [IsAuthenticated]
@@ -195,8 +233,136 @@ class change_password_view(APIView):
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
+            # Cambiar la contraseña del usuario autenticado
             serializer.update_password()
-            return Response({"detail": "La contraseña ha sido cambiada exitosamente."}, status=status.HTTP_200_OK)
+
+            # Obtener el correo electrónico del usuario autenticado
+            user = request.user  # Usuario autenticado
+            user_email = user.email  # Obtener el correo del usuario desde el modelo
+
+            # Enviar el correo de notificación
+            try:
+                send_mail(
+                    subject='Notificación de cambio de contraseña',
+                    message=(
+                        f'Hola {user.fullname},\n\n'
+                        'Queremos informarte que tu contraseña ha sido cambiada exitosamente.\n'
+                        'Si no realizaste este cambio, por favor contacta con nuestro equipo de soporte de inmediato.\n\n'
+                        'Saludos,\n'
+                        'El equipo de Voltix'
+                    ),
+                    from_email='voltix899@gmail.com',  # Correo remitente configurado en settings.py
+                    recipient_list=[user_email],  # Lista con el correo del usuario
+                    fail_silently=False,  # Si hay un error, lanza una excepción
+                )
+            except Exception as e:
+                # Manejar errores durante el envío del correo
+                print(f"Error al enviar el correo: {e}")
+
+            # Responder con éxito
+            return Response({"detail": "La contraseña ha sido cambiada exitosamente y se ha enviado un correo de notificación."}, status=status.HTTP_200_OK)
+
+        # Si los datos son inválidos, devolver errores
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-###############################################################################################################################
+################################################################################################################################
+
+
+################################################################################################################################
+############################################# PASSWORD RESET - PEDIDO CON EMAIL ################################################
+################################################################################################################################
+
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.contrib.auth import get_user_model
+import json
+import os
+
+User = get_user_model()
+
+@csrf_exempt
+def password_reset_request_view(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        email = data.get('email')
+        if not email:
+            return JsonResponse({"error": "El email es requerido."}, status=400)
+
+        user = get_object_or_404(User, email=email)
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        reset_link = f"{os.getenv('BACKEND_URL')}/password/reset/{uid}/{token}/"
+
+        send_mail(
+            subject='Restablecimiento de contraseña',
+            message=(
+                f"Hola {user.fullname},\n\n"  # Cambiado de get_full_name a fullname
+                "Recibimos una solicitud para restablecer tu contraseña. "
+                "Haz clic en el siguiente enlace para establecer una nueva contraseña:\n\n"
+                f"{reset_link}\n\n"
+                "Si no realizaste esta solicitud, puedes ignorar este correo."
+            ),
+            from_email='voltix899@gmail.com',
+            recipient_list=[email],
+            fail_silently=False,
+        )
+
+        return JsonResponse({"detail": "Se ha enviado un correo con el enlace para restablecer tu contraseña."}, status=200)
+    else:
+        return JsonResponse({"error": "Método no permitido."}, status=405)
+
+################################################################################################################################
+
+
+################################################################################################################################
+########################################## PASSWORD RESET - NUEVA PASSWORD #####################################################
+################################################################################################################################
+
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.contrib.auth import get_user_model
+import json
+import os
+
+
+@csrf_exempt
+def password_reset_view(request, uidb64, token):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+
+        if not new_password or not confirm_password:
+            return JsonResponse({"error": "Ambas contraseñas son requeridas."}, status=400)
+
+        if new_password != confirm_password:
+            return JsonResponse({"error": "Las contraseñas no coinciden."}, status=400)
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            user.set_password(new_password)
+            user.save()
+            return JsonResponse({"detail": "Tu contraseña ha sido restablecida exitosamente."}, status=200)
+        else:
+            return JsonResponse({"error": "El enlace de restablecimiento no es válido o ha expirado."}, status=400)
+    else:
+        return JsonResponse({"error": "Método no permitido."}, status=405)
+
+################################################################################################################################

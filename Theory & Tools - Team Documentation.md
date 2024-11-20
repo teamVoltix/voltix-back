@@ -19,3 +19,7 @@ https://www.youtube.com/watch?v=lZ_mIYSw_Vc
 
 Servicio de bd que nos utilizamos
 https://aiven.io/free-postgresql-database
+
+
+Configurar Swagger 
+https://www.youtube.com/watch?v=lZ_mIYSw_Vc

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -158,3 +159,36 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 from .drf_settings import REST_FRAMEWORK, SIMPLE_JWT
 
+
+
+################################################################################################################################
+########################################### CONFIG PARA EL EMAIL DE BACKEND ####################################################
+################################################################################################################################
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'voltix899@gmail.com'  # Tu dirección de correo de Gmail
+EMAIL_HOST_PASSWORD = 'jyja gtns fxpu ntfl'  # La password de la APP de Voltix en Gmail
+
+################################################################################################################################
+
+# TEMP_FOLDER = os.path.join(BASE_DIR, 'temp_uploads')
+
+
+#Base directory for the project
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Media root (default to 'media/' in BASE_DIR if not set in .env)
+MEDIA_ROOT = os.getenv('MEDIA_ROOT', os.path.join(BASE_DIR, 'media'))
+
+# Temporary file upload directory (default to 'temp/' in MEDIA_ROOT if not set in .env)
+FILE_UPLOAD_TEMP_DIR = os.getenv('FILE_UPLOAD_TEMP_DIR', os.path.join(MEDIA_ROOT, 'temp'))
+
+# Ensure directories exist (automatic creation if missing)
+os.makedirs(MEDIA_ROOT, exist_ok=True)
+os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
+
+# URL for serving media files in development
+MEDIA_URL = '/media/'

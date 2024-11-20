@@ -17,7 +17,26 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from voltix.views import index
+from django.urls import re_path
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
 from authentication.views import registro_usuario
+
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Voltix API",
+      default_version='v1',
+      description="Documentación de la API para Voltix",
+      terms_of_service="https://example.com/terms/",  # Enlace pendiente de definir
+      contact=openapi.Contact(email="voltix899@gmail.com"),
+      license=openapi.License(name="BSD License"),
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),  # Permitir acceso a todos
+)
 
 
 urlpatterns = [
@@ -26,11 +45,16 @@ urlpatterns = [
     path('', index),  # La ruta actual de voltix
     #path('', include('voltix.urls')),  # Redirigir la raíz hacia voltix
     path("api/auth/",  include("authentication.urls")),
-    path("invoices/", include("invoices.urls")),
+    path("api/invoices/", include("invoices.urls")),
     path('measurements/', include('measurements.urls')),
     path('notifications/', include('notifications.urls')),
     path('api/profile/', include('userprofile.urls')),
     path('users/', include('users.urls')),
+
+    # Rutas de Swagger
+    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redocs/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
    
 
 ]
