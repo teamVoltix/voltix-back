@@ -25,34 +25,34 @@ from rest_framework.permissions import AllowAny
 
 
 
-@api_view(['POST'])  # Especificas los métodos HTTP permitidos aquí
-@swagger_auto_schema(
-    operation_description="Registrar un nuevo usuario.",
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'fullname': openapi.Schema(type=openapi.TYPE_STRING, description="Nombre completo del usuario"),
-            'dni': openapi.Schema(type=openapi.TYPE_STRING, description="DNI del usuario"),
-            'email': openapi.Schema(type=openapi.TYPE_STRING, description="Correo electrónico del usuario"),
-            'password': openapi.Schema(type=openapi.TYPE_STRING, description="Contraseña del usuario"),
-        },
-    ),
-    responses={
-        201: openapi.Response(
-            description="Usuario registrado exitosamente",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'message': openapi.Schema(type=openapi.TYPE_STRING),
-                    'user_id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                    'fullname': openapi.Schema(type=openapi.TYPE_STRING),
-                }
-            )
-        ),
-        400: "Bad Request",
-        500: "Internal Server Error",
-    }
-)
+# @api_view(['POST'])  # Especificas los métodos HTTP permitidos aquí
+# @swagger_auto_schema(
+#     operation_description="Registrar un nuevo usuario.",
+#     request_body=openapi.Schema(
+#         type=openapi.TYPE_OBJECT,
+#         properties={
+#             'fullname': openapi.Schema(type=openapi.TYPE_STRING, description="Nombre completo del usuario"),
+#             'dni': openapi.Schema(type=openapi.TYPE_STRING, description="DNI del usuario"),
+#             'email': openapi.Schema(type=openapi.TYPE_STRING, description="Correo electrónico del usuario"),
+#             'password': openapi.Schema(type=openapi.TYPE_STRING, description="Contraseña del usuario"),
+#         },
+#     ),
+#     responses={
+#         201: openapi.Response(
+#             description="Usuario registrado exitosamente",
+#             schema=openapi.Schema(
+#                 type=openapi.TYPE_OBJECT,
+#                 properties={
+#                     'message': openapi.Schema(type=openapi.TYPE_STRING),
+#                     'user_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+#                     'fullname': openapi.Schema(type=openapi.TYPE_STRING),
+#                 }
+#             )
+#         ),
+#         400: "Bad Request",
+#         500: "Internal Server Error",
+#     }
+# )
 
 @csrf_exempt
 def registro_usuario(request):
@@ -212,10 +212,11 @@ def logout_view(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
     
-    ###########################################################################################################################
+################################################################################################################################
+
 
 ################################################################################################################################
-################################################# CHANGE PASSWORD ##############################################################
+#################################### CHANGE PASSWORD CON ENVIO DE EMAIL DE NOTIFICACION ########################################
 ################################################################################################################################
 
 from rest_framework.views import APIView
@@ -223,6 +224,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .serializers import ChangePasswordSerializer
+from django.core.mail import send_mail
+from voltix.models import User  # Importa el modelo User
 
 class change_password_view(APIView):
     permission_classes = [IsAuthenticated]
@@ -230,8 +233,36 @@ class change_password_view(APIView):
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
+            # Cambiar la contraseña del usuario autenticado
             serializer.update_password()
-            return Response({"detail": "La contraseña ha sido cambiada exitosamente."}, status=status.HTTP_200_OK)
+
+            # Obtener el correo electrónico del usuario autenticado
+            user = request.user  # Usuario autenticado
+            user_email = user.email  # Obtener el correo del usuario desde el modelo
+
+            # Enviar el correo de notificación
+            try:
+                send_mail(
+                    subject='Notificación de cambio de contraseña',
+                    message=(
+                        f'Hola {user.fullname},\n\n'
+                        'Queremos informarte que tu contraseña ha sido cambiada exitosamente.\n'
+                        'Si no realizaste este cambio, por favor contacta con nuestro equipo de soporte de inmediato.\n\n'
+                        'Saludos,\n'
+                        'El equipo de Voltix'
+                    ),
+                    from_email='voltix899@gmail.com',  # Correo remitente configurado en settings.py
+                    recipient_list=[user_email],  # Lista con el correo del usuario
+                    fail_silently=False,  # Si hay un error, lanza una excepción
+                )
+            except Exception as e:
+                # Manejar errores durante el envío del correo
+                print(f"Error al enviar el correo: {e}")
+
+            # Responder con éxito
+            return Response({"detail": "La contraseña ha sido cambiada exitosamente y se ha enviado un correo de notificación."}, status=status.HTTP_200_OK)
+
+        # Si los datos son inválidos, devolver errores
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 ###############################################################################################################################

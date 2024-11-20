@@ -166,3 +166,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 from .drf_settings import REST_FRAMEWORK, SIMPLE_JWT
 
+
+
+################################################################################################################################
+########################################### CONFIG PARA EL EMAIL DE BACKEND ####################################################
+################################################################################################################################
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'voltix899@gmail.com'  # Tu dirección de correo de Gmail
+EMAIL_HOST_PASSWORD = 'jyja gtns fxpu ntfl'  # La password de la APP de Voltix en Gmail
+
+################################################################################################################################
+
