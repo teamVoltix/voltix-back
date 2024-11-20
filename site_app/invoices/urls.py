@@ -10,3 +10,4 @@ urlpatterns = [
 
 
 # curl -X POST -F "file=@<RUTA_DE_ARCHIVO>" -H "Authorization: Bearer <ACCESS_TOKEN>" http://127.0.0.1:8000/api/invoices/upload/
+# curl -X POST -F "file=facturas/factura2.pdf>" -H "Authorization: Bearer <ACCESS_TOKEN>" http://127.0.0.1:8000/api/invoices/upload/
