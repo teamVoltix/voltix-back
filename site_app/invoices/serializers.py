@@ -26,6 +26,17 @@ class InvoiceUploadSerializer(serializers.Serializer):
         return value
 
 
+class InvoiceSerializer(serializers.Serializer):
+    invoice_id = serializers.IntegerField()
+    user_id = serializers.IntegerField()
+    upload_date = serializers.DateTimeField()
+    amount_due = serializers.DecimalField(max_digits=10, decimal_places=2)
+    due_date = serializers.DateField()
+    provider = serializers.CharField(max_length=150)
+    file_path = serializers.CharField(max_length=255)
+    ocr_data = serializers.JSONField()
+
+    
 """
 # ONLY PDF VERSION
 import mimetypes
