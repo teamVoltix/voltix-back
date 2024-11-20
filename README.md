@@ -65,6 +65,9 @@ Primero, crea y activa un entorno virtual para gestionar las dependencias del pr
     pip freeze > requirements.txt
 
 
+#* si falta una libreria en invoices.views.py
+pip install pymupdf opencv-python-headless
+
 
 
 
