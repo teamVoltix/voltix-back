@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-tdbajof^6om84qix%vxin+9hes2@^i$1@s%xu^bkh4umy$r#(g'
+SECRET_KEY = os.environ['SECRET_KEY']
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -38,6 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    #apps nuestras
     'voltix',
     'authentication',
     'invoices',
@@ -45,6 +52,8 @@ INSTALLED_APPS = [
     'notifications',
     'userprofile',
     'users',
+
+   #apps externas 
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -94,34 +103,18 @@ WSGI_APPLICATION = 'site_app.wsgi.application'
 # }
 
 from pathlib import Path
-import os 
-from dotenv import load_dotenv
 
-# Load the .env file
-load_dotenv()
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'defaultdb',
-        'USER': 'avnadmin',
-        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
-        'HOST': 'miluz-i004-voltix-back.e.aivencloud.com',
-        'PORT': '22219',
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DATABASE_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
+        'PORT': int(os.environ['DB_PORT']),
     }
 }
-
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'MiLuz',          # Nombre de tu base de datos
-#         'USER': 'postgres',        # Tu usuario de PostgreSQL
-#         'PASSWORD': 'voltix',      # La contraseña de PostgreSQL
-#         'HOST': 'localhost',       # Dirección del servidor de PostgreSQL
-#         'PORT': '5432',            # Puerto de PostgreSQL (por defecto 5432)
-#     }
-# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
