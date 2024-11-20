@@ -85,7 +85,12 @@ class InvoiceUploadView(APIView):
                         # Save the image to the temporary folder
                     output_path = os.path.join(temp_folder, f"processed_page_{idx + 1}.png")
                     cv2.imwrite(output_path, grayscale_image)
-                    logger.info(f"Imagen procesada guardada en: {output_path}")
+                    logger.info(f"Processed image saved in: {output_path}")
+                 
+                 # After processing the PDF, delete the PDF file if it's no longer needed
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    logger.info(f"Archivo PDF '{uploaded_file.name}' eliminado.")
 
 
                 logger.info("PDF successfully converted to images and processed using OpenCV.")
@@ -94,8 +99,8 @@ class InvoiceUploadView(APIView):
                 return Response({
                     'status': 'success',
                     'message': 'File uploaded successfully!',
-                    'file_name': uploaded_file.name,
-                    'file_path': file_path,
+                    #'file_name': uploaded_file.name,
+                    #'file_path': file_path,
                     'processed_images_count': len(processed_images)
                 }, status=status.HTTP_201_CREATED)
 
