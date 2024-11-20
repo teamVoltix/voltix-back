@@ -1,32 +1,32 @@
-import mimetypes
-from rest_framework import serializers
+# import mimetypes
+# from rest_framework import serializers
 
-class InvoiceUploadSerializer(serializers.Serializer):
+# class InvoiceUploadSerializer(serializers.Serializer):
 
-    file = serializers.FileField()
+#     file = serializers.FileField()
 
-    def validate_file(self, value):
+#     def validate_file(self, value):
 
-        max_size = 5 * 1024 * 1024  #5mb
-        if value.size > max_size:
-            raise serializers.ValidationError("File size exceeds 5 MB.")
+#         max_size = 5 * 1024 * 1024  #5mb
+#         if value.size > max_size:
+#             raise serializers.ValidationError("File size exceeds 5 MB.")
 
-        allowed_types = ['application/pdf', 'image/png', 'image/jpeg']
-        if value.content_type not in allowed_types:
-            raise serializers.ValidationError(
-                f"Invalid file type: {value.content_type}. Allowed types are PDF, PNG, and JPEG."
-            )
+#         allowed_types = ['application/pdf', 'image/png', 'image/jpeg']
+#         if value.content_type not in allowed_types:
+#             raise serializers.ValidationError(
+#                 f"Invalid file type: {value.content_type}. Allowed types are PDF, PNG, and JPEG."
+#             )
         
-        ext = mimetypes.guess_extension(value.content_type)
-        if ext and not value.name.endswith(ext):
-            raise serializers.ValidationError(
-                f"File extension does not match content type: Expected {ext}"
-            )
+#         ext = mimetypes.guess_extension(value.content_type)
+#         if ext and not value.name.endswith(ext):
+#             raise serializers.ValidationError(
+#                 f"File extension does not match content type: Expected {ext}"
+#             )
 
-        return value
+#         return value
 
 
-"""
+
 # ONLY PDF VERSION
 import mimetypes
 from rest_framework import serializers
@@ -57,4 +57,3 @@ class InvoiceUploadSerializer(serializers.Serializer):
 
         return value
 
-"""

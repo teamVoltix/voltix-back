@@ -79,6 +79,7 @@ class InvoiceUploadView(APIView):
                 images = pdf_to_images(file_path)
                 processed_images = []
 
+                #we apply OpenCV here
                 for idx, img_data in enumerate(images):
                     grayscale_image = process_image(img_data)
                     processed_images.append(grayscale_image)
