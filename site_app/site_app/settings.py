@@ -167,7 +167,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 from .drf_settings import REST_FRAMEWORK, SIMPLE_JWT
 
 
-<<<<<<< HEAD
 
 ################################################################################################################################
 ########################################### CONFIG PARA EL EMAIL DE BACKEND ####################################################
@@ -182,7 +181,6 @@ EMAIL_HOST_PASSWORD = 'jyja gtns fxpu ntfl'  # La password de la APP de Voltix e
 
 ################################################################################################################################
 
-=======
 # TEMP_FOLDER = os.path.join(BASE_DIR, 'temp_uploads')
 
 
@@ -201,4 +199,3 @@ os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
 
 # URL for serving media files in development
 MEDIA_URL = '/media/'
->>>>>>> origin/develop
