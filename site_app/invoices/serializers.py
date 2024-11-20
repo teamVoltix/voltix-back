@@ -33,6 +33,7 @@
 # ONLY PDF VERSION
 import mimetypes
 from rest_framework import serializers
+
 class InvoiceSerializer(serializers.Serializer):
     invoice_id = serializers.IntegerField()
     user_id = serializers.IntegerField()
