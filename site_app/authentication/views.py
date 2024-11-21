@@ -260,15 +260,39 @@ class LoginView(APIView):
 ################################################################################################################################
 
 # to check the TOKEN
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+@swagger_auto_schema(
+    method="get",
+    operation_summary="Protected View",
+    operation_description="Verify the validity of the JWT token and retrieve a personalized message for the user.",
+    responses={
+        200: openapi.Response(
+            description="Token is valid. Personalized message returned.",
+            examples={
+                "application/json": {
+                    "message": "Hello, John Doe! Your token is valid."
+                }
+            },
+        ),
+        401: openapi.Response(
+            description="Unauthorized. Token is invalid or missing.",
+            examples={
+                "application/json": {
+                    "detail": "Authentication credentials were not provided."
+                }
+            },
+        ),
+    },
+)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def protected_view(request):
     return Response({"message": f"Hello, {request.user.fullname}! Your token is valid."})
-
 
 # USER PROFILE
 
@@ -294,27 +318,71 @@ def protected_view(request):
 ########################################################### LOGOUT ############################################################
 ###############################################################################################################################
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+
+@swagger_auto_schema(
+    method="post",
+    operation_summary="User Logout",
+    operation_description="Logs out an authenticated user by blacklisting their refresh token. Requires the `refresh_token` in the request body.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["refresh_token"],
+        properties={
+            "refresh_token": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The refresh token to be blacklisted."
+            ),
+        },
+        example={
+            "refresh_token": "your_refresh_token_here"
+        }
+    ),
+    responses={
+        200: openapi.Response(
+            description="Successfully logged out.",
+            examples={
+                "application/json": {
+                    "message": "Successfully logged out"
+                }
+            }
+        ),
+        400: openapi.Response(
+            description="Missing or invalid refresh token.",
+            examples={
+                "application/json": {
+                    "error": "Refresh token is required"
+                }
+            }
+        ),
+        500: openapi.Response(
+            description="Server error while logging out.",
+            examples={
+                "application/json": {
+                    "error": "An error occurred while processing the logout."
+                }
+            }
+        ),
+    }
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-# solo los usuarios autenticados pueden acceder a esta vista
 def logout_view(request):
     try:
         refresh_token = request.data.get("refresh_token")
-        #Obtiene el refresh_token del cuerpo de la solicitud POST. Si el refresh_token no está presente, refresh_token será None
         if not refresh_token:
             return Response({"error": "Refresh token is required"}, status=400)
-            # Verifica si el refresh_token está presente. Si no lo está, devuelve una respuesta con un mensaje de error 
-            # {"error": "Refresh token is required"} y un código de estado 400 Bad Request
 
         token = RefreshToken(refresh_token)
         token.blacklist()
-        # Llama al método blacklist() del token para agregarlo a la lista negra. Esto significa que el refresh_token 
-        # será invalidado y no podrá ser usado nuevamente para obtener un nuevo access_token. Nota: Para que esta operación 
-        # funcione, debes tener habilitada la lista negra en tu proyecto ('rest_framework_simplejwt.token_blacklist' debe estar
-        #  en INSTALLED_APPS y las migraciones aplicadas).
         return Response({"message": "Successfully logged out"}, status=200)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
     
 ################################################################################################################################
 
@@ -323,28 +391,70 @@ def logout_view(request):
 #################################### CHANGE PASSWORD CON ENVIO DE EMAIL DE NOTIFICACION ########################################
 ################################################################################################################################
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
 from .serializers import ChangePasswordSerializer
-from django.core.mail import send_mail
-from voltix.models import User  # Importa el modelo User
 
 class change_password_view(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="Change Password",
+        operation_description="Allows an authenticated user to change their password and sends a confirmation email upon success.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["old_password", "new_password", "confirm_new_password"],
+            properties={
+                "old_password": openapi.Schema(type=openapi.TYPE_STRING, description="Current password of the user."),
+                "new_password": openapi.Schema(type=openapi.TYPE_STRING, description="New password for the user."),
+                "confirm_new_password": openapi.Schema(type=openapi.TYPE_STRING, description="Confirmation of the new password."),
+            },
+            example={
+                "old_password": "current_password",
+                "new_password": "new_password123",
+                "confirm_new_password": "new_password123",
+            },
+        ),
+        responses={
+            200: openapi.Response(
+                description="Password changed successfully and notification email sent.",
+                examples={
+                    "application/json": {
+                        "detail": "La contraseña ha sido cambiada exitosamente y se ha enviado un correo de notificación."
+                    }
+                },
+            ),
+            400: openapi.Response(
+                description="Validation errors with input fields.",
+                examples={
+                    "application/json": {
+                        "old_password": ["La contraseña actual es incorrecta."],
+                        "new_password": ["La nueva contraseña no cumple con los requisitos."]
+                    }
+                },
+            ),
+            500: openapi.Response(
+                description="Error while sending notification email.",
+                examples={
+                    "application/json": {
+                        "error": "Error al enviar el correo de notificación."
+                    }
+                },
+            ),
+        },
+    )
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            # Cambiar la contraseña del usuario autenticado
             serializer.update_password()
 
-            # Obtener el correo electrónico del usuario autenticado
-            user = request.user  # Usuario autenticado
-            user_email = user.email  # Obtener el correo del usuario desde el modelo
+            user = request.user
+            user_email = user.email
 
-            # Enviar el correo de notificación
             try:
                 send_mail(
                     subject='Notificación de cambio de contraseña',
@@ -355,19 +465,17 @@ class change_password_view(APIView):
                         'Saludos,\n'
                         'El equipo de Voltix'
                     ),
-                    from_email='voltix899@gmail.com',  # Correo remitente configurado en settings.py
-                    recipient_list=[user_email],  # Lista con el correo del usuario
-                    fail_silently=False,  # Si hay un error, lanza una excepción
+                    from_email='voltix899@gmail.com',
+                    recipient_list=[user_email],
+                    fail_silently=False,
                 )
             except Exception as e:
-                # Manejar errores durante el envío del correo
                 print(f"Error al enviar el correo: {e}")
 
-            # Responder con éxito
             return Response({"detail": "La contraseña ha sido cambiada exitosamente y se ha enviado un correo de notificación."}, status=status.HTTP_200_OK)
 
-        # Si los datos son inválidos, devolver errores
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 ################################################################################################################################
 
@@ -376,50 +484,104 @@ class change_password_view(APIView):
 ############################################# PASSWORD RESET - PEDIDO CON EMAIL ################################################
 ################################################################################################################################
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.decorators import api_view
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.contrib.auth import get_user_model
 import json
 import os
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+@swagger_auto_schema(
+    method="post",
+    operation_summary="Password Reset Request",
+    operation_description=(
+        "Allows a user to request a password reset by providing their email. "
+        "If the email is associated with a registered user, a reset link is sent."
+    ),
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["email"],
+        properties={
+            "email": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The email address associated with the user account.",
+            ),
+        },
+        example={
+            "email": "user@example.com"
+        },
+    ),
+    responses={
+        200: openapi.Response(
+            description="Email with reset link sent successfully.",
+            examples={
+                "application/json": {
+                    "detail": "Se ha enviado un correo con el enlace para restablecer tu contraseña."
+                }
+            },
+        ),
+        400: openapi.Response(
+            description="Missing or invalid email.",
+            examples={
+                "application/json": {
+                    "error": "El email es requerido."
+                }
+            },
+        ),
+        404: openapi.Response(
+            description="Email not associated with any user account.",
+            examples={
+                "application/json": {
+                    "error": "No user found with this email."
+                }
+            },
+        ),
+        405: openapi.Response(
+            description="Method not allowed.",
+            examples={
+                "application/json": {
+                    "error": "Método no permitido."
+                }
+            },
+        ),
+    },
+)
+@api_view(['POST'])  # Esto maneja explícitamente el método HTTP
 @csrf_exempt
 def password_reset_request_view(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        email = data.get('email')
-        if not email:
-            return JsonResponse({"error": "El email es requerido."}, status=400)
+    data = json.loads(request.body)
+    email = data.get('email')
+    if not email:
+        return JsonResponse({"error": "El email es requerido."}, status=400)
 
-        user = get_object_or_404(User, email=email)
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        reset_link = f"{os.getenv('BACKEND_URL')}/password/reset/{uid}/{token}/"
+    user = get_object_or_404(User, email=email)
+    token = default_token_generator.make_token(user)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    reset_link = f"{os.getenv('BACKEND_URL')}/password/reset/{uid}/{token}/"
 
-        send_mail(
-            subject='Restablecimiento de contraseña',
-            message=(
-                f"Hola {user.fullname},\n\n"  # Cambiado de get_full_name a fullname
-                "Recibimos una solicitud para restablecer tu contraseña. "
-                "Haz clic en el siguiente enlace para establecer una nueva contraseña:\n\n"
-                f"{reset_link}\n\n"
-                "Si no realizaste esta solicitud, puedes ignorar este correo."
-            ),
-            from_email='voltix899@gmail.com',
-            recipient_list=[email],
-            fail_silently=False,
-        )
+    send_mail(
+        subject='Restablecimiento de contraseña',
+        message=(
+            f"Hola {user.fullname},\n\n"
+            "Recibimos una solicitud para restablecer tu contraseña. "
+            "Haz clic en el siguiente enlace para establecer una nueva contraseña:\n\n"
+            f"{reset_link}\n\n"
+            "Si no realizaste esta solicitud, puedes ignorar este correo."
+        ),
+        from_email='voltix899@gmail.com',
+        recipient_list=[email],
+        fail_silently=False,
+    )
 
-        return JsonResponse({"detail": "Se ha enviado un correo con el enlace para restablecer tu contraseña."}, status=200)
-    else:
-        return JsonResponse({"error": "Método no permitido."}, status=405)
+    return JsonResponse({"detail": "Se ha enviado un correo con el enlace para restablecer tu contraseña."}, status=200)
 
 ################################################################################################################################
 
@@ -428,45 +590,96 @@ def password_reset_request_view(request):
 ########################################## PASSWORD RESET - NUEVA PASSWORD #####################################################
 ################################################################################################################################
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.decorators import api_view
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
-from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from django.contrib.auth import get_user_model
+from django.views.decorators.csrf import csrf_exempt
 import json
-import os
 
+User = get_user_model()
 
-@csrf_exempt
+@swagger_auto_schema(
+    method="post",
+    operation_summary="Password Reset",
+    operation_description=(
+        "Allows a user to reset their password using the provided token and UID. "
+        "The user must send the new password and confirm it."
+    ),
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["new_password", "confirm_password"],
+        properties={
+            "new_password": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The new password to set for the user.",
+            ),
+            "confirm_password": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="Confirmation of the new password.",
+            ),
+        },
+        example={
+            "new_password": "new_secure_password123",
+            "confirm_password": "new_secure_password123",
+        },
+    ),
+    responses={
+        200: openapi.Response(
+            description="Password reset successfully.",
+            examples={
+                "application/json": {
+                    "detail": "Tu contraseña ha sido restablecida exitosamente."
+                }
+            },
+        ),
+        400: openapi.Response(
+            description="Invalid input or expired token.",
+            examples={
+                "application/json": {
+                    "error": "El enlace de restablecimiento no es válido o ha expirado."
+                }
+            },
+        ),
+        405: openapi.Response(
+            description="Method not allowed.",
+            examples={
+                "application/json": {
+                    "error": "Método no permitido."
+                }
+            },
+        ),
+    },
+)
+@api_view(['POST'])  # Hace explícito que solo POST es aceptado
+@csrf_exempt  # Permite la desactivación de la validación CSRF
 def password_reset_view(request, uidb64, token):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        new_password = data.get('new_password')
-        confirm_password = data.get('confirm_password')
+    data = json.loads(request.body)
+    new_password = data.get('new_password')
+    confirm_password = data.get('confirm_password')
 
-        if not new_password or not confirm_password:
-            return JsonResponse({"error": "Ambas contraseñas son requeridas."}, status=400)
+    if not new_password or not confirm_password:
+        return JsonResponse({"error": "Ambas contraseñas son requeridas."}, status=400)
 
-        if new_password != confirm_password:
-            return JsonResponse({"error": "Las contraseñas no coinciden."}, status=400)
+    if new_password != confirm_password:
+        return JsonResponse({"error": "Las contraseñas no coinciden."}, status=400)
 
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            user = None
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
 
-        if user is not None and default_token_generator.check_token(user, token):
-            user.set_password(new_password)
-            user.save()
-            return JsonResponse({"detail": "Tu contraseña ha sido restablecida exitosamente."}, status=200)
-        else:
-            return JsonResponse({"error": "El enlace de restablecimiento no es válido o ha expirado."}, status=400)
+    if user is not None and default_token_generator.check_token(user, token):
+        user.set_password(new_password)
+        user.save()
+        return JsonResponse({"detail": "Tu contraseña ha sido restablecida exitosamente."}, status=200)
     else:
-        return JsonResponse({"error": "Método no permitido."}, status=405)
+        return JsonResponse({"error": "El enlace de restablecimiento no es válido o ha expirado."}, status=400)
+
 
 ################################################################################################################################

@@ -50,13 +50,90 @@ def process_image(image_data):
     grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     return grayscale_image
 
-class InvoiceUploadView(APIView):
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
+import os
+import uuid
+import cv2
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+import os
+import uuid
+import cv2
+import logging
+
+logger = logging.getLogger(__name__)
+
+class InvoiceUploadView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
+    @swagger_auto_schema(
+        operation_summary="Subir y procesar facturas en PDF",
+        operation_description=(
+            "Permite a un usuario autenticado subir un archivo PDF. "
+            "El archivo se convierte en imágenes, se procesa usando OpenCV y se guarda temporalmente."
+        ),
+        manual_parameters=[ 
+            openapi.Parameter(
+                name="file",
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_FILE,
+                description="El archivo PDF a subir y procesar.",
+            ),
+        ],
+        responses={
+            201: openapi.Response(
+                description="File uploaded and processed successfully.",
+                examples={
+                    "application/json": {
+                        "status": "success",
+                        "message": "File uploaded successfully!",
+                        "processed_images_count": 5,
+                    }
+                },
+            ),
+            400: openapi.Response(
+                description="Validation error in the uploaded file.",
+                examples={
+                    "application/json": {
+                        "status": "error",
+                        "details": {
+                            "file": [
+                                "This field is required.",
+                                "File size exceeds 5 MB.",
+                                "Invalid file type: application/msword. Only PDF files are allowed.",
+                                "File extension does not match content type. Only '.pdf' files are allowed.",
+                                "File name must end with '.pdf'."
+                            ],
+                        }
+                    }
+                },
+            ),
+            500: openapi.Response(
+                description="Server error during file upload or processing.",
+                examples={
+                    "application/json": {
+                        "status": "error",
+                        "message": "An error occurred while uploading the file.",
+                        "details": "File processing failed due to XYZ error.",
+                    }
+                },
+            ),
+        },
+    )
     def post(self, request, *args, **kwargs):
-
         logger.info("Received a file upload request.")
         serializer = InvoiceUploadSerializer(data=request.data)
 
@@ -64,10 +141,8 @@ class InvoiceUploadView(APIView):
             try:
                 uploaded_file = serializer.validated_data['file']
 
-                # Get TEMP_FOLDER from settings.py
                 temp_folder = settings.FILE_UPLOAD_TEMP_DIR
 
-                # Save file in chunks for memory efficiency
                 file_path = os.path.join(temp_folder, uploaded_file.name)
                 with open(file_path, 'wb+') as destination:
                     for chunk in uploaded_file.chunks():
@@ -75,49 +150,51 @@ class InvoiceUploadView(APIView):
 
                 logger.info(f"File '{uploaded_file.name}' uploaded successfully to {file_path}.")
 
-                 # Convert PDF to images
                 images = pdf_to_images(file_path)
                 processed_images = []
 
-                #we apply OpenCV here
                 for idx, img_data in enumerate(images):
                     grayscale_image = process_image(img_data)
                     processed_images.append(grayscale_image)
-                        
-                        # Save the image to the temporary folder
-                    file_name_without_extension = os.path.splitext(uploaded_file.name)[0]  #Name without extension
+
+                    file_name_without_extension = os.path.splitext(uploaded_file.name)[0]
                     unique_id = uuid.uuid4().hex
-                    output_path = os.path.join(temp_folder, f"{file_name_without_extension}_page_{idx + 1}_{unique_id}.png")   
+                    output_path = os.path.join(
+                        temp_folder, f"{file_name_without_extension}_page_{idx + 1}_{unique_id}.png"
+                    )
                     cv2.imwrite(output_path, grayscale_image)
                     logger.info(f"Processed image saved in: {output_path}")
-                 
-                 # After processing the PDF, delete the PDF file if it's no longer needed
+
                 if os.path.exists(file_path):
                     os.remove(file_path)
                     logger.info(f"PDF file '{uploaded_file.name}' deleted.")
 
-
                 logger.info("PDF successfully converted to images and processed using OpenCV.")
 
-
-                return Response({
-                    'status': 'success',
-                    'message': 'File uploaded successfully!',
-                    #'file_name': uploaded_file.name,
-                    #'file_path': file_path,
-                    'processed_images_count': len(processed_images)
-                }, status=status.HTTP_201_CREATED)
+                return Response(
+                    {
+                        "status": "success",
+                        "message": "File uploaded successfully!",
+                        "processed_images_count": len(processed_images),
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
 
             except Exception as e:
                 logger.error(f"Error while saving file: {str(e)}")
-                return Response({
-                    'status': 'error',
-                    'message': 'An error occurred while uploading the file.',
-                    'details': str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response(
+                    {
+                        "status": "error",
+                        "message": "An error occurred while uploading the file.",
+                        "details": str(e),
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
 
         logger.warning("File upload validation failed: %s", serializer.errors)
-        return Response({'status': 'error', 'details': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"status": "error", "details": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     # def delete(self, request, *args, **kwargs):
     #     """
@@ -145,6 +222,8 @@ class InvoiceUploadView(APIView):
     #         logger.warning(f"File '{file_name}' not found for deletion.")
     #         return Response({'status': 'error', 'message': 'File not found.'}, status=status.HTTP_404_NOT_FOUND)
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -155,8 +234,48 @@ import random
 class InvoiceSearchView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="Search Invoices",
+        operation_description="Retrieves a list of invoices for the authenticated user. This is based on a dummy dataset.",
+        responses={
+            200: openapi.Response(
+                description="List of invoices retrieved successfully.",
+                examples={
+                    "application/json": [
+                        {
+                            "invoice_id": 1,
+                            "user_id": 1,
+                            "upload_date": "2024-11-21T12:00:00.000Z",
+                            "amount_due": 250.75,
+                            "due_date": "2024-12-01T12:00:00.000Z",
+                            "provider": "Proveedor A",
+                            "file_path": "/fake/path/invoice1.pdf",
+                            "ocr_data": {"field": "value1"},
+                        },
+                        {
+                            "invoice_id": 2,
+                            "user_id": 1,
+                            "upload_date": "2024-11-22T12:00:00.000Z",
+                            "amount_due": 500.30,
+                            "due_date": "2024-12-15T12:00:00.000Z",
+                            "provider": "Proveedor B",
+                            "file_path": "/fake/path/invoice2.pdf",
+                            "ocr_data": {"field": "value2"},
+                        },
+                    ]
+                },
+            ),
+            401: openapi.Response(
+                description="Unauthorized. User not authenticated.",
+                examples={
+                    "application/json": {
+                        "detail": "Authentication credentials were not provided."
+                    }
+                },
+            ),
+        },
+    )
     def get(self, request, *args, **kwargs):
-        # Datos ficticios de facturas
         fake_invoices = [
             {
                 "invoice_id": 1,
@@ -180,7 +299,6 @@ class InvoiceSearchView(APIView):
             },
         ]
 
-        # Filtrar facturas por el usuario autenticado
         user_invoices = [invoice for invoice in fake_invoices if invoice["user_id"] == request.user.id]
 
         serializer = InvoiceSerializer(user_invoices, many=True)

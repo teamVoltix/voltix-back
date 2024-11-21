@@ -69,4 +69,3 @@ class InvoiceUploadSerializer(serializers.Serializer):
             raise serializers.ValidationError("File name must end with '.pdf'.")
 
         return value
-
