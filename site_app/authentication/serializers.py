@@ -49,3 +49,76 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
         user.save()
+
+
+from rest_framework import serializers
+from django.core.exceptions import ValidationError
+from django.contrib.auth.hashers import make_password
+from django.core.validators import validate_email
+import re
+from voltix.models import User  # Ensure User is your custom model or default Django User model
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    fullname = serializers.CharField(max_length=255)
+    dni = serializers.CharField(max_length=20)
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8, max_length=15)
+
+    class Meta:
+        model = User
+        fields = ['fullname', 'dni', 'email', 'password']
+
+    def validate_email(self, value):
+        try:
+            validate_email(value)
+        except ValidationError:
+            raise serializers.ValidationError("El formato del correo electrónico es inválido.")
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Este correo electrónico ya está registrado.")
+        return value
+
+    def validate_dni(self, value):
+        if User.objects.filter(dni=value).exists():
+            raise serializers.ValidationError("Este DNI ya está registrado.")
+        return value
+
+    def validate_password(self, value):
+        if len(value) < 8 or len(value) > 15:
+            raise serializers.ValidationError("La contraseña debe tener entre 8 y 15 caracteres.")
+        if not re.search(r'[A-Z]', value):
+            raise serializers.ValidationError("La contraseña debe tener al menos 1 letra mayúscula.")
+        if not re.search(r'[a-z]', value):
+            raise serializers.ValidationError("La contraseña debe tener al menos 1 letra minúscula.")
+        if not re.search(r'[0-9]', value):
+            raise serializers.ValidationError("La contraseña debe tener al menos 1 número.")
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
+            raise serializers.ValidationError("La contraseña debe tener al menos 1 carácter especial.")
+        if re.search(r'\s', value):
+            raise serializers.ValidationError("La contraseña no debe contener espacios.")
+        return value
+
+    def create(self, validated_data):
+        # Hash the password before saving
+        validated_data['password'] = make_password(validated_data['password'])
+        return super().create(validated_data)
+
+from rest_framework import serializers
+
+class LoginSerializer(serializers.Serializer):
+    dni = serializers.CharField(
+        required=True,
+        max_length=20,
+        help_text="The DNI (unique identifier) of the user.",
+        error_messages={
+            "required": "DNI is required.",
+            "max_length": "DNI cannot exceed 20 characters.",
+        },
+    )
+    password = serializers.CharField(
+        required=True,
+        write_only=True,
+        help_text="The password associated with the user account.",
+        error_messages={
+            "required": "Password is required.",
+        },
+    )

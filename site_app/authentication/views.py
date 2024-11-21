@@ -63,75 +63,112 @@ from rest_framework.permissions import AllowAny
 ################################################################################################################################
 
 import re  # Importar para realizar validaciones de expresiones regulares
+# @api_view(['POST'])
+# @csrf_exempt
+# def registro_usuario(request):
+#     if request.method == 'POST':
+#         try:
+#             # Cargar los datos del body de la solicitud
+#             data = json.loads(request.body)
+#             fullname = data.get('fullname')
+#             dni = data.get('dni')
+#             email = data.get('email')
+#             password = data.get('password')
 
-@csrf_exempt
-def registro_usuario(request):
-    if request.method == 'POST':
-        try:
-            # Cargar los datos del body de la solicitud
-            data = json.loads(request.body)
-            fullname = data.get('fullname')
-            dni = data.get('dni')
-            email = data.get('email')
-            password = data.get('password')
+#             # Validaciones
+#             if User.objects.filter(dni=dni).exists():
+#                 return JsonResponse({"error": "Este DNI ya está registrado."}, status=400)
 
-            # Validaciones
-            if User.objects.filter(dni=dni).exists():
-                return JsonResponse({"error": "Este DNI ya está registrado."}, status=400)
+#             if not fullname or not email or not password:
+#                 return JsonResponse({"error": "Todos los campos (fullname, email, password) son requeridos."}, status=400)
 
-            if not fullname or not email or not password:
-                return JsonResponse({"error": "Todos los campos (fullname, email, password) son requeridos."}, status=400)
+#             # Validación del formato del correo electrónico
+#             try:
+#                 validate_email(email)
+#             except ValidationError:
+#                 return JsonResponse({"error": "El formato del correo electrónico es inválido."}, status=400)
 
-            # Validación del formato del correo electrónico
-            try:
-                validate_email(email)
-            except ValidationError:
-                return JsonResponse({"error": "El formato del correo electrónico es inválido."}, status=400)
+#             if User.objects.filter(email=email).exists():
+#                 return JsonResponse({"error": "Este correo electrónico ya está registrado."}, status=400)
 
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({"error": "Este correo electrónico ya está registrado."}, status=400)
+#             # Validación de la contraseña
+#             if len(password) < 8 or len(password) > 15:
+#                 return JsonResponse({"error": "La contraseña debe tener entre 8 y 15 caracteres."}, status=400)
+#             if not re.search(r'[A-Z]', password):
+#                 return JsonResponse({"error": "La contraseña debe tener al menos 1 letra mayúscula."}, status=400)
+#             if not re.search(r'[a-z]', password):
+#                 return JsonResponse({"error": "La contraseña debe tener al menos 1 letra minúscula."}, status=400)
+#             if not re.search(r'[0-9]', password):
+#                 return JsonResponse({"error": "La contraseña debe tener al menos 1 número."}, status=400)
+#             if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+#                 return JsonResponse({"error": "La contraseña debe tener al menos 1 carácter especial."}, status=400)
+#             if re.search(r'\s', password):
+#                 return JsonResponse({"error": "La contraseña no debe contener espacios."}, status=400)
 
-            # Validación de la contraseña
-            if len(password) < 8 or len(password) > 15:
-                return JsonResponse({"error": "La contraseña debe tener entre 8 y 15 caracteres."}, status=400)
-            if not re.search(r'[A-Z]', password):
-                return JsonResponse({"error": "La contraseña debe tener al menos 1 letra mayúscula."}, status=400)
-            if not re.search(r'[a-z]', password):
-                return JsonResponse({"error": "La contraseña debe tener al menos 1 letra minúscula."}, status=400)
-            if not re.search(r'[0-9]', password):
-                return JsonResponse({"error": "La contraseña debe tener al menos 1 número."}, status=400)
-            if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-                return JsonResponse({"error": "La contraseña debe tener al menos 1 carácter especial."}, status=400)
-            if re.search(r'\s', password):
-                return JsonResponse({"error": "La contraseña no debe contener espacios."}, status=400)
+#             # Hashear la contraseña
+#             hashed_password = make_password(password)
 
-            # Hashear la contraseña
-            hashed_password = make_password(password)
-
-            # Crear el usuario
-            user = User(
-                fullname=fullname,
-                dni=dni,
-                email=email,
-                password=hashed_password
-            )
-            user.save()
+#             # Crear el usuario
+#             user = User(
+#                 fullname=fullname,
+#                 dni=dni,
+#                 email=email,
+#                 password=hashed_password
+#             )
+#             user.save()
             
-            # Respuesta exitosa
-            return JsonResponse({
-                "message": "Usuario registrado exitosamente",
-                "user_id": user.user_id,
-                "fullname": user.fullname,
-            }, status=201)
+#             # Respuesta exitosa
+#             return JsonResponse({
+#                 "message": "Usuario registrado exitosamente",
+#                 "user_id": user.user_id,
+#                 "fullname": user.fullname,
+#             }, status=201)
         
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Datos de solicitud no válidos. Asegúrate de enviar un JSON válido."}, status=400)
-        except Exception as e:
-            return JsonResponse({"error": f"Ocurrió un error: {str(e)}"}, status=500)
+#         except json.JSONDecodeError:
+#             return JsonResponse({"error": "Datos de solicitud no válidos. Asegúrate de enviar un JSON válido."}, status=400)
+#         except Exception as e:
+#             return JsonResponse({"error": f"Ocurrió un error: {str(e)}"}, status=500)
 
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+#     return JsonResponse({"error": "Método no permitido"}, status=405)
 
 ################################################################################################################################
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import UserRegistrationSerializer
+from rest_framework.permissions import AllowAny
+class UserRegistrationView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_description="Register a new user.",
+        request_body=UserRegistrationSerializer,
+        responses={
+            201: openapi.Response(
+                description="User registered successfully.",
+                examples={
+                    "application/json": {
+                        "message": "Usuario registrado exitosamente",
+                        "user_id": 1,
+                        "fullname": "John Doe",
+                    }
+                }
+            ),
+            400: "Invalid input data."
+        }
+    )
+
+    def post(self, request):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({
+                "message": "Usuario registrado exitosamente",
+                "user_id": user.id,
+                "fullname": user.fullname,
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 ################################################################################################################################
@@ -145,41 +182,80 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-@csrf_exempt
-def login_view(request):
-    if request.method == 'POST':
-        try:
-            # Parse the incoming JSON data
-            data = json.loads(request.body)
-            dni = data.get('dni')
-            password = data.get('password')
 
-            # Validate input
-            if not dni or not password:
-                return JsonResponse({"error": "DNI and password are required."}, status=400)
 
-            # Authenticate the user
-            user = authenticate(request, username=dni, password=password)
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from .serializers import LoginSerializer
+from django.http import JsonResponse
+from rest_framework.permissions import AllowAny
 
-            if user is not None:
-                # Generate JWT tokens
-                refresh = RefreshToken.for_user(user)
-                return JsonResponse({
-                    "message": "Login successful",
-                    "access_token": str(refresh.access_token),
-                    "refresh_token": str(refresh),
-                    "user_id": user.user_id,
-                    "fullname": user.fullname,
-                }, status=200)
-            else:
-                return JsonResponse({"error": "Invalid credentials. Please try again."}, status=401)
+class LoginView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
 
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid request data. Ensure it's valid JSON."}, status=400)
-        except Exception as e:
-            return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
+    @swagger_auto_schema(
+        operation_summary="User Login",
+        operation_description="Authenticate a user using their DNI and password to retrieve JWT access and refresh tokens.",
+        request_body=LoginSerializer,
+        responses={
+            200: openapi.Response(
+                description="User authenticated successfully. JWT tokens and user info are returned.",
+                examples={
+                    "application/json": {
+                        "message": "Login successful",
+                        "access_token": "JWT_ACCESS_TOKEN",
+                        "refresh_token": "JWT_REFRESH_TOKEN",
+                        "user_id": 1,
+                        "fullname": "John Doe",
+                    }
+                },
+            ),
+            401: openapi.Response(
+                description="Invalid credentials. User authentication failed.",
+                examples={
+                    "application/json": {"error": "Invalid credentials. Please try again."}
+                },
+            ),
+            400: openapi.Response(
+                description="Validation errors due to missing or incorrect fields.",
+                examples={
+                    "application/json": {
+                        "dni": ["This field is required."],
+                        "password": ["This field is required."],
+                    }
+                },
+            ),
+        },
+    )
 
-    return JsonResponse({"error": "Method not allowed."}, status=405)
+    def post(self, request):
+        # Validate the input with serializer
+        serializer = LoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        dni = serializer.validated_data['dni']
+        password = serializer.validated_data['password']
+
+        # Authenticate the user
+        user = authenticate(request, username=dni, password=password)
+
+        if user is not None:
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "message": "Login successful",
+                "access_token": str(refresh.access_token),
+                "refresh_token": str(refresh),
+                "user_id": user.user_id,  # Change `user.user_id` if using custom fields
+                "fullname": user.fullname,
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Invalid credentials. Please try again."}, status=status.HTTP_401_UNAUTHORIZED)
 
 ################################################################################################################################
 
