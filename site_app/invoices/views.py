@@ -80,17 +80,17 @@ class InvoiceUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     @swagger_auto_schema(
-        operation_summary="Upload and Process PDF Invoices",
+        operation_summary="Subir y procesar facturas en PDF",
         operation_description=(
-            "Allows an authenticated user to upload a PDF file. "
-            "The file is converted into images, processed using OpenCV, and saved temporarily."
+            "Permite a un usuario autenticado subir un archivo PDF. "
+            "El archivo se convierte en imágenes, se procesa usando OpenCV y se guarda temporalmente."
         ),
-        manual_parameters=[
+        manual_parameters=[ 
             openapi.Parameter(
                 name="file",
                 in_=openapi.IN_FORM,
                 type=openapi.TYPE_FILE,
-                description="The PDF file to be uploaded and processed.",
+                description="El archivo PDF a subir y procesar.",
             ),
         ],
         responses={
@@ -109,7 +109,15 @@ class InvoiceUploadView(APIView):
                 examples={
                     "application/json": {
                         "status": "error",
-                        "details": {"file": ["This field is required."]},
+                        "details": {
+                            "file": [
+                                "This field is required.",
+                                "File size exceeds 5 MB.",
+                                "Invalid file type: application/msword. Only PDF files are allowed.",
+                                "File extension does not match content type. Only '.pdf' files are allowed.",
+                                "File name must end with '.pdf'."
+                            ],
+                        }
                     }
                 },
             ),
