@@ -105,5 +105,20 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 from rest_framework import serializers
 
 class LoginSerializer(serializers.Serializer):
-    dni = serializers.CharField(required=True)
-    password = serializers.CharField(required=True, write_only=True)
+    dni = serializers.CharField(
+        required=True,
+        max_length=20,
+        help_text="The DNI (unique identifier) of the user.",
+        error_messages={
+            "required": "DNI is required.",
+            "max_length": "DNI cannot exceed 20 characters.",
+        },
+    )
+    password = serializers.CharField(
+        required=True,
+        write_only=True,
+        help_text="The password associated with the user account.",
+        error_messages={
+            "required": "Password is required.",
+        },
+    )

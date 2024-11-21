@@ -141,6 +141,24 @@ class UserRegistrationView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(
+        operation_description="Register a new user.",
+        request_body=UserRegistrationSerializer,
+        responses={
+            201: openapi.Response(
+                description="User registered successfully.",
+                examples={
+                    "application/json": {
+                        "message": "Usuario registrado exitosamente",
+                        "user_id": 1,
+                        "fullname": "John Doe",
+                    }
+                }
+            ),
+            400: "Invalid input data."
+        }
+    )
+
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -178,6 +196,41 @@ from rest_framework.permissions import AllowAny
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary="User Login",
+        operation_description="Authenticate a user using their DNI and password to retrieve JWT access and refresh tokens.",
+        request_body=LoginSerializer,
+        responses={
+            200: openapi.Response(
+                description="User authenticated successfully. JWT tokens and user info are returned.",
+                examples={
+                    "application/json": {
+                        "message": "Login successful",
+                        "access_token": "JWT_ACCESS_TOKEN",
+                        "refresh_token": "JWT_REFRESH_TOKEN",
+                        "user_id": 1,
+                        "fullname": "John Doe",
+                    }
+                },
+            ),
+            401: openapi.Response(
+                description="Invalid credentials. User authentication failed.",
+                examples={
+                    "application/json": {"error": "Invalid credentials. Please try again."}
+                },
+            ),
+            400: openapi.Response(
+                description="Validation errors due to missing or incorrect fields.",
+                examples={
+                    "application/json": {
+                        "dni": ["This field is required."],
+                        "password": ["This field is required."],
+                    }
+                },
+            ),
+        },
+    )
 
     def post(self, request):
         # Validate the input with serializer
