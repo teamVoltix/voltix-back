@@ -185,3 +185,30 @@ class InvoiceSearchView(APIView):
 
         serializer = InvoiceSerializer(user_invoices, many=True)
         return Response(serializer.data)
+
+################################################################################################################################
+############################################ GET - VISUALIZAR FATURA POR ID ####################################################
+################################################################################################################################
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from voltix.models import Invoice  # Importar el modelo Invoice
+from .serializers import InvoiceSerializer  # Usar el serializer existente
+
+class InvoiceDetailView(APIView):
+    permission_classes = [IsAuthenticated]  # Asegurar que solo usuarios autenticados puedan acceder
+
+    def get(self, request, invoice_id):
+        # Obtener la factura por ID
+        invoice = get_object_or_404(Invoice, pk=invoice_id)
+
+        # Serializar la factura utilizando tu serializer existente
+        serializer = InvoiceSerializer(invoice)
+
+        # Retornar la respuesta JSON
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+################################################################################################################################
