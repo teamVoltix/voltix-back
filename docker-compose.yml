@@ -14,7 +14,7 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - SECRET_KEY=${SECRET_KEY}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
     working_dir: /usr/share/app
     volumes:
       - ./site_app/static:/usr/share/app/static
@@ -38,10 +38,10 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - SECRET_KEY=${SECRET_KEY}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
     restart: always
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - ./site_app/static:/app/static
@@ -52,4 +52,5 @@ services:
 
 networks:
   voltix:
-        external: false
+    external: true
+        
