@@ -58,34 +58,62 @@ class Profile(models.Model):
         return f"Perfil de {self.user.fullname}"
 
 
+# class Invoice(models.Model):
+#     invoice_id = models.AutoField(primary_key=True)
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     upload_date = models.DateTimeField()
+#     amount_due = models.DecimalField(max_digits=10, decimal_places=2)
+#     due_date = models.DateField()
+#     provider = models.CharField(max_length=150)
+#     file_path = models.CharField(max_length=255)
+#     ocr_data = models.JSONField()
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     def __str__(self):
+#         return f"Factura {self.invoice_id} - Usuario: {self.user.fullname}"
+
+
 class Invoice(models.Model):
-    invoice_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    upload_date = models.DateTimeField()
-    amount_due = models.DecimalField(max_digits=10, decimal_places=2)
-    due_date = models.DateField()
-    provider = models.CharField(max_length=150)
-    file_path = models.CharField(max_length=255)
-    ocr_data = models.JSONField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Relación con el usuario
+    billing_period_start = models.DateField()  # Fecha de inicio del período de facturación
+    billing_period_end = models.DateField()  # Fecha de fin del período de facturación
+    price_per_kwh = models.DecimalField(max_digits=10, decimal_places=4)  # Precio por kWh
+    data = models.JSONField()  # Datos JSON (por ejemplo, OCR o metadatos)
+    created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación
+    updated_at = models.DateTimeField(auto_now=True)  # Fecha de última actualización
 
     def __str__(self):
-        return f"Factura {self.invoice_id} - Usuario: {self.user.fullname}"
+        return f"Invoice {self.id} - User: {self.user.fullname}"
+
 
 
 # Esta tabla creemos que no va... ya que serviria para refistrar mediciones que es algo que la app ni la empresa hacen de momento.
+# class Measurement(models.Model):
+#     measurement_id = models.AutoField(primary_key=True)
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     date = models.DateTimeField()
+#     value = models.DecimalField(max_digits=10, decimal_places=2)
+#     type = models.CharField(max_length=100)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     def __str__(self):
+#         return f"Medición {self.measurement_id} - Usuario: {self.user.fullname}"
+
 class Measurement(models.Model):
-    measurement_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    date = models.DateTimeField()
-    value = models.DecimalField(max_digits=10, decimal_places=2)
-    type = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Relación con el usuario
+    date = models.DateField()  # Fecha de la medición
+    value = models.DecimalField(max_digits=10, decimal_places=2)  # Valor de la medición (kWh, por ejemplo)
+    data = models.JSONField()  # Datos adicionales en formato JSON
+    created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación
+    updated_at = models.DateTimeField(auto_now=True)  # Fecha de última actualización
 
     def __str__(self):
-        return f"Medición {self.measurement_id} - Usuario: {self.user.fullname}"
+        return f"Measurement {self.id} - User: {self.user.fullname} - Date: {self.date}"
+
 
 
 class Notification(models.Model):
@@ -110,16 +138,34 @@ class NotificationSettings(models.Model):
         return f"Configuración de Notificación {self.type} - Usuario: {self.user.fullname}"
 
 
+# class InvoiceComparison(models.Model):
+#     comparison_id = models.AutoField(primary_key=True)
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     invoice1 = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='comparison_invoice1')
+#     invoice2 = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='comparison_invoice2')
+#     comparison_date = models.DateTimeField()
+#     comparison_result = models.JSONField()
+
+#     def __str__(self):
+#         return f"Comparación {self.comparison_id} - Usuario: {self.user.fullname}"
+
 class InvoiceComparison(models.Model):
-    comparison_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    invoice1 = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='comparison_invoice1')
-    invoice2 = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='comparison_invoice2')
-    comparison_date = models.DateTimeField()
-    comparison_result = models.JSONField()
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Relación con el usuario
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)  # Factura relacionada
+    measurement = models.ForeignKey(Measurement, on_delete=models.CASCADE)  # Medición relacionada
+    comparison_date = models.DateField()  # Fecha de comparación, derivada del período de consumo de la factura
+    comparison_results = models.JSONField()  # Resultados de comparación
+
+    def save(self, *args, **kwargs):
+        # Extraer la fecha del período de consumo de la factura al guardar
+        if self.invoice:
+            self.comparison_date = self.invoice.billing_period_start  # Ajustar según la lógica
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Comparación {self.comparison_id} - Usuario: {self.user.fullname}"
+        return f"Comparison {self.id} - User: {self.user.fullname} - Invoice: {self.invoice.id}"
+
     
 
 class MiLuzBase(models.Model):

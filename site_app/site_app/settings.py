@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -115,6 +116,11 @@ DATABASES = {
         'PORT': int(os.environ['DB_PORT']),
     }
 }
+
+
+print(os.environ.get('DB_NAME'))
+print(os.environ.get('DB_USER'))
+print(os.environ.get('DB_HOST'))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
