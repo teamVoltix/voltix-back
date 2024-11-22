@@ -156,6 +156,7 @@ class InvoiceComparison(models.Model):
     measurement = models.ForeignKey(Measurement, on_delete=models.CASCADE)  # Medición relacionada
     comparison_date = models.DateField()  # Fecha de comparación, derivada del período de consumo de la factura
     comparison_results = models.JSONField()  # Resultados de comparación
+    is_comparison_valid = models.BooleanField(default=True)  # Nuevo campo
 
     def save(self, *args, **kwargs):
         # Extraer la fecha del período de consumo de la factura al guardar
