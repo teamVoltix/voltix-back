@@ -99,21 +99,49 @@ class ProfileAdmin(admin.ModelAdmin):
 
 admin.site.register(Profile, ProfileAdmin)
 
+# class InvoiceAdmin(admin.ModelAdmin):
+#     fields = ['invoice_id', 'user', 'upload_date', 'amount_due', 'due_date', 'provider', 'file_path', 'ocr_data', 'created_at', 'updated_at']
+#     list_display = ['invoice_id', 'user', 'upload_date', 'amount_due', 'due_date', 'provider', 'created_at', 'updated_at']
+#     search_fields = ['user__dni', 'user__fullname', 'provider']
+#     list_filter = ['due_date', 'upload_date']
+#     readonly_fields = ['created_at', 'updated_at']
+
+# admin.site.register(Invoice, InvoiceAdmin)
+
 class InvoiceAdmin(admin.ModelAdmin):
-    fields = ['invoice_id', 'user', 'upload_date', 'amount_due', 'due_date', 'provider', 'file_path', 'ocr_data', 'created_at', 'updated_at']
-    list_display = ['invoice_id', 'user', 'upload_date', 'amount_due', 'due_date', 'provider', 'created_at', 'updated_at']
-    search_fields = ['user__dni', 'user__fullname', 'provider']
-    list_filter = ['due_date', 'upload_date']
+    fields = [
+        'id', 'user', 'billing_period_start', 'billing_period_end', 
+        'price_per_kwh', 'data', 'created_at', 'updated_at'
+    ]
+    list_display = [
+        'id', 'user', 'billing_period_start', 'billing_period_end', 
+        'price_per_kwh', 'created_at', 'updated_at'
+    ]
+    search_fields = ['user__dni', 'user__fullname']
+    list_filter = ['billing_period_start', 'billing_period_end']
     readonly_fields = ['created_at', 'updated_at']
 
 admin.site.register(Invoice, InvoiceAdmin)
 
+# class MeasurementAdmin(admin.ModelAdmin):
+#     fields = ['measurement_id', 'user', 'date', 'value', 'type', 'created_at', 'updated_at']
+#     list_display = ['measurement_id', 'user', 'date', 'value', 'type', 'created_at', 'updated_at']
+#     readonly_fields = ['created_at', 'updated_at']
+
+# admin.site.register(Measurement, MeasurementAdmin)
+
 class MeasurementAdmin(admin.ModelAdmin):
-    fields = ['measurement_id', 'user', 'date', 'value', 'type', 'created_at', 'updated_at']
-    list_display = ['measurement_id', 'user', 'date', 'value', 'type', 'created_at', 'updated_at']
+    fields = [
+        'id', 'user', 'date', 'value', 'data', 
+        'created_at', 'updated_at'
+    ]
+    list_display = [
+        'id', 'user', 'date', 'value', 'created_at', 'updated_at'
+    ]
     readonly_fields = ['created_at', 'updated_at']
 
 admin.site.register(Measurement, MeasurementAdmin)
+
 
 class NotificationAdmin(admin.ModelAdmin):
     fields = ['notification_id', 'user', 'message', 'is_read', 'created_at']
@@ -122,9 +150,22 @@ class NotificationAdmin(admin.ModelAdmin):
 
 admin.site.register(Notification, NotificationAdmin)
 
+# class InvoiceComparisonAdmin(admin.ModelAdmin):
+#     fields = ['id', 'user', 'invoice', 'comparison_date', 'comparison_result']
+#     list_display = ['comparison_id', 'user', 'invoice1', 'invoice2', 'comparison_date', 'comparison_result']
+#     readonly_fields = ['comparison_date']
+
+# admin.site.register(InvoiceComparison, InvoiceComparisonAdmin)
+
 class InvoiceComparisonAdmin(admin.ModelAdmin):
-    fields = ['comparison_id', 'user', 'invoice1', 'invoice2', 'comparison_date', 'comparison_result']
-    list_display = ['comparison_id', 'user', 'invoice1', 'invoice2', 'comparison_date', 'comparison_result']
+    fields = [
+        'id', 'user', 'invoice', 'measurement', 
+        'comparison_date', 'comparison_results', 'is_comparison_valid'
+    ]
+    list_display = [
+        'id', 'user', 'invoice', 'measurement', 
+        'comparison_date', 'is_comparison_valid'
+    ]
     readonly_fields = ['comparison_date']
 
 admin.site.register(InvoiceComparison, InvoiceComparisonAdmin)
