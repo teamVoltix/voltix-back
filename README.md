@@ -60,7 +60,9 @@ Primero, crea y activa un entorno virtual para gestionar las dependencias del pr
    #Ejecutar el Servidor de Desarrollo
     python3 site_app/manage.py runserver
 
-
+    # para instalar requiremetns:
+    pip install -r requirements.txt
+    
     #para renovar requirements
     pip freeze > requirements.txt
 

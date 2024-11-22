@@ -1,0 +1,14 @@
+{
+    "name": "My Dev Container",
+    "build": {
+      "dockerfile": "Dockerfile",
+      "context": ".."
+    },
+    "workspaceFolder": "/app",
+    "extensions": [
+      "ms-vscode-remote.remote-containers"
+    ],
+    "settings": {
+      "terminal.integrated.shell.linux": "/bin/bash"
+    }
+  }
