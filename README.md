@@ -100,3 +100,8 @@ A continuación, se presenta una tabla con comandos útiles para explorar y admi
 - **Documentación Oficial:** Consulta la [documentación oficial de PostgreSQL](https://www.postgresql.org/docs/current/app-psql.html) para obtener una referencia más completa.
 
 Este conjunto de comandos puede facilitar tareas como explorar bases de datos, analizar estructuras de tablas, y obtener detalles sobre roles y permisos.
+
+
+# Cuando añades una medición en data_measurements.json, hay que correr el siguiente comando para que se suba la medición a la base de datos:
+
+python site_app/measurements/scripts/load_measurements.py
