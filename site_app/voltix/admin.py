@@ -108,19 +108,30 @@ admin.site.register(Profile, ProfileAdmin)
 
 # admin.site.register(Invoice, InvoiceAdmin)
 
+
 class InvoiceAdmin(admin.ModelAdmin):
+    # Fields to display in the admin form
     fields = [
         'id', 'user', 'billing_period_start', 'billing_period_end', 
-        'price_per_kwh', 'data', 'created_at', 'updated_at'
+        'data', 'created_at', 'updated_at'  # Removed 'price_per_kwh'
     ]
+    
+    # Fields to display in the admin list view
     list_display = [
         'id', 'user', 'billing_period_start', 'billing_period_end', 
-        'price_per_kwh', 'created_at', 'updated_at'
+        'created_at', 'updated_at'  # Removed 'price_per_kwh'
     ]
+    
+    # Fields to enable searching in the admin
     search_fields = ['user__dni', 'user__fullname']
+    
+    # Fields to enable filtering in the admin
     list_filter = ['billing_period_start', 'billing_period_end']
+    
+    # Fields that are read-only in the admin form
     readonly_fields = ['created_at', 'updated_at']
 
+# Register the admin class with the Invoice model
 admin.site.register(Invoice, InvoiceAdmin)
 
 # class MeasurementAdmin(admin.ModelAdmin):
@@ -131,13 +142,18 @@ admin.site.register(Invoice, InvoiceAdmin)
 # admin.site.register(Measurement, MeasurementAdmin)
 
 class MeasurementAdmin(admin.ModelAdmin):
+    # Fields to display on the admin form
     fields = [
-        'id', 'user', 'date', 'value', 'data', 
+        'id', 'user', 'measurement_start', 'measurement_end', 'data',
         'created_at', 'updated_at'
     ]
+    
+    # Fields to display in the admin list view
     list_display = [
-        'id', 'user', 'date', 'value', 'created_at', 'updated_at'
+        'id', 'user', 'measurement_start', 'measurement_end', 'created_at', 'updated_at'
     ]
+    
+    # Fields that are read-only in the admin form
     readonly_fields = ['created_at', 'updated_at']
 
 admin.site.register(Measurement, MeasurementAdmin)
@@ -158,16 +174,23 @@ admin.site.register(Notification, NotificationAdmin)
 # admin.site.register(InvoiceComparison, InvoiceComparisonAdmin)
 
 class InvoiceComparisonAdmin(admin.ModelAdmin):
+    # Fields to display in the admin form
     fields = [
         'id', 'user', 'invoice', 'measurement', 
-        'comparison_date', 'comparison_results', 'is_comparison_valid'
+        'comparison_results', 'is_comparison_valid', 
+        'created_at', 'updated_at'  # Removed 'comparison_date'
     ]
+    
+    # Fields to display in the admin list view
     list_display = [
         'id', 'user', 'invoice', 'measurement', 
-        'comparison_date', 'is_comparison_valid'
+        'is_comparison_valid', 'created_at', 'updated_at'  # Removed 'comparison_date'
     ]
-    readonly_fields = ['comparison_date']
+    
+    # Fields that are read-only in the admin form
+    readonly_fields = ['created_at', 'updated_at']  # Removed 'comparison_date'
 
+# Register the admin class with the InvoiceComparison model
 admin.site.register(InvoiceComparison, InvoiceComparisonAdmin)
 
 class MiLuzBaseAdmin(admin.ModelAdmin):

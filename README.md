@@ -49,7 +49,8 @@ Primero, crea y activa un entorno virtual para gestionar las dependencias del pr
 
     #Ruta de nuestra base de datos
     #Conectar con nuestra base de datos, con su terminal, <PASSWORD> que tenemos en archivo .env
-    psql 'postgres://avnadmin:<PASSWORD>@miluz-i004-voltix-back.e.aivencloud.com:22219/defaultdb?sslmode=require'
+    psql 'postgres://avnadmin:AVNS_KMlR6yxJcuqiTSYfkny@miluz-i004-voltix-back.e.aivencloud.com:22219/defaultdb?sslmode=require'
+    
     
     
         #Para listar todas las bases de datos: 

@@ -79,7 +79,7 @@ class Invoice(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Relación con el usuario
     billing_period_start = models.DateField()  # Fecha de inicio del período de facturación
     billing_period_end = models.DateField()  # Fecha de fin del período de facturación
-    price_per_kwh = models.DecimalField(max_digits=10, decimal_places=4)  # Precio por kWh
+    # price_per_kwh = models.DecimalField(max_digits=10, decimal_places=4)  # Precio por kWh
     data = models.JSONField()  # Datos JSON (por ejemplo, OCR o metadatos)
     created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación
     updated_at = models.DateTimeField(auto_now=True)  # Fecha de última actualización
@@ -105,8 +105,9 @@ class Invoice(models.Model):
 class Measurement(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Relación con el usuario
-    date = models.DateField()  # Fecha de la medición
-    value = models.DecimalField(max_digits=10, decimal_places=2)  # Valor de la medición (kWh, por ejemplo)
+    measurement_start = models.DateTimeField(null=True, blank=True) # Fecha y hora de inicio
+    measurement_end = models.DateTimeField(null=True, blank=True) # Fecha y hora de inicio
+    # value = models.DecimalField(max_digits=10, decimal_places=2)  # Valor de la medición (kWh, por ejemplo)
     data = models.JSONField()  # Datos adicionales en formato JSON
     created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación
     updated_at = models.DateTimeField(auto_now=True)  # Fecha de última actualización
@@ -154,15 +155,18 @@ class InvoiceComparison(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Relación con el usuario
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)  # Factura relacionada
     measurement = models.ForeignKey(Measurement, on_delete=models.CASCADE)  # Medición relacionada
-    comparison_date = models.DateField()  # Fecha de comparación, derivada del período de consumo de la factura
+    # comparison_date = models.DateField()  # Fecha de comparación, derivada del período de consumo de la factura
     comparison_results = models.JSONField()  # Resultados de comparación
-    is_comparison_valid = models.BooleanField(default=True)  # Nuevo campo
+    is_comparison_valid = models.BooleanField(default=True) # Nuevo campo
+    created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación
+    updated_at = models.DateTimeField(auto_now=True)  # Fecha de última actualización
 
-    def save(self, *args, **kwargs):
-        # Extraer la fecha del período de consumo de la factura al guardar
-        if self.invoice:
-            self.comparison_date = self.invoice.billing_period_start  # Ajustar según la lógica
-        super().save(*args, **kwargs)
+
+    # def save(self, *args, **kwargs):
+    #     # Extraer la fecha del período de consumo de la factura al guardar
+    #     if self.invoice:
+    #         self.comparison_date = self.invoice.billing_period_start  # Ajustar según la lógica
+    #     super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Comparison {self.id} - User: {self.user.fullname} - Invoice: {self.invoice.id}"
