@@ -113,7 +113,7 @@ class Measurement(models.Model):
     updated_at = models.DateTimeField(auto_now=True)  # Fecha de última actualización
 
     def __str__(self):
-        return f"Measurement {self.id} - User: {self.user.fullname} - Date: {self.date}"
+        return f"Measurement {self.id} - User: {self.user.fullname} - Start: {self.measurement_start} - End: {self.measurement_end}"
 
 
 
