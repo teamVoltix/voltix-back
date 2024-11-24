@@ -72,11 +72,15 @@ admin.site.register(Notification, NotificationAdmin)
 
 class InvoiceComparisonAdmin(admin.ModelAdmin):
     # Fields to display in the admin form
-    fields = ['id', 'user', 'invoice', 'measurement','comparison_results', 'is_comparison_valid','created_at', 'updated_at']
-    list_display = ['id', 'user', 'invoice', 'measurement','is_comparison_valid', 'created_at', 'updated_at']
+    fields = ['id', 'user', 'invoice', 'measurement', 'comparison_results', 'is_comparison_valid', 'created_at', 'updated_at']
+    list_display = ['id', 'user', 'invoice', 'measurement', 'display_comparison_results', 'is_comparison_valid', 'created_at', 'updated_at']
     readonly_fields = ['created_at', 'updated_at']
 
-# Register the admin class with the InvoiceComparison model
+    def display_comparison_results(self, obj):
+        return format_json_field(obj, 'comparison_results')
+
+    display_comparison_results.short_description = "Comparison Results (JSON)"
+
 admin.site.register(InvoiceComparison, InvoiceComparisonAdmin)
 
 class MiLuzBaseAdmin(admin.ModelAdmin):
