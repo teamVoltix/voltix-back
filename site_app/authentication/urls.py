@@ -12,9 +12,9 @@ from .views import protected_view, logout_view, change_password_view, password_r
 
 
 urlpatterns = [
-    path("", views.index, name="index"),
+    #path("", views.index, name="index"),
     # path('register/', views.registro_usuario, name='registro_usuario'),
-    path('register/', UserRegistrationView.as_view(), name='register'),
+    path('', UserRegistrationView.as_view(), name='register'), #hace con que sea la primera vista
     path('login/', LoginView.as_view(), name='login'),
 
     # path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
