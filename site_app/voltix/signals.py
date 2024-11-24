@@ -4,8 +4,9 @@ from .models import User, Profile
 from datetime import date  # Importamos para usar una fecha predeterminada
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, kwargs):
+def create_user_profile(sender, instance, created, **kwargs):
     if created:
+        print(f"Creating profile for user {instance.id}")
         # Crear un perfil automáticamente con valores predeterminados
         Profile.objects.create(
             user=instance,
@@ -16,6 +17,6 @@ def create_user_profile(sender, instance, created, kwargs):
         )
 
 @receiver(post_save, sender=User)
-def save_user_profile(sender, instance, kwargs):
+def save_user_profile(sender, instance, **kwargs):
     # Guardar automáticamente el perfil asociado cuando el usuario se guarda
     instance.profile.save()
