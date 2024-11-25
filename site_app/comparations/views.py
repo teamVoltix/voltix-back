@@ -76,11 +76,13 @@ def compare_invoice_and_measurement(invoice, measurement):
         detail["difference"] == 0 for detail in consumption_details.values()
     ) and billing_period == "Matches"
 
-    # Retornar los resultados como un JsonResponse con el campo is_comparison_valid y los totales estimados
-    return JsonResponse({
+    # Crear el JSON de respuesta
+    response_data = {
         "billing_period": billing_period,
         "consumption_details": consumption_details,
-        "is_comparison_valid": is_comparison_valid,
         "total_estimated": round(total_estimated, 2),
         "total_estimated_with_time_of_use": round(total_estimated_with_time_of_use, 2),
-    })
+    }
+
+    # Devolver el JsonResponse y el valor booleano is_comparison_valid como una tupla
+    return JsonResponse(response_data), is_comparison_valid
