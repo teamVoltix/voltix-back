@@ -31,10 +31,10 @@ python3 site_app/manage.py migrate
 Como crear un superusuario
 Superuser Data
 
-    DNI: B7654321A
-    Fullname: Voltix
-    Email: voltix@igorwker.com
-    Password: 1234567@
+    DNI: <superuser DNI>
+    Fullname: <name>
+    Email: <email>
+    Password: <password>
     
     1.python manage.py shell
 2. enter script
@@ -43,10 +43,10 @@ from voltix.models import User
 
 # Create a superuser with the provided data
 superuser = User.objects.create_superuser(
-    dni="B7654321A",
-    fullname="Voltix",
-    email="voltix@igorwker.com",
-    password="1234567@"
+    dni="<superuser DNI>",
+    fullname="<name>",
+    email="<email>",
+    password="<password>"
 )
 
 # Print confirmation
