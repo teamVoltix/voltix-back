@@ -3,19 +3,20 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from drf_yasg import openapi # cambios
 from voltix.models import Measurement
+from .schemas import measurement_schema
 
 # Esquema de respuesta para una medición
-measurement_schema = openapi.Schema(
-    type=openapi.TYPE_OBJECT,
-    properties={
-        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID de la medición'),
-        'date': openapi.Schema(type=openapi.TYPE_STRING, format='date', description='Fecha de la medición'),
-        'value': openapi.Schema(type=openapi.TYPE_NUMBER, description='Valor de la medición'),
-        'data': openapi.Schema(type=openapi.TYPE_OBJECT, description='Datos adicionales en formato JSON'),
-    }
-)
+# measurement_schema = openapi.Schema(
+#     type=openapi.TYPE_OBJECT,
+#     properties={
+#         'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID de la medición'),
+#         'date': openapi.Schema(type=openapi.TYPE_STRING, format='date', description='Fecha de la medición'),
+#         'value': openapi.Schema(type=openapi.TYPE_NUMBER, description='Valor de la medición'),
+#         'data': openapi.Schema(type=openapi.TYPE_OBJECT, description='Datos adicionales en formato JSON'),
+#     }
+# )
 
 def index(request):
     return HttpResponse("MEASUREMENTS YEY")
@@ -51,7 +52,7 @@ def get_user_measurements(request):
     """
     try:
         user = request.user 
-        measurements = Measurement.objects.filter(user=user).values('id', 'date', 'value', 'data')
+        measurements = Measurement.objects.filter(user=user).values('id', 'measurement_start', 'measurement_end', 'data', 'created_at', 'updated_at')
         return Response({"user": user.fullname, "measurements": list(measurements)})
     except Exception as e:
         return Response({"error": str(e)}, status=500)
@@ -85,7 +86,8 @@ def get_all_measurements(request):
     Retorna todas las mediciones existentes en la base de datos.
     """
     try:
-        measurements = Measurement.objects.all().values('id', 'user__fullname', 'date', 'value', 'data')
+        measurements = Measurement.objects.all().values('id', 'user__fullname', 'measurement_start', 'measurement_end', 'data', 'created_at', 'updated_at'
+)
         return Response({"measurements": list(measurements)})
     except Exception as e:
         return Response({"error": str(e)}, status=500)

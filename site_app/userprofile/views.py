@@ -7,14 +7,11 @@ from voltix.models import Profile
 from datetime import date
 from django.core.exceptions import ValidationError
 
-# Endpoint para obtener el perfil del usuario (GET)
+# Swagger imports
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from voltix.models import Profile
 
+# Endpoint para obtener el perfil del usuario (GET)
 @swagger_auto_schema(
     method='get',
     operation_summary="Retrieve User Profile",
@@ -69,14 +66,6 @@ def profile_view(request):
     return Response(profile_data)
 
 # Endpoint para actualizar parcialmente el perfil del usuario (PATCH)
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-from voltix.models import Profile
-
 @swagger_auto_schema(
     method='patch',
     operation_summary="Update User Profile",
@@ -151,6 +140,7 @@ from voltix.models import Profile
         ),
     }
 )
+
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def patch_profile(request):
