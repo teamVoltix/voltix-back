@@ -1,14 +1,20 @@
 from django.http import JsonResponse
+from datetime import datetime
 
 def compare_invoice_and_measurement(invoice, measurement):
     # Comparar el período de facturación
-    billing_period = (
+    billing_period_matches = (
         "Matches" if invoice.billing_period_start == measurement.data["billing_period"]["start"]
         and invoice.billing_period_end == measurement.data["billing_period"]["end"]
         else "Does not match"
     )
 
-    # Comparar los detalles del consumo
+    # Calcular los días facturados
+    invoice_start_date = datetime.strptime(invoice.billing_period_start, "%Y-%m-%d")
+    invoice_end_date = datetime.strptime(invoice.billing_period_end, "%Y-%m-%d")
+    days_billed = (invoice_end_date - invoice_start_date).days + 1  # Incluye el día final
+
+    # Detalles del consumo
     invoice_consumption = invoice.data["consumption_details"]
     measurement_consumption = measurement.data["consumption_details"]
 
@@ -17,16 +23,19 @@ def compare_invoice_and_measurement(invoice, measurement):
             "invoice": invoice_consumption["total_consumption"],
             "measurement": measurement_consumption["total_consumption"],
             "difference": round(invoice_consumption["total_consumption"] - measurement_consumption["total_consumption"], 2),
+            "matches": invoice_consumption["total_consumption"] == measurement_consumption["total_consumption"]
         },
         "peak_consumption": {
             "invoice": invoice_consumption["peak_consumption"],
             "measurement": measurement_consumption["peak_consumption"],
             "difference": round(invoice_consumption["peak_consumption"] - measurement_consumption["peak_consumption"], 2),
+            "matches": invoice_consumption["peak_consumption"] == measurement_consumption["peak_consumption"]
         },
-        "off_peak_consumption": {  # Comparación del consumo en horario valle
+        "off_peak_consumption": {
             "invoice": invoice_consumption["off_peak_consumption"],
             "measurement": measurement_consumption["off_peak_consumption"],
             "difference": round(invoice_consumption["off_peak_consumption"] - measurement_consumption["off_peak_consumption"], 2),
+            "matches": invoice_consumption["off_peak_consumption"] == measurement_consumption["off_peak_consumption"]
         },
     }
 
@@ -71,18 +80,27 @@ def compare_invoice_and_measurement(invoice, measurement):
         total_estimated_with_time_of_use = total_estimated
 
     # Evaluar si la comparación es válida
-    # Si alguna de las diferencias no es 0, la comparación no es válida
     is_comparison_valid = all(
-        detail["difference"] == 0 for detail in consumption_details.values()
-    ) and billing_period == "Matches"
+        detail["matches"] for detail in consumption_details.values()
+    ) and billing_period_matches == "Matches"
 
-    # Crear el JSON de respuesta
+    # Crear el JSON de respuesta con los datos adicionales
     response_data = {
-        "billing_period": billing_period,
+        "billing_period": {
+            "status": billing_period_matches,
+            "invoice_start_date": invoice.billing_period_start,
+            "invoice_end_date": invoice.billing_period_end,
+            "measurement_start_date": measurement.data["billing_period"]["start"],
+            "measurement_end_date": measurement.data["billing_period"]["end"],
+            "days_billed": days_billed
+        },
         "consumption_details": consumption_details,
         "total_estimated": round(total_estimated, 2),
         "total_estimated_with_time_of_use": round(total_estimated_with_time_of_use, 2),
+        "total_consumption_kwh": {
+            "invoice": invoice_consumption["total_consumption"],
+            "measurement": measurement_consumption["total_consumption"]
+        }
     }
 
-    # Devolver el JsonResponse y el valor booleano is_comparison_valid como una tupla
     return JsonResponse(response_data), is_comparison_valid
