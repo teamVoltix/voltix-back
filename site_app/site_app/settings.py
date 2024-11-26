@@ -27,7 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ['SECRET_KEY']
 
+# for production we will need to change it
+CORS_ALLOW_ALL_ORIGINS = True
 
+# CORS_ALLOW_HEADERS = ['*']
+# CSRF_TRUSTED_ORIGINS = ['*']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ['DEBUG']
@@ -46,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tesseract',
+    'corsheaders',
 
     #apps nuestras
     'voltix',
@@ -71,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'site_app.urls'
