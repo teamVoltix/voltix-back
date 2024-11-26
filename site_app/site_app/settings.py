@@ -28,10 +28,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ['SECRET_KEY']
 
 # for production we will need to change it
-CORS_ALLOW_ALL_ORIGINS = True
+os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
 
-# CORS_ALLOW_HEADERS = ['*']
-# CSRF_TRUSTED_ORIGINS = ['*']
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "OPTIONS",
+]
+
+CORS_ALLOW_HEADERS = [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+]
+
+
+
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ['DEBUG']
