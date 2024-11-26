@@ -105,13 +105,12 @@ def compare_invoice_and_measurement(request):
         response_data = {
             "billing_period": {
                 "status": billing_period_matches,
-                "invoice_start_date": invoice.billing_period_start,
-                "invoice_end_date": invoice.billing_period_end,
-                "measurement_start_date": measurement.data["billing_period"]["start"],
-                "measurement_end_date": measurement.data["billing_period"]["end"],
+                "invoice_start_date": invoice["billing_period_start"],
+                "invoice_end_date": invoice["billing_period_end"],
+                "measurement_start_date": measurement["data"]["billing_period"]["start"],
+                "measurement_end_date": measurement["data"]["billing_period"]["end"],
                 "days_billed": days_billed
             },
-            #aqui
         "consumption_details": consumption_details,
         "total_estimated": round(total_estimated, 2),
         "total_estimated_with_time_of_use": round(total_estimated_with_time_of_use, 2),
