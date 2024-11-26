@@ -44,6 +44,7 @@ urlpatterns = [
     path('api/profile/', include('userprofile.urls')),
     path('notifications/', include('notifications.urls')),
     path('users/', include('users.urls')),
+    path('comparations/', include('comparations.urls')),
 
     # Rutas de Swagger
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
