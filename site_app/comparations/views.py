@@ -3,9 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
-from datetime import datetime
 from voltix.models import Invoice, Measurement, InvoiceComparison
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -26,8 +24,8 @@ def compare_invoice_and_measurement(request):
             return JsonResponse({"error": "Invoice not found."}, status=404)
 
         # Buscar la medición que coincida con el período de facturación de la factura
-        invoice_start_date = datetime.strptime(invoice.billing_period_start, "%Y-%m-%d")
-        invoice_end_date = datetime.strptime(invoice.billing_period_end, "%Y-%m-%d")
+        invoice_start_date = invoice.billing_period_start  # Es de tipo datetime.date
+        invoice_end_date = invoice.billing_period_end  # Es de tipo datetime.date
 
         # Buscar mediciones que coincidan con el período de facturación
         measurements = Measurement.objects.filter(
@@ -42,46 +40,47 @@ def compare_invoice_and_measurement(request):
         # Supongamos que hay solo una medición que coincide. Si hay más, debes decidir cómo manejarlas.
         measurement = measurements.first()
 
-        # Comparar las fechas de la factura y medición
-        measurement_start_date = datetime.strptime(measurement.measurement_start, "%Y-%m-%d")
-        measurement_end_date = datetime.strptime(measurement.measurement_end, "%Y-%m-%d")
+        # Verificar si existen los detalles de consumo en los datos de la factura y medición
+        invoice_consumption = invoice.data.get("detalles_consumo", None)
+        measurement_consumption = measurement.data.get("consumo_por_franja_horaria", None)
 
-        days_billed = (invoice_end_date - invoice_start_date).days + 1  # Incluye el día final
+        # Si no se encuentran los detalles de consumo en la factura o medición, retornar un error
+        if not invoice_consumption or not measurement_consumption:
+            return JsonResponse({"error": "'detalles_consumo' not found in invoice or measurement."}, status=404)
 
-        # Verificar si las fechas coinciden
-        dates_match = (
-            invoice.billing_period_start == measurement.measurement_start and
-            invoice.billing_period_end == measurement.measurement_end
-        )
+        # Asegurarse de que no haya valores None, reemplazarlos con 0
+        consumo_total_invoice = invoice_consumption.get("consumo_total", 0) or 0
+        consumo_punta_invoice = invoice_consumption.get("consumo_punta", 0) or 0
+        consumo_valle_invoice = invoice_consumption.get("consumo_valle", 0) or 0
+        
+        consumo_total_measurement = measurement_consumption.get("consumo_total", 0) or 0
+        consumo_punta_measurement = measurement_consumption.get("punta", 0) or 0
+        consumo_valle_measurement = measurement_consumption.get("valle", 0) or 0
 
         # Detalles del consumo
-        invoice_consumption = invoice.data["consumption_details"]
-        measurement_consumption = measurement.data["consumption_details"]
-
-        # Comparar los detalles de consumo
         consumption_details = {
             "total_consumption_kwh": {
-                "invoice": invoice_consumption["total_consumption"],
-                "measurement": measurement_consumption["total_consumption"],
-                "difference": round(invoice_consumption["total_consumption"] - measurement_consumption["total_consumption"], 2),
-                "matches": invoice_consumption["total_consumption"] == measurement_consumption["total_consumption"]
+                "invoice": consumo_total_invoice,
+                "measurement": consumo_total_measurement,
+                "difference": round(consumo_total_invoice - consumo_total_measurement, 2),
+                "matches": consumo_total_invoice == consumo_total_measurement
             },
             "peak_consumption": {
-                "invoice": invoice_consumption["peak_consumption"],
-                "measurement": measurement_consumption["peak_consumption"],
-                "difference": round(invoice_consumption["peak_consumption"] - measurement_consumption["peak_consumption"], 2),
-                "matches": invoice_consumption["peak_consumption"] == measurement_consumption["peak_consumption"]
+                "invoice": consumo_punta_invoice,
+                "measurement": consumo_punta_measurement,
+                "difference": round(consumo_punta_invoice - consumo_punta_measurement, 2),
+                "matches": consumo_punta_invoice == consumo_punta_measurement
             },
             "off_peak_consumption": {
-                "invoice": invoice_consumption["off_peak_consumption"],
-                "measurement": measurement_consumption["off_peak_consumption"],
-                "difference": round(invoice_consumption["off_peak_consumption"] - measurement_consumption["off_peak_consumption"], 2),
-                "matches": invoice_consumption["off_peak_consumption"] == measurement_consumption["off_peak_consumption"]
+                "invoice": consumo_valle_invoice,
+                "measurement": consumo_valle_measurement,
+                "difference": round(consumo_valle_invoice - consumo_valle_measurement, 2),
+                "matches": consumo_valle_invoice == consumo_valle_measurement
             }
         }
 
         # Calcular el importe total estimado para el consumo total (basado en medición)
-        total_consumption_kWh = measurement_consumption["total_consumption"]
+        total_consumption_kWh = consumo_total_measurement
         price_per_kWh = 0.1121  # Precio por kWh
         electricity_tax_rate = 0.051127  # Tasa del impuesto sobre la electricidad
         vat_rate = 0.21  # IVA al 21%
@@ -93,11 +92,11 @@ def compare_invoice_and_measurement(request):
         total_to_pay = subtotal + vat
 
         # Si hay discriminación horaria, calcular el total estimado para cada franja horaria
-        if "peak_consumption" in measurement_consumption and "off_peak_consumption" in measurement_consumption:
+        if "punta" in measurement_consumption and "valle" in measurement_consumption:
             peak_price = 0.15
             off_peak_price = 0.10
-            peak_consumption_kWh = measurement_consumption["peak_consumption"]
-            off_peak_consumption_kWh = measurement_consumption["off_peak_consumption"]
+            peak_consumption_kWh = consumo_punta_measurement
+            off_peak_consumption_kWh = consumo_valle_measurement
 
             peak_energy_term = peak_consumption_kWh * peak_price
             off_peak_energy_term = off_peak_consumption_kWh * off_peak_price
@@ -111,21 +110,24 @@ def compare_invoice_and_measurement(request):
             total_estimated_with_time_of_use = total_to_pay
 
         # Comparar el total a pagar entre la factura y la medición
-        total_to_pay_matches = invoice_consumption["total_to_pay"] == round(total_to_pay, 2)
+        total_to_pay_matches = invoice_consumption.get("desglose_cargos", {}).get("total_a_pagar", 0) == round(total_to_pay, 2)
+
+        # Comparar las fechas (para 'dates_match')
+        dates_match = invoice_start_date == measurement.measurement_start and invoice_end_date == measurement.measurement_end
 
         # Crear el JSON de respuesta con los datos adicionales
         response_data = {
             "billing_period": {
-                "invoice_start_date": invoice.billing_period_start,
-                "invoice_end_date": invoice.billing_period_end,
-                "measurement_start_date": measurement.measurement_start, 
-                "measurement_end_date": measurement.measurement_end, 
-                "days_billed": days_billed,
+                "invoice_start_date": invoice.billing_period_start.strftime('%Y-%m-%d'),  # Convertir a string
+                "invoice_end_date": invoice.billing_period_end.strftime('%Y-%m-%d'),  # Convertir a string
+                "measurement_start_date": measurement.measurement_start.strftime('%Y-%m-%d'),  # Convertir a string
+                "measurement_end_date": measurement.measurement_end.strftime('%Y-%m-%d'),  # Convertir a string
+                "days_billed": (invoice_end_date - invoice_start_date).days + 1,
                 "matches": dates_match
             },
             "consumption_details": consumption_details,
             "total_to_pay": {
-                "invoice": invoice_consumption["total_to_pay"],  # Valor tomado de la factura
+                "invoice": invoice_consumption.get("desglose_cargos", {}).get("total_a_pagar", 0),  # Valor tomado de la factura
                 "measurement_calculation": round(total_to_pay, 2),  # Valor calculado a partir de mediciones
                 "matches": total_to_pay_matches
             },
