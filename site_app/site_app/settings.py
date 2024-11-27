@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ['SECRET_KEY']
 
 # for production we will need to change it
-CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
+# CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
 
 CORS_ALLOW_METHODS = [
     "GET",
@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'notifications',
     'userprofile',
     'users',
+    'pdf_measurement',
 
    #apps externas 
     'rest_framework',

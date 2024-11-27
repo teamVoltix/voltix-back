@@ -1,14 +1,33 @@
 {
-    "name": "My Dev Container",
-    "build": {
-      "dockerfile": "Dockerfile",
-      "context": ".."
-    },
-    "workspaceFolder": "/app",
-    "extensions": [
-      "ms-vscode-remote.remote-containers"
-    ],
-    "settings": {
-      "terminal.integrated.shell.linux": "/bin/bash"
-    }
+  "name": "Voltix Backend Dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/usr/share/app",
+  "extensions": [
+    "ms-python.python",
+    "esbenp.prettier-vscode",
+    "ms-azuretools.vscode-docker"
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "/usr/local/bin/python",
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "black",
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "postCreateCommand": "pip install -r requirements.txt",
+  "forwardPorts": [8000],
+  "remoteEnv": {
+    "DJANGO_SUPERUSER_USERNAME": "${localEnv:DJ_USERNAME}",
+    "DJANGO_SUPERUSER_PASSWORD": "${localEnv:DJ_PASSWORD}",
+    "DJANGO_SUPERUSER_EMAIL": "${localEnv:DJ_EMAIL}",
+    "DB_NAME": "${localEnv:DB_NAME}",
+    "DB_HOST": "${localEnv:DB_HOST}",
+    "DB_PORT": "${localEnv:DB_PORT}",
+    "DB_USER": "${localEnv:DB_USER}",
+    "SECRET_KEY": "${localEnv:SECRET_KEY}",
+    "DATABASE_PASSWORD": "${localEnv:DATABASE_PASSWORD}"
   }
+}
