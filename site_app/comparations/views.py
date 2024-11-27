@@ -13,36 +13,52 @@ def compare_invoice_and_measurement(request):
     try:
         # Obtener datos del cuerpo de la solicitud
         data = request.data
-        invoice = data.get("invoice")
-        measurement = data.get("measurement")
+        invoice_id = data.get("invoice")  # ID de la factura (invoice)
+        
+        # Validar si el 'invoice' está presente
+        if not invoice_id:
+            return Response({"error": "'invoice' is required."}, status=400)
 
-        # Validar si los datos requeridos están presentes
-        if not invoice or not measurement:
-            return Response({"error": "Incomplete data. 'invoice' and 'measurement' are required."}, status=400)
+        # Buscar el objeto Invoice
+        try:
+            invoice = Invoice.objects.get(id=invoice_id)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Invoice not found."}, status=404)
 
-        # Buscar medición con las mismas fechas de inicio y fin
-        measurement = Measurement.objects.filter(
-            measurement_start__gte=invoice.billing_period_start,
-            measurement_end__lte=invoice.billing_period_end
-        ).first()
-
-
-        if not measurement:
-            return JsonResponse({"error": "No matching measurement found for the provided billing period."}, status=404)
-
-        # Calcular los días facturados
+        # Buscar la medición que coincida con el período de facturación de la factura
         invoice_start_date = datetime.strptime(invoice.billing_period_start, "%Y-%m-%d")
         invoice_end_date = datetime.strptime(invoice.billing_period_end, "%Y-%m-%d")
+
+        # Buscar mediciones que coincidan con el período de facturación
+        measurements = Measurement.objects.filter(
+            measurement_start__lte=invoice_end_date,
+            measurement_end__gte=invoice_start_date
+        )
+        
+        # Si no se encuentra ninguna medición que coincida con las fechas, retornar un error
+        if not measurements.exists():
+            return JsonResponse({"error": "No matching measurements found."}, status=404)
+
+        # Supongamos que hay solo una medición que coincide. Si hay más, debes decidir cómo manejarlas.
+        measurement = measurements.first()
+
+        # Comparar las fechas de la factura y medición
+        measurement_start_date = datetime.strptime(measurement.measurement_start, "%Y-%m-%d")
+        measurement_end_date = datetime.strptime(measurement.measurement_end, "%Y-%m-%d")
+
         days_billed = (invoice_end_date - invoice_start_date).days + 1  # Incluye el día final
+
+        # Verificar si las fechas coinciden
+        dates_match = (
+            invoice.billing_period_start == measurement.measurement_start and
+            invoice.billing_period_end == measurement.measurement_end
+        )
 
         # Detalles del consumo
         invoice_consumption = invoice.data["consumption_details"]
         measurement_consumption = measurement.data["consumption_details"]
 
-        # Inicializamos el valor general como True
-        general_match = True
-
-        # Consumptions details: Comparar facturación y medición
+        # Comparar los detalles de consumo
         consumption_details = {
             "total_consumption_kwh": {
                 "invoice": invoice_consumption["total_consumption"],
@@ -61,15 +77,10 @@ def compare_invoice_and_measurement(request):
                 "measurement": measurement_consumption["off_peak_consumption"],
                 "difference": round(invoice_consumption["off_peak_consumption"] - measurement_consumption["off_peak_consumption"], 2),
                 "matches": invoice_consumption["off_peak_consumption"] == measurement_consumption["off_peak_consumption"]
-            },
+            }
         }
 
-        # Verificar si alguno de los `matches` es False y actualizar `general_match`
-        for key, value in consumption_details.items():
-            if not value["matches"]:
-                general_match = False
-
-        # Calcular el importe estimado para el consumo total (basado en medición)
+        # Calcular el importe total estimado para el consumo total (basado en medición)
         total_consumption_kWh = measurement_consumption["total_consumption"]
         price_per_kWh = 0.1121  # Precio por kWh
         electricity_tax_rate = 0.051127  # Tasa del impuesto sobre la electricidad
@@ -99,9 +110,8 @@ def compare_invoice_and_measurement(request):
         else:
             total_estimated_with_time_of_use = total_to_pay
 
-        # Comparar `total_to_pay` entre la factura y la medición
-        if invoice_consumption["total_to_pay"] != round(total_to_pay, 2):
-            general_match = False
+        # Comparar el total a pagar entre la factura y la medición
+        total_to_pay_matches = invoice_consumption["total_to_pay"] == round(total_to_pay, 2)
 
         # Crear el JSON de respuesta con los datos adicionales
         response_data = {
@@ -111,28 +121,25 @@ def compare_invoice_and_measurement(request):
                 "measurement_start_date": measurement.measurement_start, 
                 "measurement_end_date": measurement.measurement_end, 
                 "days_billed": days_billed,
-                "matches": (
-                    invoice.billing_period_start == measurement.billing_period_start
-                    and invoice.billing_period_end == measurement.billing_period_end
-                )
+                "matches": dates_match
             },
             "consumption_details": consumption_details,
             "total_to_pay": {
                 "invoice": invoice_consumption["total_to_pay"],  # Valor tomado de la factura
                 "measurement_calculation": round(total_to_pay, 2),  # Valor calculado a partir de mediciones
-                "matches": invoice_consumption["total_to_pay"] == round(total_to_pay, 2)
+                "matches": total_to_pay_matches
             },
             "total_estimated_with_time_of_use": round(total_estimated_with_time_of_use, 2),
-            "general_match": general_match  # Este es el nuevo valor booleano general
+            "general_match": all(value["matches"] for value in consumption_details.values()) and total_to_pay_matches and dates_match
         }
+
         # Crear la instancia en InvoiceComparison
-        
         InvoiceComparison.objects.create(
             user=request.user,
             invoice=invoice,
             measurement=measurement,
             comparison_results=response_data,
-            is_comparison_valid=general_match
+            is_comparison_valid=response_data["general_match"]
         )
 
         return Response(response_data, status=200)
