@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.http import JsonResponse
 from datetime import datetime
+from voltix.models import Invoice, Measurement, InvoiceComparison
 
 
 @api_view(['POST'])
@@ -122,6 +123,15 @@ def compare_invoice_and_measurement(request):
             "total_estimated_with_time_of_use": round(total_estimated_with_time_of_use, 2),
             "general_match": general_match  # Este es el nuevo valor booleano general
         }
+        # Crear la instancia en InvoiceComparison
+        
+        InvoiceComparison.objects.create(
+            user=request.user,
+            invoice=invoice,
+            measurement=measurement,
+            comparison_results=response_data,
+            is_comparison_valid=general_match
+        )
 
         return Response(response_data, status=200)
     except Exception as e:
