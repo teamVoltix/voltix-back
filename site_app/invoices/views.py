@@ -1,3 +1,7 @@
+################################################################################################################################
+############################## PROCESO DE TRATAMIENTO DE PDF + OCR TO JSON + JSON PARA BASE DE DATOS ###########################
+################################################################################################################################
+
 import os
 import uuid
 import cv2
@@ -15,10 +19,10 @@ from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .serializers import InvoiceUploadSerializer
+from voltix.models import Invoice
 from django.http import JsonResponse
 
 logger = logging.getLogger(__name__)
-
 
 class InvoiceProcessView(APIView):
     permission_classes = [IsAuthenticated]
@@ -105,14 +109,6 @@ class InvoiceProcessView(APIView):
                     grayscale_image = self.process_image(img_data)
                     processed_images.append(grayscale_image)
 
-                    file_name_without_extension = os.path.splitext(uploaded_file.name)[0]
-                    unique_id = uuid.uuid4().hex
-                    output_path = os.path.join(
-                        temp_folder, f"{file_name_without_extension}_page_{idx + 1}_{unique_id}.png"
-                    )
-                    cv2.imwrite(output_path, grayscale_image)
-                    logger.info(f"Imagen procesada guardada en: {output_path}")
-
                 # Realizar OCR en la primera imagen
                 if processed_images:
                     ocr_text = self.perform_ocr(processed_images[0])
@@ -126,11 +122,32 @@ class InvoiceProcessView(APIView):
                     os.remove(file_path)
                     logger.info(f"Archivo PDF '{uploaded_file.name}' eliminado.")
 
+                # Guardar en la base de datos
+                from datetime import datetime
+
+                # Extraer datos para crear la factura
+                billing_period_start = parsed_data["periodo_facturacion"]["inicio"]
+                billing_period_end = parsed_data["periodo_facturacion"]["fin"]
+
+                # Si no hay fechas de facturación válidas, lanza un error
+                if not billing_period_start or not billing_period_end:
+                    raise ValueError("Faltan datos del período de facturación en el JSON procesado.")
+
+                # Crear la factura
+                invoice = Invoice.objects.create(
+                    user=request.user,  # Asigna el usuario autenticado
+                    billing_period_start=datetime.strptime(billing_period_start, "%Y-%m-%d"),
+                    billing_period_end=datetime.strptime(billing_period_end, "%Y-%m-%d"),
+                    data=parsed_data  # Almacena el JSON completo
+                )
+
+                logger.info(f"Factura creada con ID: {invoice.id}")
+
                 return Response(
                     {
                         "status": "success",
-                        "message": "Archivo procesado y texto extraído exitosamente.",
-                        "extracted_text": ocr_text,
+                        "message": "Archivo procesado, texto extraído y datos guardados exitosamente.",
+                        "invoice_id": invoice.id,
                         "parsed_data": parsed_data,
                         "processed_images_count": len(processed_images),
                     },
@@ -329,6 +346,7 @@ class InvoiceProcessView(APIView):
             logger.error(f"Error al convertir OCR a JSON: {str(e)}")
             return {"error": "Error al convertir OCR a JSON."}
 
+################################################################################################################################
 
 
 
