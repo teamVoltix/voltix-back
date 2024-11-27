@@ -92,3 +92,27 @@ Este conjunto de comandos puede facilitar tareas como explorar bases de datos, a
 # Cuando añades una medición en data_measurements.json, hay que correr el siguiente comando para que se suba la medición a la base de datos:
 
 python site_app/measurements/scripts/load_measurements.py
+
+
+|--------------------------------------------------- INSRTUCCIONES PARA GENERAR EL PDF ----------------------------------------------------------|
+
+# Guía para la descarga del reporte PDF en el front-end
+
+El endpoint `/api/measurements/report/download/` permite descargar un reporte en formato PDF, recibiendo como parámetro el `id` de la medición asociada. A continuación, se explica cómo gestionar la solicitud desde el front-end.
+
+## 1. Construcción del URL
+
+Para realizar la solicitud al backend, el front-end debe construir el URL con el parámetro `id`. El formato correcto es el siguiente:
+
+
+{{base_url}}/api/measurements/report/download/?id=<ID_MEDICION>
+
+    {{base_url}}: Es la URL base de tu servidor backend (por ejemplo: https://example.com).
+
+    Ejemplo de URL: {{base_url}}: Es la URL base de tu servidor backend (por ejemplo: https://example.com).
+
+    <ID_MEDICION>: El ID de la medición que quieres incluir en el reporte.
+
+# Ejemplo de URL:
+
+https://example.com/api/measurements/report/download/?id=1
