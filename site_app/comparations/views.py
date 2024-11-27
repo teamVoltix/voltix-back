@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.http import JsonResponse
+from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
 from voltix.models import Invoice, Measurement, InvoiceComparison
 
@@ -107,8 +108,8 @@ def compare_invoice_and_measurement(request):
             "billing_period": {
                 "invoice_start_date": invoice.billing_period_start,
                 "invoice_end_date": invoice.billing_period_end,
-                "measurement_start_date": measurement.billing_period_start,
-                "measurement_end_date": measurement.billing_period_end,
+                "measurement_start_date": measurement.measurement_start, 
+                "measurement_end_date": measurement.measurement_end, 
                 "days_billed": days_billed,
                 "matches": (
                     invoice.billing_period_start == measurement.billing_period_start
