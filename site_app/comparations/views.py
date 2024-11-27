@@ -21,9 +21,10 @@ def compare_invoice_and_measurement(request):
 
         # Buscar medición con las mismas fechas de inicio y fin
         measurement = Measurement.objects.filter(
-            billing_period_start=invoice.billing_period_start,
-            billing_period_end=invoice.billing_period_end
+            measurement_start__gte=invoice.billing_period_start,
+            measurement_end__lte=invoice.billing_period_end
         ).first()
+
 
         if not measurement:
             return JsonResponse({"error": "No matching measurement found for the provided billing period."}, status=404)
