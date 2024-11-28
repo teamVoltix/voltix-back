@@ -396,20 +396,58 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from voltix.models import Invoice  # Importar el modelo Invoice
-from .serializers import InvoiceSerializer  # Usar el serializer existente
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from .serializers import InvoiceSerializer
+from voltix.models import Invoice
 
 class InvoiceDetailView(APIView):
-    permission_classes = [IsAuthenticated]  # Asegurar que solo usuarios autenticados puedan acceder
+    permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="Obtener factura por ID",
+        operation_description="Permite a un usuario autenticado obtener los detalles de una factura específica por su ID.",
+        responses={
+            200: openapi.Response(
+                description="Detalles de la factura obtenidos exitosamente.",
+                examples={
+                    "application/json": {
+                        "id": 123,
+                        "user": {"id": 1, "username": "usuario"},
+                        "billing_period_start": "2023-01-01",
+                        "billing_period_end": "2023-01-31",
+                        "data": {
+                            "nombre_cliente": "Ejemplo Cliente",
+                            "detalles_consumo": {
+                                "consumo_punta": 120.5,
+                                "consumo_valle": 85.4,
+                                "total_kwh": 205.9
+                            }
+                        }
+                    }
+                },
+            ),
+            404: openapi.Response(
+                description="Factura no encontrada.",
+                examples={
+                    "application/json": {
+                        "detail": "Factura no encontrada."
+                    }
+                },
+            ),
+            401: openapi.Response(
+                description="No autenticado.",
+                examples={
+                    "application/json": {
+                        "detail": "No se han proporcionado credenciales de autenticación."
+                    }
+                },
+            ),
+        },
+    )
     def get(self, request, invoice_id):
-        # Obtener la factura por ID
         invoice = get_object_or_404(Invoice, pk=invoice_id)
-
-        # Serializar la factura utilizando tu serializer existente
         serializer = InvoiceSerializer(invoice)
-
-        # Retornar la respuesta JSON
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 ################################################################################################################################
