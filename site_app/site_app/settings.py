@@ -226,3 +226,10 @@ os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
 
 # URL for serving media files in development
 MEDIA_URL = '/media/'
+
+# Configuración de Cloudinary (site_app setting)
+CLOUDINARY = {
+    'cloud_name': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'api_key': os.getenv('CLOUDINARY_API_KEY'),
+    'api_secret': os.getenv('CLOUDINARY_API_SECRET'),
+}
