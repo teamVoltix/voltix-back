@@ -7,6 +7,9 @@ from voltix.models import Profile
 from datetime import date
 from django.core.exceptions import ValidationError
 
+from cloudinary.uploader import upload
+from cloudinary.exceptions import Error as CloudinaryError
+
 # Swagger imports
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -168,3 +171,39 @@ def patch_profile(request):
         "message": "Perfil actualizado exitosamente.",
         "updated_fields": updated_fields
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_profile_photo(request):
+    try:
+        profile = Profile.objects.get(user=request.user)
+    except Profile.DoesNotExist:
+        return Response({"error": "El perfil no existe."}, status=404)
+
+    # Validar que se envió un archivo en la solicitud
+    if 'photo' not in request.FILES:
+        return Response({"error": "No se encontró un archivo para subir."}, status=400)
+
+    photo = request.FILES['photo']
+
+    try:
+        # Subir la foto a Cloudinary
+        upload_result = upload(photo, folder="profiles", overwrite=True, resource_type="image")
+        photo_url = upload_result.get("secure_url")
+
+        if not photo_url:
+            return Response({"error": "Error al subir la imagen a Cloudinary."}, status=500)
+
+        # Actualizar el perfil con la URL de la foto
+        profile.photo_url = photo_url
+        profile.save()
+
+        return Response({
+            "message": "Foto subida exitosamente.",
+            "photo_url": photo_url
+        }, status=200)
+    except CloudinaryError as e:
+        return Response({"error": f"Error de Cloudinary: {str(e)}"}, status=500)
+    except Exception as e:
+        return Response({"error": f"Error inesperado: {str(e)}"}, status=500)
