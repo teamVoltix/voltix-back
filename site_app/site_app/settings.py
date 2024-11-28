@@ -141,6 +141,7 @@ DATABASES = {
         'PASSWORD': os.environ['DATABASE_PASSWORD'],
         'HOST': os.environ['DB_HOST'],
         'PORT': int(os.environ['DB_PORT']),
+        'CONN_MAX_AGE': 0,  # Deshabilita conexiones persistentes
     }
 }
 
