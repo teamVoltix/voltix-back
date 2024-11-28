@@ -22,6 +22,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from pdf_measurement.views import download_report
+from notify_service.views import NotificationListView
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -46,7 +47,10 @@ urlpatterns = [
     path('api/notifications/', include('notifications.urls')),
     path('users/', include('users.urls')),
     path('comparations/', include('comparations.urls')),
-    path('api/measurements/report/download/', download_report, name='download_report'),  # New endpoint
+    path('api/measurements/report/download/', download_report, name='download_report'),
+    path('api/notifications/', NotificationListView.as_view(), name='notification-list'),   
+    
+    
     
 
     # Rutas de Swagger
