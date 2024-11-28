@@ -1,5 +1,5 @@
 # Use an official Python image as the base image
-FROM docker.uclv.cu/python:3.12-bookworm
+FROM python:3.12-bookworm
 
 
 # Install tesseract ocr with spanish package
@@ -28,18 +28,6 @@ COPY site_app/  .
 #RUN python manage.py collectstatic --no-input
 RUN find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
 RUN find . -path "*/migrations/*.pyc"  -delete
-
-
-ENV DJANGO_SUPERUSER_USERNAME= \
-    DJANGO_SUPERUSER_PASSWORD= \
-    DJANGO_SUPERUSER_EMAIL= \
-    DB_NAME=\
-    DB_USER= \
-    DB_PASSWORD= \
-    DB_HOST= \
-    DB_PORT=
-
-
 
 #For production
 CMD ["uwsgi","--ini", "uwsgi.ini"]
