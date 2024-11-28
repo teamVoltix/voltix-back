@@ -2,10 +2,12 @@ from django.urls import path
 
 from . import views
 from .views import InvoiceProcessView, InvoiceDetailView
+from .invoicelistview import InvoiceListView
 
 urlpatterns = [
     path("upload/", InvoiceProcessView.as_view(), name="invoice-upload"),
     path('<int:invoice_id>/', InvoiceDetailView.as_view(), name='invoice_detail'),
+    path("", InvoiceListView.as_view(), name="invoice_list"),
 ]
 
 
