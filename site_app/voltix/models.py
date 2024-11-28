@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.timezone import now
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 class UserManager(BaseUserManager):
     def create_user(self, dni, fullname, email, password=None, **extra_fields):
@@ -50,10 +52,10 @@ class Profile(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     address = models.TextField()
     phone_number = models.CharField(max_length=20)
-    preferences = models.JSONField()
+    photo_url = models.URLField(max_length=500, null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
     def __str__(self):
         return f"Perfil de {self.user.fullname}"
 
@@ -116,27 +118,41 @@ class Measurement(models.Model):
         return f"Measurement {self.id} - User: {self.user.fullname} - Start: {self.measurement_start} - End: {self.measurement_end}"
 
 
-
 class Notification(models.Model):
     notification_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Campos para relaciones genéricas
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)  # Apunta al tipo de modelo
+    object_id = models.PositiveIntegerField()  # ID del objeto relacionado
+    content_object = GenericForeignKey('content_type', 'object_id')  # Relación genérica
+
+    # Tipo de notificación
+    TYPE_CHOICES = [
+        ('alerta', 'Alerta inmediata'),
+        ('recomendacion', 'Recomendación'),
+        ('recordatorio', 'Recordatorio')
+    ]
+    type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+
     def __str__(self):
-        return f"Notificación {self.notification_id} - Usuario: {self.user.fullname}"
+        return f"Notificación {self.notification_id} - Usuario: {self.user.fullname} - Tipo: {self.get_type_display()}"
 
 
-# El usuario podra desactivar las notificaciones si lo desea
 class NotificationSettings(models.Model):
     notification_setting_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    type = models.CharField(max_length=100)
-    is_enabled = models.BooleanField(default=True)
+
+    # Configuración de cada tipo
+    enable_alerts = models.BooleanField(default=True)  # Alertas inmediatas
+    enable_recommendations = models.BooleanField(default=True)  # Recomendaciones
+    enable_reminders = models.BooleanField(default=True)  # Recordatorios
 
     def __str__(self):
-        return f"Configuración de Notificación {self.type} - Usuario: {self.user.fullname}"
+        return f"Configuración de Notificaciones - Usuario: {self.user.fullname}"
 
 
 # class InvoiceComparison(models.Model):
@@ -171,7 +187,7 @@ class InvoiceComparison(models.Model):
     def __str__(self):
         return f"Comparison {self.id} - User: {self.user.fullname} - Invoice: {self.invoice.id}"
 
-    
+
 
 class MiLuzBase(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -200,4 +216,3 @@ class Token(models.Model):
 
     def __str__(self):
         return f"Token for {self.user.fullname} (valid: {self.is_valid()})"
-    
