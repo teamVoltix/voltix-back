@@ -51,7 +51,7 @@ def profile_view(request):
             birth_date=None,
             address="",
             phone_number="",
-            photo=""
+            photo_url=""
         )
 
     profile_data = {

@@ -1,17 +1,17 @@
-# from django.contrib import admin
-# from .models import (
-#     User, Profile, Invoice, Measurement, Notification, 
-#     NotificationSettings, InvoiceComparison, MiLuzBase, Token
-# )
+from django.contrib import admin
+from .models import (
+    User, Profile, Invoice, Measurement, Notification, 
+    NotificationSettings, InvoiceComparison, MiLuzBase, Token
+)
 
-# class UserAdmin(admin.ModelAdmin):
-#     fields = ['dni', 'fullname', 'email', 'is_staff', 'is_superuser', 'is_active', 'created_at', 'updated_at']
-#     list_display = ['user_id', 'dni', 'fullname', 'email', 'is_staff', 'is_superuser', 'is_active', 'created_at', 'updated_at']
-#     list_filter = ['is_staff', 'is_superuser', 'is_active']
-#     search_fields = ['dni', 'fullname', 'email']
-#     readonly_fields = ['created_at', 'updated_at']
+class UserAdmin(admin.ModelAdmin):
+    fields = ['dni', 'fullname', 'email', 'is_staff', 'is_superuser', 'is_active', 'created_at', 'updated_at']
+    list_display = ['user_id', 'dni', 'fullname', 'email', 'is_staff', 'is_superuser', 'is_active', 'created_at', 'updated_at']
+    list_filter = ['is_staff', 'is_superuser', 'is_active']
+    search_fields = ['dni', 'fullname', 'email']
+    readonly_fields = ['created_at', 'updated_at']
 
-# admin.site.register(User, UserAdmin)
+admin.site.register(User, UserAdmin)
 
 # # Register other models
 # class ProfileAdmin(admin.ModelAdmin):
