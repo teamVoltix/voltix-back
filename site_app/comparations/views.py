@@ -4,56 +4,131 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from voltix.models import Invoice, Measurement, InvoiceComparison
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
+@swagger_auto_schema(
+    method="post",
+    operation_summary="Compare Invoice and Measurement",
+    operation_description="""
+        Compares an invoice with a measurement based on billing periods and energy consumption data.
+
+        This endpoint performs the following:
+        - Validates the provided invoice ID.
+        - Fetches the invoice and the corresponding measurement based on the billing period.
+        - Compares consumption details and calculates the total to pay based on the measurement.
+        - Stores the comparison results in the `InvoiceComparison` model.
+    """,
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["invoice"],
+        properties={
+            "invoice": openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description="The ID of the invoice to compare."
+            ),
+        },
+        example={
+            "invoice": 123
+        }
+    ),
+    responses={
+        200: openapi.Response(
+            description="Comparison successful.",
+            examples={
+                "application/json": {
+                    "periodo_facturacion": {
+                        "fecha_inicio_factura": "2023-01-01",
+                        "fecha_fin_factura": "2023-01-31",
+                        "fecha_inicio_medicion": "2023-01-01",
+                        "fecha_fin_medicion": "2023-01-31",
+                        "dias_facturados": 30,
+                        "coincide_fechas": True
+                    },
+                    "detalles_consumo": {
+                        "total_consumption_kwh": {
+                            "invoice": 500,
+                            "measurement": 495,
+                            "difference": 5.0,
+                            "matches": False
+                        }
+                    },
+                    "total_a_pagar": {
+                        "factura": 100.0,
+                        "calculo_medicion": 98.56,
+                        "coincide_total": False
+                    },
+                    "coincidencia_general": False
+                }
+            }
+        ),
+        400: openapi.Response(
+            description="Invalid request.",
+            examples={
+                "application/json": {
+                    "error": "'invoice' is required."
+                }
+            }
+        ),
+        404: openapi.Response(
+            description="Resource not found.",
+            examples={
+                "application/json": {
+                    "error": "Invoice not found."
+                }
+            }
+        ),
+        500: openapi.Response(
+            description="Server error.",
+            examples={
+                "application/json": {
+                    "error": "An unexpected error occurred."
+                }
+            }
+        )
+    }
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def compare_invoice_and_measurement(request):
     try:
-        # Obtener datos del cuerpo de la solicitud
         data = request.data
         invoice_id = data.get("invoice")  # ID de la factura (invoice)
-        
+
         # Validar si el 'invoice' está presente
         if not invoice_id:
             return Response({"error": "'invoice' is required."}, status=400)
 
         # Buscar el objeto Invoice
         try:
-            invoice = Invoice.objects.get(id=invoice_id, user=request.user)  # Buscar la factura solo del usuario autenticado
+            invoice = Invoice.objects.get(id=invoice_id, user=request.user)
         except ObjectDoesNotExist:
-            return JsonResponse({"error": "Invoice not found."}, status=404)
+            return Response({"error": "Invoice not found."}, status=404)
 
         # Buscar la medición que coincida con el período de facturación de la factura
-        invoice_start_date = invoice.billing_period_start  # Es de tipo datetime.date
-        invoice_end_date = invoice.billing_period_end  # Es de tipo datetime.date
+        invoice_start_date = invoice.billing_period_start
+        invoice_end_date = invoice.billing_period_end
 
         # Buscar mediciones que coincidan con el período de facturación
         measurements = Measurement.objects.filter(
-            user=request.user,  # Solo mediciones del usuario logueado
+            user=request.user,
             measurement_start__lte=invoice_end_date,
             measurement_end__gte=invoice_start_date
         )
-        
-        # Si no se encuentra ninguna medición que coincida con las fechas, retornar un error
+
         if not measurements.exists():
-            return JsonResponse({"error": "No matching measurements found."}, status=404)
+            return Response({"error": "No matching measurements found."}, status=404)
 
-        # Supongamos que hay solo una medición que coincide. Si hay más, debes decidir cómo manejarlas.
         measurement = measurements.first()
-
-        # Verificar si existen los detalles de consumo en los datos de la factura y medición
         invoice_consumption = invoice.data.get("detalles_consumo", None)
         measurement_consumption = measurement.data.get("consumo_total", None)
 
-        # Si no se encuentran los detalles de consumo en la factura o medición, retornar un error
         if not invoice_consumption or not measurement_consumption:
-            return JsonResponse({"error": "'detalles_consumo' or 'consumo_total' not found in invoice or measurement."}, status=404)
+            return Response({"error": "'detalles_consumo' or 'consumo_total' not found in invoice or measurement."}, status=404)
 
-        # Asegurarse de que no haya valores None, reemplazarlos con 0
         consumo_total_invoice = invoice_consumption.get("consumo_total", 0) or 0
         consumo_total_measurement = measurement_consumption or 0
 
-        # Detalles del consumo
         consumption_details = {
             "total_consumption_kwh": {
                 "invoice": consumo_total_invoice,
@@ -63,11 +138,10 @@ def compare_invoice_and_measurement(request):
             }
         }
 
-        # Calcular el importe total estimado para el consumo total (basado en medición)
         total_consumption_kWh = consumo_total_measurement
-        price_per_kWh = 0.1121  # Precio por kWh (puedes cambiar esto según tus necesidades)
-        electricity_tax_rate = 0.051127  # Tasa del impuesto sobre la electricidad
-        vat_rate = 0.21  # IVA al 21%
+        price_per_kWh = 0.1121
+        electricity_tax_rate = 0.051127
+        vat_rate = 0.21
 
         energy_term = total_consumption_kWh * price_per_kWh
         electricity_tax = energy_term * electricity_tax_rate
@@ -75,35 +149,28 @@ def compare_invoice_and_measurement(request):
         vat = subtotal * vat_rate
         total_to_pay = subtotal + vat
 
-        # Ahora accedemos correctamente al total_a_pagar desde el desglose_cargos de la factura
         total_a_pagar = invoice.data.get("desglose_cargos", {}).get("total_a_pagar", 0)
-
-        # Comparar el total a pagar entre la factura y la medición
         total_to_pay_matches = total_a_pagar == round(total_to_pay, 2)
-
-        # Comparar las fechas (para 'dates_match')
         dates_match = invoice_start_date == measurement.measurement_start.date() and invoice_end_date == measurement.measurement_end.date()
 
-        # Crear el JSON de respuesta con los datos en español
         response_data = {
             "periodo_facturacion": {
-                "fecha_inicio_factura": invoice.billing_period_start.strftime('%Y-%m-%d'),  # Convertir a string
-                "fecha_fin_factura": invoice.billing_period_end.strftime('%Y-%m-%d'),  # Convertir a string
-                "fecha_inicio_medicion": measurement.measurement_start.strftime('%Y-%m-%d'),  # Convertir a string
-                "fecha_fin_medicion": measurement.measurement_end.strftime('%Y-%m-%d'),  # Convertir a string
+                "fecha_inicio_factura": invoice_start_date.strftime('%Y-%m-%d'),
+                "fecha_fin_factura": invoice_end_date.strftime('%Y-%m-%d'),
+                "fecha_inicio_medicion": measurement.measurement_start.strftime('%Y-%m-%d'),
+                "fecha_fin_medicion": measurement.measurement_end.strftime('%Y-%m-%d'),
                 "dias_facturados": invoice.data.get("periodo_facturacion", {}).get("dias", 0),
                 "coincide_fechas": dates_match
             },
             "detalles_consumo": consumption_details,
             "total_a_pagar": {
-                "factura": total_a_pagar,  # Ahora correctamente toma el total a pagar de la factura
-                "calculo_medicion": round(total_to_pay, 2),  # Valor calculado a partir de mediciones
+                "factura": total_a_pagar,
+                "calculo_medicion": round(total_to_pay, 2),
                 "coincide_total": total_to_pay_matches
             },
             "coincidencia_general": all(value["matches"] for value in consumption_details.values()) and total_to_pay_matches and dates_match
         }
 
-        # Crear la instancia en InvoiceComparison
         InvoiceComparison.objects.create(
             user=request.user,
             invoice=invoice,
