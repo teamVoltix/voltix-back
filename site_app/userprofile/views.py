@@ -6,11 +6,8 @@ from rest_framework import status
 from voltix.models import Profile
 from datetime import date
 from django.core.exceptions import ValidationError
-
 from cloudinary.uploader import upload
 from cloudinary.exceptions import Error as CloudinaryError
-
-# Swagger imports
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -173,8 +170,70 @@ def patch_profile(request):
     }, status=status.HTTP_200_OK)
 
 
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import parser_classes
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from cloudinary.uploader import upload
+from cloudinary.exceptions import Error as CloudinaryError
+
+@swagger_auto_schema(
+    method="post",
+    operation_summary="Subir foto de perfil",
+    operation_description="""
+        Permite a un usuario autenticado subir una foto de perfil. 
+        La imagen se almacena en Cloudinary, y la URL resultante se guarda en el perfil del usuario.
+    """,
+    manual_parameters=[
+        openapi.Parameter(
+            name="photo",
+            in_=openapi.IN_FORM,
+            type=openapi.TYPE_FILE,
+            description="El archivo de imagen que se subirá como foto de perfil.",
+        ),
+    ],
+    responses={
+        200: openapi.Response(
+            description="Foto subida exitosamente.",
+            examples={
+                "application/json": {
+                    "message": "Foto subida exitosamente.",
+                    "photo_url": "https://res.cloudinary.com/example/profiles/photo.jpg"
+                }
+            },
+        ),
+        400: openapi.Response(
+            description="Solicitud inválida.",
+            examples={
+                "application/json": {
+                    "error": "No se encontró un archivo para subir."
+                }
+            },
+        ),
+        404: openapi.Response(
+            description="Perfil no encontrado.",
+            examples={
+                "application/json": {
+                    "error": "El perfil no existe."
+                }
+            },
+        ),
+        500: openapi.Response(
+            description="Error interno del servidor.",
+            examples={
+                "application/json": {
+                    "error": "Error de Cloudinary: Detalle del error..."
+                }
+            },
+        ),
+    }
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])  # Agregar parser_classes para manejar multipart/form-data
 def upload_profile_photo(request):
     try:
         profile = Profile.objects.get(user=request.user)
