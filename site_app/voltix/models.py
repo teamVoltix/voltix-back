@@ -60,22 +60,6 @@ class Profile(models.Model):
         return f"Perfil de {self.user.fullname}"
 
 
-# class Invoice(models.Model):
-#     invoice_id = models.AutoField(primary_key=True)
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     upload_date = models.DateTimeField()
-#     amount_due = models.DecimalField(max_digits=10, decimal_places=2)
-#     due_date = models.DateField()
-#     provider = models.CharField(max_length=150)
-#     file_path = models.CharField(max_length=255)
-#     ocr_data = models.JSONField()
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     def __str__(self):
-#         return f"Factura {self.invoice_id} - Usuario: {self.user.fullname}"
-
-
 class Invoice(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Relación con el usuario
@@ -89,20 +73,6 @@ class Invoice(models.Model):
     def __str__(self):
         return f"Invoice {self.id} - User: {self.user.fullname}"
 
-
-
-# Esta tabla creemos que no va... ya que serviria para refistrar mediciones que es algo que la app ni la empresa hacen de momento.
-# class Measurement(models.Model):
-#     measurement_id = models.AutoField(primary_key=True)
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     date = models.DateTimeField()
-#     value = models.DecimalField(max_digits=10, decimal_places=2)
-#     type = models.CharField(max_length=100)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     def __str__(self):
-#         return f"Medición {self.measurement_id} - Usuario: {self.user.fullname}"
 
 class Measurement(models.Model):
     id = models.AutoField(primary_key=True)
@@ -154,17 +124,6 @@ class NotificationSettings(models.Model):
     def __str__(self):
         return f"Configuración de Notificaciones - Usuario: {self.user.fullname}"
 
-
-# class InvoiceComparison(models.Model):
-#     comparison_id = models.AutoField(primary_key=True)
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     invoice1 = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='comparison_invoice1')
-#     invoice2 = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='comparison_invoice2')
-#     comparison_date = models.DateTimeField()
-#     comparison_result = models.JSONField()
-
-#     def __str__(self):
-#         return f"Comparación {self.comparison_id} - Usuario: {self.user.fullname}"
 
 class InvoiceComparison(models.Model):
     id = models.AutoField(primary_key=True)
