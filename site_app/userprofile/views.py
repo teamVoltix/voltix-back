@@ -26,7 +26,7 @@ from drf_yasg import openapi
                     "birth_date": None,
                     "address": "",
                     "phone_number": "",
-                    "preferences": {}
+                    "photo": ""
                 }
             }
         ),
@@ -51,16 +51,17 @@ def profile_view(request):
             birth_date=None,
             address="",
             phone_number="",
-            preferences={}
+            photo_url=""
         )
 
     profile_data = {
         'fullname': request.user.fullname,
+        'dni': request.user.dni,
         'email': request.user.email,
         'birth_date': profile.birth_date,
         'address': profile.address,
         'phone_number': profile.phone_number,
-        'preferences': profile.preferences,
+        'photo': profile.photo_url, 
     }
 
     return Response(profile_data)
@@ -98,7 +99,7 @@ def profile_view(request):
             "birth_date": "1990-01-01",
             "address": "123 Main Street",
             "phone_number": "+1234567890",
-            "preferences": {"newsletter": True}
+            "photo": ""
         }
     ),
     responses={
@@ -150,7 +151,7 @@ def patch_profile(request):
         return Response({"error": "El perfil no existe."}, status=status.HTTP_404_NOT_FOUND)
 
     data = request.data
-    allowed_fields = ['birth_date', 'address', 'phone_number', 'preferences']
+    allowed_fields = ['birth_date', 'address', 'phone_number', 'photo']
     updated_fields = {}
 
     for field in allowed_fields:
