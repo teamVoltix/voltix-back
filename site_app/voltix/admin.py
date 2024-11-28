@@ -13,15 +13,15 @@ class UserAdmin(admin.ModelAdmin):
 
 admin.site.register(User, UserAdmin)
 
-# # Register other models
-# class ProfileAdmin(admin.ModelAdmin):
-#     fields = ['user', 'birth_date', 'address', 'phone_number', 'preferences', 'created_at', 'updated_at']
-#     list_display = ['profile_id', 'user', 'birth_date', 'address', 'phone_number', 'created_at', 'updated_at']
-#     search_fields = ['user__dni', 'user__fullname']
-#     list_filter = ['birth_date', 'created_at']
-#     readonly_fields = ['created_at', 'updated_at']
+# Register other models
+class ProfileAdmin(admin.ModelAdmin):
+    fields = ['user', 'birth_date', 'address', 'phone_number', 'photo_url', 'created_at', 'updated_at']
+    list_display = ['profile_id', 'user', 'birth_date', 'address', 'phone_number', 'photo_url','created_at', 'updated_at']
+    search_fields = ['user__dni', 'user__fullname']
+    list_filter = ['birth_date', 'created_at']
+    readonly_fields = ['created_at', 'updated_at']
 
-# admin.site.register(Profile, ProfileAdmin)
+admin.site.register(Profile, ProfileAdmin)
 
 # from django.utils.safestring import mark_safe
 # import json
