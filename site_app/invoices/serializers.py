@@ -69,3 +69,11 @@ class InvoiceUploadSerializer(serializers.Serializer):
             raise serializers.ValidationError("File name must end with '.pdf'.")
 
         return value
+
+from voltix.models import Invoice
+class InvoiceSerializer(serializers.ModelSerializer):
+    comparison_status = serializers.CharField(read_only=True)  # Add estado as a read-only field
+
+    class Meta:
+        model = Invoice
+        fields = '__all__'
