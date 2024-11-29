@@ -21,42 +21,6 @@ from .schemas import measurement_schema
 def index(request):
     return HttpResponse("MEASUREMENTS YEY")
 
-# 1. GET para obtener mediciones del usuario autenticado
-@swagger_auto_schema(
-    method="get",
-    operation_description="Devuelve las mediciones asociadas al usuario autenticado",
-    responses={
-        200: openapi.Response(
-            description="Mediciones del usuario autenticado",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'user': openapi.Schema(type=openapi.TYPE_STRING, description='Nombre del usuario'),
-                    'measurements': openapi.Schema(
-                        type=openapi.TYPE_ARRAY,
-                        items=measurement_schema,
-                        description='Lista de mediciones del usuario'
-                    ),
-                }
-            )
-        ),
-        401: openapi.Response(description="No autorizado. El token no es válido o ha expirado"),
-        500: openapi.Response(description="Error interno del servidor"),
-    },
-)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_user_measurements(request):
-    """
-    Retorna las mediciones asociadas al usuario autenticado.
-    """
-    try:
-        user = request.user 
-        measurements = Measurement.objects.filter(user=user).values('id', 'measurement_start', 'measurement_end', 'data', 'created_at', 'updated_at')
-        return Response({"user": user.fullname, "measurements": list(measurements)})
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
-
 
 # 2. GET para obtener todas las mediciones
 @swagger_auto_schema(
