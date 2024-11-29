@@ -161,13 +161,14 @@ def protected_view(request):
 def logout_view(request):
     refresh_token = request.data.get("refresh_token")
     if not refresh_token:
-        return Response({"error": "Refresh token is required"}, status=400)
+        return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
     try:
         token = RefreshToken(refresh_token)
         token.blacklist()
-        return Response({"message": "Successfully logged out"}, status=200)
-    except Exception:
-        return Response({"error": "Invalid refresh token"}, status=400)
+        return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
+    except Exception as e:
+        # Cambiar el código a 400
+        return Response({"error": "Invalid refresh token."}, status=status.HTTP_400_BAD_REQUEST)
 
 # ==========================================================
 # Change Password
@@ -297,10 +298,10 @@ def password_reset_view(request, uidb64, token):
     confirm_password = data.get('confirm_password')
 
     if not new_password or not confirm_password:
-        return JsonResponse({"error": "Ambas contraseñas son requeridas."}, status=400)
+        return JsonResponse({"error": "Ambas contraseñas son requeridas."}, status=status.HTTP_400_BAD_REQUEST)
 
     if new_password != confirm_password:
-        return JsonResponse({"error": "Las contraseñas no coinciden."}, status=400)
+        return JsonResponse({"error": "Las contraseñas no coinciden."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
@@ -311,6 +312,7 @@ def password_reset_view(request, uidb64, token):
     if user is not None and default_token_generator.check_token(user, token):
         user.set_password(new_password)
         user.save()
-        return JsonResponse({"detail": "Tu contraseña ha sido restablecida exitosamente."}, status=200)
+        return JsonResponse({"detail": "Tu contraseña ha sido restablecida exitosamente."}, status=status.HTTP_200_OK)
     else:
-        return JsonResponse({"error": "El enlace de restablecimiento no es válido o ha expirado."}, status=400)
+        # Cambiar el código a 400
+        return JsonResponse({"error": "El enlace de restablecimiento no es válido o ha expirado."}, status=status.HTTP_400_BAD_REQUEST)

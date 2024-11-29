@@ -60,7 +60,12 @@ from voltix.models import User  # Ensure User is your custom model or default Dj
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     fullname = serializers.CharField(max_length=255)
-    dni = serializers.CharField(max_length=8)  # Limitar a un máximo de 8 caracteres
+    dni = serializers.CharField(
+        max_length=9,  # Cambiado a un máximo de 9 caracteres
+        error_messages={
+            "max_length": "El DNI no puede tener más de 9 caracteres."
+        }
+    )
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8, max_length=15)
 
@@ -68,20 +73,43 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = ['fullname', 'dni', 'email', 'password']
 
-    def validate_dni(self, value):
-        # Validar que no tenga más de 8 caracteres
-        if len(value) > 8:
-            raise serializers.ValidationError("El DNI no puede tener más de 8 caracteres.")
 
-        # Validar que contenga al menos 1 letra
-        if not any(char.isalpha() for char in value):
-            raise serializers.ValidationError("El DNI debe contener al menos una letra.")
+    def validate_dni(self, value):
+        # Validar longitud exacta de 9 caracteres
+        if len(value) != 9:
+            raise serializers.ValidationError("El DNI debe tener exactamente 9 caracteres.")
+
+        # Validar si comienza con un número
+        if value[0].isdigit():
+            # Validar el patrón específico: 8 números seguidos de 1 letra
+            if not re.match(r"^\d{8}[A-Za-z]$", value):
+                raise serializers.ValidationError(
+                    "El DNI que comienza con un número debe tener 8 números seguidos de 1 letra (ejemplo: 12345678A)."
+                )
+
+        # Validar si comienza con una letra
+        elif value[0].isalpha():
+            # Validar el patrón específico: 1 letra, 7 números, 1 letra
+            if not re.match(r"^[A-Za-z]\d{7}[A-Za-z]$", value):
+                raise serializers.ValidationError(
+                    "El DNI que comienza con una letra debe tener 1 letra al inicio, seguido de 7 números y 1 letra al final (ejemplo: A1234567B)."
+                )
+        else:
+            raise serializers.ValidationError(
+                "El DNI debe comenzar con una letra o un número."
+            )
 
         # Validar que no se haya registrado previamente
         if User.objects.filter(dni=value).exists():
             raise serializers.ValidationError("Este DNI ya está registrado.")
         
         return value
+
+
+
+
+
+
 
 
     def validate_password(self, value):
