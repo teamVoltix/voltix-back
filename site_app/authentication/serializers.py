@@ -60,7 +60,7 @@ from voltix.models import User  # Ensure User is your custom model or default Dj
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     fullname = serializers.CharField(max_length=255)
-    dni = serializers.CharField(max_length=20)
+    dni = serializers.CharField(max_length=8)  # Limitar a un máximo de 8 caracteres
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8, max_length=15)
 
@@ -68,19 +68,21 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = ['fullname', 'dni', 'email', 'password']
 
-    def validate_email(self, value):
-        try:
-            validate_email(value)
-        except ValidationError:
-            raise serializers.ValidationError("El formato del correo electrónico es inválido.")
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Este correo electrónico ya está registrado.")
-        return value
-
     def validate_dni(self, value):
+        # Validar que no tenga más de 8 caracteres
+        if len(value) > 8:
+            raise serializers.ValidationError("El DNI no puede tener más de 8 caracteres.")
+
+        # Validar que contenga al menos 1 letra
+        if not any(char.isalpha() for char in value):
+            raise serializers.ValidationError("El DNI debe contener al menos una letra.")
+
+        # Validar que no se haya registrado previamente
         if User.objects.filter(dni=value).exists():
             raise serializers.ValidationError("Este DNI ya está registrado.")
+        
         return value
+
 
     def validate_password(self, value):
         if len(value) < 8 or len(value) > 15:
@@ -102,6 +104,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data['password'] = make_password(validated_data['password'])
         return super().create(validated_data)
 
+
 from rest_framework import serializers
 
 class LoginSerializer(serializers.Serializer):
@@ -122,3 +125,7 @@ class LoginSerializer(serializers.Serializer):
             "required": "Password is required.",
         },
     )
+
+    def validate_dni(self, value):
+        # Eliminar espacios en blanco antes de validar
+        return value.strip()
