@@ -1,4 +1,6 @@
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.views import APIView
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.http import JsonResponse
@@ -195,3 +197,28 @@ def compare_invoice_and_measurement(request):
         return Response(response, status=200)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
+
+class UserComparisonDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, comparison_id):
+        try:
+            # Buscar la comparación específica por su ID
+            comparison = InvoiceComparison.objects.get(id=comparison_id, user=request.user)
+            
+            # Retornar los detalles de la comparación
+            return Response({
+                "status": "success",
+                "comparison_id": comparison.id,
+                "invoice_id": comparison.invoice.id,
+                "measurement_id": comparison.measurement.id,
+                "result": comparison.comparison_results,
+                "created_at": comparison.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            }, status=status.HTTP_200_OK)
+        
+        except InvoiceComparison.DoesNotExist:
+            # Si no se encuentra la comparación
+            return Response({
+                "error": "Comparison not found."
+            }, status=status.HTTP_404_NOT_FOUND)
