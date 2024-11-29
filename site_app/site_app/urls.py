@@ -44,7 +44,7 @@ urlpatterns = [
     path("api/invoices/", include("invoices.urls")),
     path('api/measurements/', include('measurements.urls')),
     path('api/profile/', include('userprofile.urls')),
-    path('api/notifications/', include('notifications.urls')),
+    # path('api/notifications/', include('notifications.urls')),
     path('users/', include('users.urls')),
     path('comparations/', include('comparations.urls')),
     path('api/measurements/report/download/', download_report, name='download_report'),

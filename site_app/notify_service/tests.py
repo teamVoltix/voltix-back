@@ -1,152 +1,85 @@
-from unittest import mock
-from django.test import TestCase
-from rest_framework.test import APIClient
+from django.contrib.contenttypes.models import ContentType
+from rest_framework_simplejwt.tokens import RefreshToken
 from voltix.models import Notification
-from datetime import datetime
+from django.utils import timezone
+from rest_framework.test import APITestCase
+from rest_framework import status
+from django.contrib.auth import get_user_model
 
-class NotificationListViewTest(TestCase):
+class NotificationTests(APITestCase):
     def setUp(self):
-        # Inicializa el cliente de API
-        self.client = APIClient()
-        self.client.force_authenticate(user=self.create_user())  # Autenticar un usuario para la prueba
-
-    def create_user(self):
-        # Crea un usuario de prueba
-        from django.contrib.auth.models import User
-        return User.objects.create_user(username="testuser", password="testpass")
-
-    @mock.patch('voltix.models.Notification.objects.filter')
-    def test_get_notifications(self, mock_filter):
-        # Simulamos el comportamiento de get_queryset() para devolver notificaciones
-        mock_filter.return_value = [
-            Notification(id=1, message='Test Notification 1', user=self.create_user()),
-            Notification(id=2, message='Test Notification 2', user=self.create_user())
-        ]
+        # Crear un usuario para probar los endpoints
+        self.user = get_user_model().objects.create_user(
+            dni="7782452J",
+            fullname="John Smith",
+            email="john.smith@outlook.com",
+            password="Secur3John@"
+        )
         
-        # Realizamos la petición GET al endpoint
-        response = self.client.get('/api/notifications/')
-        
-        # Verificamos que la respuesta es correcta
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 2)
-        self.assertEqual(response.data[0]['message'], 'Test Notification 1')
-        self.assertEqual(response.data[1]['message'], 'Test Notification 2')
+        # Obtener el ContentType para un modelo relacionado, por ejemplo, un modelo llamado `SomeModel`
+        # Reemplaza `SomeModel` con el modelo que quieras usar para el object_id
+        content_type = ContentType.objects.get_for_model(Notification)
 
-    @mock.patch('voltix.models.Notification.objects.filter')
-    def test_get_notifications_by_type(self, mock_filter):
-        # Simulamos el comportamiento de get_queryset() para devolver notificaciones de tipo 'alerta'
-        mock_filter.return_value = [
-            Notification(id=1, message='Alert Notification', user=self.create_user(), type='alerta')
-        ]
+        # Crear algunas notificaciones para este usuario
+        self.notification1 = Notification.objects.create(
+            user=self.user,
+            message="Alerta importante",
+            type="alerta",
+            created_at=timezone.now(),
+            content_type=content_type,
+            object_id=12  # Reemplaza con un ID válido de tu modelo relacionado
+        )
         
-        # Realizamos la petición GET con un parámetro de tipo
-        response = self.client.get('/api/notifications/?type=alerta')
+        self.notification2 = Notification.objects.create(
+            user=self.user,
+            message="Recomendación sobre seguridad",
+            type="recomendacion",
+            created_at=timezone.now() - timezone.timedelta(days=5),
+            content_type=content_type,
+            object_id=12  # Reemplaza con un ID válido de tu modelo relacionado
+        )
         
-        # Verificamos que la respuesta es correcta
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['message'], 'Alert Notification')
+        self.notification3 = Notification.objects.create(
+            user=self.user,
+            message="Recordatorio de cita médica",
+            type="recordatorio",
+            created_at=timezone.now() - timezone.timedelta(days=10),
+            content_type=content_type,
+            object_id=13  # Reemplaza con un ID válido de tu modelo relacionado
+        )
+        
+        # Obtener JWT token
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
 
-    @mock.patch('voltix.models.Notification.objects.filter')
-    def test_get_notifications_by_date(self, mock_filter):
-        # Simulamos el comportamiento de get_queryset() para devolver notificaciones en una fecha específica
-        mock_filter.return_value = [
-            Notification(id=1, message='Notification on specific date', user=self.create_user(), created_at='2024-01-01')
-        ]
-        
-        # Realizamos la petición GET con un parámetro de fecha
-        response = self.client.get('/api/notifications/?start_date=2024-01-01')
-        
-        # Verificamos que la respuesta es correcta
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['message'], 'Notification on specific date')
+    def get_authentication_headers(self):
+        # Retornar los headers necesarios con el token de autenticación
+        return {'HTTP_AUTHORIZATION': f'Bearer {self.access_token}'}  # Cambié el prefijo a 'HTTP_' para que funcione correctamente en pruebas
 
-    @mock.patch('voltix.models.Notification.objects.filter')
-    def test_get_notifications_by_date_range(self, mock_filter):
-        # Simulamos el comportamiento de get_queryset() para devolver notificaciones dentro de un rango de fechas
-        mock_filter.return_value = [
-            Notification(id=1, message='Notification in date range', user=self.create_user(), created_at='2024-01-01')
-        ]
-        
-        # Realizamos la petición GET con un parámetro de fecha de inicio y final
-        response = self.client.get('/api/notifications/?start_date=2024-01-01&end_date=2024-12-31')
-        
-        # Verificamos que la respuesta es correcta
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['message'], 'Notification in date range')
-
-    @mock.patch('voltix.models.Notification.objects.filter')
-    def test_get_notifications_no_data(self, mock_filter):
-        # Simulamos el caso en que no hay notificaciones
-        mock_filter.return_value = []
-        
-        # Realizamos la petición GET
-        response = self.client.get('/api/notifications/')
-        
-        # Verificamos que la respuesta es correcta, pero sin datos
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 0)
-
-# ------------------------------------------------------------
-
-class NotificationListViewTestRealDB(TestCase):
-    def setUp(self):
-        # Inicializa el cliente de API y crea un usuario
-        self.client = APIClient()
-        self.user = self.create_user()
-        self.client.force_authenticate(user=self.user)
-
-        # Crea algunas notificaciones en la base de datos real
-        Notification.objects.create(message="Test Notification 1", user=self.user)
-        Notification.objects.create(message="Test Notification 2", user=self.user, type="alerta")
-        Notification.objects.create(message="Test Notification 3", user=self.user, created_at="2024-01-01")
-
-    def create_user(self):
-        # Crea un usuario de prueba
-        from django.contrib.auth.models import User
-        return User.objects.create_user(username="testuser", password="testpass")
-
-    def test_get_notifications(self):
-        # Realiza la petición GET al endpoint
-        response = self.client.get('/api/notifications/')
-        
-        # Verifica la respuesta
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 3)
-
-    def test_get_notifications_by_type(self):
-        # Realiza la petición GET con un parámetro de tipo
-        response = self.client.get('/api/notifications/?type=alerta')
-        
-        # Verifica la respuesta
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-
-    def test_get_notifications_by_date(self):
-        # Realiza la petición GET con un parámetro de fecha
-        response = self.client.get('/api/notifications/?start_date=2024-01-01')
-        
-        # Verifica la respuesta
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
+    def test_get_all_notifications(self):
+        # Test para obtener todas las notificaciones de un usuario
+        response = self.client.get('/api/notifications/', **self.get_authentication_headers())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)  # Debe devolver las 3 notificaciones
 
     def test_get_notifications_by_date_range(self):
-        # Realiza la petición GET con un rango de fechas
-        response = self.client.get('/api/notifications/?start_date=2024-01-01&end_date=2024-12-31')
-        
-        # Verifica la respuesta
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
+        # Test para obtener notificaciones dentro de un rango de fechas
+        start_date = '2024-11-01'
+        end_date = '2024-11-29'
+        response = self.client.get(f'/api/notifications/?start_date={start_date}&end_date={end_date}', 
+                                   **self.get_authentication_headers())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # Debe devolver 2 notificaciones (dentro de ese rango)
 
-    def test_get_notifications_no_data(self):
-        # Borra todas las notificaciones
-        Notification.objects.all().delete()
-        
-        # Realiza la petición GET
+    def test_get_notifications_by_type(self):
+        # Test para obtener notificaciones por tipo
+        response = self.client.get('/api/notifications/?type=alerta', 
+                                   **self.get_authentication_headers())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)  # Debe devolver solo 1 notificación de tipo 'alerta'
+        self.assertEqual(response.data[0]['type'], 'alerta')  # Verifica que sea del tipo 'alerta'
+
+    def test_get_notifications_no_auth(self):
+        # Test para intentar acceder sin estar autenticado (sin enviar el token JWT)
         response = self.client.get('/api/notifications/')
-        
-        # Verifica que no hay notificaciones
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)  # Debe devolver 401 Unauthorized
