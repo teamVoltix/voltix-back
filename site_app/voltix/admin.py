@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     User, Profile, Invoice, Measurement, Notification, 
-    NotificationSettings, InvoiceComparison, MiLuzBase, Token
+    NotificationSettings, InvoiceComparison
 )
 
 class UserAdmin(admin.ModelAdmin):
@@ -13,7 +13,6 @@ class UserAdmin(admin.ModelAdmin):
 
 admin.site.register(User, UserAdmin)
 
-# Register other models
 class ProfileAdmin(admin.ModelAdmin):
     fields = ['user', 'birth_date', 'address', 'phone_number', 'photo_url', 'created_at', 'updated_at']
     list_display = ['profile_id', 'user', 'birth_date', 'address', 'phone_number', 'photo_url','created_at', 'updated_at']
@@ -70,11 +69,26 @@ class NotificationAdmin(admin.ModelAdmin):
 admin.site.register(Notification, NotificationAdmin)
 
 class NotificationSettingsAdmin(admin.ModelAdmin):
-    fields = ['notification_setting_id', 'user', 'enable_alerts', 'enable_recommendations', 'enable_reminders']
-    list_display = ['notification_setting_id', 'user', 'enable_alerts', 'enable_recommendations', 'enable_reminders']
+    fields = [
+        'user', 
+        'enable_alerts', 
+        'enable_recommendations', 
+        'enable_reminders',
+        'created_at', 
+        'updated_at'
+    ]
+    list_display = [
+        'notification_setting_id', 
+        'user', 
+        'enable_alerts', 
+        'enable_recommendations', 
+        'enable_reminders',
+        'created_at', 
+        'updated_at'
+    ]
     search_fields = ['user__dni', 'user__fullname']
     list_filter = ['enable_alerts', 'enable_recommendations', 'enable_reminders']
-    readonly_fields = ['notification_setting_id']
+    readonly_fields = ['notification_setting_id', 'created_at', 'updated_at']
 
 admin.site.register(NotificationSettings, NotificationSettingsAdmin)
 
