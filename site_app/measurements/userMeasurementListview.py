@@ -5,10 +5,9 @@ from rest_framework import status
 from voltix.models import Measurement
 from .serializers import MeasurementSerializer
 from voltix.utils.comparison_status import annotate_comparison_status
-#swagger
+# swagger imports
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
 
 measurement_schema = openapi.Schema(
     type=openapi.TYPE_OBJECT,
@@ -23,6 +22,53 @@ measurement_schema = openapi.Schema(
     },
 )
 
+# Example response
+example_response = {
+    "status": "success",
+    "message": "Data retrieved successfully!",
+    "user": {
+        "id": 4,
+        "name": "John Smith",
+        "email": "john.smith@outlook.com"
+    },
+    "measurements": [
+        {
+            "id": 2,
+            "comparison_status": "Con discrepancia",
+            "measurement_start": "2023-10-01T00:00:00Z",
+            "measurement_end": "2023-10-31T23:59:59Z",
+            "data": {
+                "consumo_total": 213,
+                "periodo_medicion": {
+                    "inicio": "2023-10-01",
+                    "fin": "2023-10-31"
+                },
+                "tension_promedio": 230,
+                "corriente_promedio": {
+                    "punta": 23.9,
+                    "valle": 13.0
+                },
+                "eventos_registrados": {
+                    "interrupciones": 0,
+                    "caidas_de_tension": 2
+                },
+                "potencia_maxima_demandada": {
+                    "punta": 5.5,
+                    "valle": 3.0
+                },
+                "consumo_por_franja_horaria": {
+                    "punta": 146.0,
+                    "valle": 67.0
+                },
+                "factor_de_potencia_promedio": 0.95
+            },
+            "created_at": "2024-11-28T11:14:03.317972Z",
+            "updated_at": "2024-11-28T11:14:03.317972Z",
+            "user": 4
+        },
+        # Add additional measurements here for brevity
+    ]
+}
 
 class UserMeasurementListView(APIView):
     """
@@ -55,21 +101,25 @@ class UserMeasurementListView(APIView):
                         ),
                     },
                 ),
+                examples={
+                    "application/json": example_response  # Example response
+                },
             ),
             401: openapi.Response(description="Unauthorized. The token is invalid or has expired."),
             500: openapi.Response(description="Internal server error."),
         },
     )
-
-
     def get(self, request):
         try:
             user = request.user
 
+            # Retrieve measurements for the authenticated user
             measurements = Measurement.objects.filter(user=user)
 
+            # Annotate measurements with comparison status
             annotated_measurements = annotate_comparison_status(measurements, "measurement")
 
+            # Serialize the annotated measurements
             serializer = MeasurementSerializer(annotated_measurements, many=True)
 
             response_data = {

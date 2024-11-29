@@ -2,7 +2,7 @@ from django.urls import path
 
 from . import views
 from .views import InvoiceProcessView, InvoiceDetailView
-from .userinvoicelistview import UserInvoiceListView
+from .userInvoiceListview import UserInvoiceListView
 
 urlpatterns = [
     path("upload/", InvoiceProcessView.as_view(), name="invoice-upload"),
