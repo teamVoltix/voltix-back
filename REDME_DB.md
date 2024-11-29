@@ -43,10 +43,10 @@ from voltix.models import User
 
 # Create a superuser with the provided data
 superuser = User.objects.create_superuser(
-    dni="B7654123",
+    dni="12345678Z",
     fullname="Voltix",
     email="adminvoltix@igorwker.com",
-    password="1234567@"
+    password="1234Aa@"
 )
 
 # Print confirmation
