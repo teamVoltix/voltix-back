@@ -29,8 +29,8 @@ SECRET_KEY = os.environ['SECRET_KEY']
 
 
 # Configuración de Celery y Redis
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Broker para gestionar las tareas
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # Backend para resultados de las tareas
+CELERY_BROKER_URL =  os.environ['CELERY_BROKER_URL']  # Broker para gestionar las tareas
+CELERY_RESULT_BACKEND =  os.environ['CELERY_RESULT_BACKEND']  # Backend para resultados de las tareas
 CELERY_ACCEPT_CONTENT = ['json']  # Formato aceptado para mensajes
 CELERY_TASK_SERIALIZER = 'json'  # Serializador para tareas
 CELERY_TIMEZONE = 'UTC'  # Zona horaria
