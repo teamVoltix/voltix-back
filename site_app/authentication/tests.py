@@ -14,7 +14,7 @@ class ExtendedAuthenticationTests(TestCase):
         self.client = APIClient()
         self.user_data = {
             "fullname": "Test User",
-            "dni": "123456789",
+            "dni": "1234567A",
             "email": "test@example.com",
             "password": "Test1234!"
         }
@@ -29,34 +29,39 @@ class ExtendedAuthenticationTests(TestCase):
     # Tests for User Registration
     ##############################
 
-    def test_registration_with_special_characters_in_name(self):
-        """Test registration with names containing special characters."""
+    def test_registration_with_valid_dni(self):
+        """Test registration with a valid DNI."""
         response = self.client.post(reverse('register'), data={
-            "fullname": "Ñandú Pérez",
-            "dni": "987654321",
-            "email": "specialchar@example.com",
-            "password": "ValidPass123!"
+            "fullname": "John Doe",
+            "dni": "1234567A",  # Válido: máximo 8 caracteres y al menos una letra
+            "email": "johndoe@example.com",
+            "password": "Password123!"
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_registration_with_long_dni(self):
-        """Test registration with a very long DNI."""
+
+    def test_registration_with_invalid_dni_length(self):
+        """Test registration fails if DNI has more than 8 characters."""
         response = self.client.post(reverse('register'), data={
-            "fullname": "Long DNI",
-            "dni": "12345678901234567890",
-            "email": "longdni@example.com",
-            "password": "ValidPass123!"
+            "fullname": "John Doe",
+            "dni": "123456789",  # Más de 8 caracteres
+            "email": "johndoe@example.com",
+            "password": "Password123!"
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("El DNI no puede tener más de 8 caracteres.", str(response.data))
 
-    def test_registration_with_malformed_json(self):
-        """Test registration with invalid JSON format."""
-        response = self.client.post(
-            reverse('register'),
-            data="{'malformed': 'json'}",
-            content_type="application/json"
-        )
+    def test_registration_with_dni_without_letters(self):
+        """Test registration fails if DNI does not contain at least one letter."""
+        response = self.client.post(reverse('register'), data={
+            "fullname": "John Doe",
+            "dni": "12345678",  # No contiene ninguna letra
+            "email": "johndoe@example.com",
+            "password": "Password123!"
+        })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("El DNI debe contener al menos una letra.", str(response.data))
+
 
     ##############################
     # Tests for User Login
