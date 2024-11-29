@@ -1,10 +1,11 @@
-from django.db.models import OuterRef, Subquery, Case, When, Value, CharField, Exists
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from voltix.models import Invoice, InvoiceComparison
+from voltix.models import Invoice
 from .serializers import InvoiceSerializer
+from voltix.utils.comparison_status import annotate_comparison_status  # Import the utility function
+
 
 class UserInvoiceListView(APIView):
     """
@@ -14,31 +15,13 @@ class UserInvoiceListView(APIView):
 
     def get(self, request):
         try:
-            # Get the authenticated user
             user = request.user
 
-            # Subquery to check if a comparison exists for each invoice
-            comparison_subquery = InvoiceComparison.objects.filter(invoice=OuterRef('pk'))
+            invoices = Invoice.objects.filter(user=user)
+            annotated_invoices = annotate_comparison_status(invoices, "invoice")
 
-            # Annotate the user's invoices with their comparison status
-            invoices = Invoice.objects.filter(user=user).annotate(
-                comparison_status=Case(
-                    # No comparison exists
-                    When(~Exists(comparison_subquery), then=Value("Sin comparacion")),
-                    # A valid comparison exists
-                    When(Exists(comparison_subquery.filter(is_comparison_valid=True)), then=Value("Sin discrepancia")),
-                    # An invalid comparison exists
-                    When(Exists(comparison_subquery.filter(is_comparison_valid=False)), then=Value("Con discrepancia")),
-                    # Default case
-                    default=Value("unknown"),
-                    output_field=CharField(),
-                )
-            )
+            serializer = InvoiceSerializer(annotated_invoices, many=True)
 
-            # Serialize the data
-            serializer = InvoiceSerializer(invoices, many=True)
-
-            # Enhanced response structure
             response_data = {
                 "status": "success",
                 "message": "Data retrieved successfully!",
@@ -47,14 +30,12 @@ class UserInvoiceListView(APIView):
                     "name": user.fullname,
                     "email": user.email,
                 },
-                "invoices": serializer.data,  # Send invoices as a structured list
+                "invoices": serializer.data,
             }
 
-            # Return a formatted response
             return Response(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
-            # Handle unexpected errors gracefully
             return Response(
                 {
                     "status": "error",
