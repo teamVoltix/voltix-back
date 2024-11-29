@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.http import JsonResponse
+from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from voltix.models import Invoice, Measurement, InvoiceComparison
 
@@ -111,7 +112,19 @@ def compare_invoice_and_measurement(request):
             comparison_results=response_data,
             is_comparison_valid=response_data["coincidencia_general"]
         )
+        
+        response = {
+            "status": "success",
+            "message": "Comparison completed successfully.",
+            "user_id": request.user.id,
+            "invoice_id": invoice.id,
+            "measurement_id": measurement.id,
+            "invoice_created_at": invoice.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "measurement_created_at": measurement.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "result": response_data
+        }
 
-        return Response(response_data, status=200)
+
+        return Response(response, status=200)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
