@@ -14,7 +14,7 @@ def send_reminder_to_user(invoice_comparison_id):
         print(f"No se encontró la comparación de factura con ID {invoice_comparison_id}")
         return  # Detener la tarea si no se encuentra la comparación
 
-    # Verificar si ya ha pasado más de 7 días desde la creación de la comparación
+    # Verificar si ya ha pasado más de 5 minuto desde la creación de la comparación
     if invoice_comparison.created_at <= timezone.now() - timedelta(minutes=1):
         # Recuperar la configuración de notificaciones del usuario relacionado
         notification_settings = NotificationSettings.objects.filter(user=invoice_comparison.user).first()
@@ -38,7 +38,7 @@ def send_reminder_to_user(invoice_comparison_id):
         else:
             print(f"El usuario {invoice_comparison.user.email} no tiene habilitado los recordatorios.")
     else:
-        print(f"El recordatorio no se guardó porque aún no han pasado 7 días desde la creación de la comparación.")
+        print(f"El recordatorio no se guardó porque aún no han pasado 5 minutos desde la creación de la comparación.")
 
 
 
