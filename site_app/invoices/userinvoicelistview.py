@@ -8,20 +8,23 @@ from .serializers import InvoiceSerializer
 
 class UserInvoiceListView(APIView):
     """
-    API view to retrieve a list of invoices with their comparison status.
+    API view to retrieve a list of invoices with their comparison status for the authenticated user.
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
+            # Get the authenticated user
+            user = request.user
+
             # Subquery to check if a comparison exists for each invoice
             comparison_subquery = InvoiceComparison.objects.filter(invoice=OuterRef('pk'))
 
-            # Annotate the invoices with their comparison status
-            invoices = Invoice.objects.annotate(
+            # Annotate the user's invoices with their comparison status
+            invoices = Invoice.objects.filter(user=user).annotate(
                 comparison_status=Case(
                     # No comparison exists
-                    When(~Exists(comparison_subquery), then=Value("Sin comparasion")),
+                    When(~Exists(comparison_subquery), then=Value("Sin comparacion")),
                     # A valid comparison exists
                     When(Exists(comparison_subquery.filter(is_comparison_valid=True)), then=Value("Sin discrepancia")),
                     # An invalid comparison exists
@@ -40,9 +43,9 @@ class UserInvoiceListView(APIView):
                 "status": "success",
                 "message": "Data retrieved successfully!",
                 "user": {
-                    "id": request.user.id,
-                    "name": request.user.fullname,
-                    "email": request.user.email,
+                    "id": user.id,
+                    "name": user.fullname,
+                    "email": user.email,
                 },
                 "invoices": serializer.data,  # Send invoices as a structured list
             }
