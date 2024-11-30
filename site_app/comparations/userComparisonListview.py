@@ -6,6 +6,7 @@ from voltix.models import InvoiceComparison
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+
 class UserComparisonListView(APIView):
     """
     Retrieve the list of comparisons for the authenticated user.
@@ -57,6 +58,7 @@ class UserComparisonListView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class UserComparisonDetailView(APIView):
