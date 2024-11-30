@@ -3,6 +3,8 @@
 import os
 import sys
 
+# Solución para macOS y fork safety
+os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
 def main():
     """Run administrative tasks."""

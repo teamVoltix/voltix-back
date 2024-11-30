@@ -27,6 +27,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ['SECRET_KEY']
 
+
+# Configuración de Celery y Redis
+CELERY_BROKER_URL =  os.environ['CELERY_BROKER_URL']  # Broker para gestionar las tareas
+CELERY_RESULT_BACKEND =  os.environ['CELERY_RESULT_BACKEND']  # Backend para resultados de las tareas
+CELERY_ACCEPT_CONTENT = ['json']  # Formato aceptado para mensajes
+CELERY_TASK_SERIALIZER = 'json'  # Serializador para tareas
+CELERY_TIMEZONE = 'UTC'  # Zona horaria
+
+
 # for production we will need to change it
 # CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
 
