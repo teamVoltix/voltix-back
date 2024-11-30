@@ -47,7 +47,7 @@ class UserComparisonListView(APIView):
                 {
                     "invoice_id": comparison.invoice.id,
                     "measurement_id": comparison.measurement.id,
-                    "comparison_status": "Sin descrepancia" if comparison.is_comparison_valid else "Con descrepancia",
+                    "comparison_status": "Sin Descrepancia" if comparison.is_comparison_valid else "Con Descrepancia",
                     "created_at": comparison.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                     "result": comparison.comparison_results
                 }
@@ -112,7 +112,7 @@ class UserComparisonDetailView(APIView):
             comparison_data = {
                 "invoice_id": comparison.invoice.id,
                 "measurement_id": comparison.measurement.id,
-                "comparison_status": "Sin descrepancia" if comparison.is_comparison_valid else "Con descrepancia",
+                "comparison_status": "Sin Descrepancia" if comparison.is_comparison_valid else "Con Descrepancia",
                 "created_at": comparison.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 "result": comparison.comparison_results
             }
