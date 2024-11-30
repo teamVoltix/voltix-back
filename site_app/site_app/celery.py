@@ -11,6 +11,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'site_app.settings')
 # Crea la aplicación de Celery
 #app = Celery('site_app', broker='redis://localhost:6379/0', backend='redis://localhost:6379/0')
 app = Celery('site_app')
+
 # Configura Celery para leer las configuraciones desde el archivo settings.py
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
