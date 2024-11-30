@@ -3,7 +3,7 @@ services:
     pull_policy: never
     build:
       context: .
-    image: voltix-backend
+    image: igrowker/voltix-backend
     restart: always
     environment:
       - DJANGO_SUPERUSER_USERNAME=${DJ_USERNAME}
@@ -22,7 +22,9 @@ services:
     working_dir: /usr/share/app
     volumes:
      - ./facturas:/tmp
-     - ./site_app/static:/usr/share/app/static     
+     - ./site_app/static:/usr/share/app/static
+    depends_on:
+      - redis-voltix     
     networks:
       - voltix
   voltix-back-proxy:
@@ -37,6 +39,13 @@ services:
       - ./site_app/static:/app/static
     depends_on:
       - voltix-back
+    networks:
+      - voltix
+  redis-voltix:
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
     networks:
       - voltix
 

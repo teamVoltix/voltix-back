@@ -3,24 +3,21 @@ DEBUG=True
 USE_DRF_SETTINGS=True
 
 #DB
-#DATABASE_PASSWORD=AVNS_KMlR6yxJcuqiTSYfkny
-#LINK_DB=postgres://avnadmin:AVNS_KMlR6yxJcuqiTSYfkny@miluz-i004-voltix-back.e.aivencloud.com:22219/defaultdb?sslmode=require
-#DB_NAME=defaultdb
-#DB_USER=avnadmin
-#DB_HOST=miluz-i004-voltix-back.e.aivencloud.com
-#DB_PORT=22219
 DB_NAME='MiLuz'
 DB_HOST='voltix_db'
 DB_PORT=5432
 DB_USER='postgres'
 DATABASE_PASSWORD='voltix'
 
+CELERY_BROKER_URL='redis://redis-voltix:6379/0'
+CELERY_RESULT_BACKEND='redis://redis-voltix:6379/0'
 
 #SECRET KEY
 SECRET_KEY=QgxQ^frI1bS2MUPUkYzwG0HFsLpkV0b*eIikX*ctr00x-^zoHi
 
 #Superuser
-DJ_USERNAME=B7654123
+DNI=B7654123
+DJ_USERNAME=Voltix
 DJ_PASSWORD=1234567@
 DJ_EMAIL=adminvoltix@igorwker.com
 
@@ -36,8 +33,3 @@ DJ_EMAIL=adminvoltix@igorwker.com
 CORS_ALLOW_ALL_ORIGINS=True
 
 CSRF_TRUSTED_ORIGINS=https://example.com,https://sub.example.com,http://localhost:3000,http://127.0.0.1:3000,http://localhost:4200
-
-
-    # Production URL (https://www.example.com): The live website that users access.
-    # Staging URL (https://staging.example.com): For testing pre-production changes.
-    # Development URLs (http://localhost:3000, http://127.0.0.1:3000): For local testing from your frontend running on a development server.
