@@ -34,6 +34,7 @@ CELERY_RESULT_BACKEND =  os.environ['CELERY_RESULT_BACKEND']  # Backend para res
 CELERY_ACCEPT_CONTENT = ['json']  # Formato aceptado para mensajes
 CELERY_TASK_SERIALIZER = 'json'  # Serializador para tareas
 CELERY_TIMEZONE = 'UTC'  # Zona horaria
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 
 # for production we will need to change it
