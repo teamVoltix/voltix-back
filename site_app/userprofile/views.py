@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,6 +10,9 @@ from cloudinary.uploader import upload
 from cloudinary.exceptions import Error as CloudinaryError
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from PIL import Image
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 # Endpoint para obtener el perfil del usuario (GET)
 @swagger_auto_schema(
@@ -231,35 +234,43 @@ from cloudinary.exceptions import Error as CloudinaryError
         ),
     }
 )
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser])  # Agregar parser_classes para manejar multipart/form-data
+@parser_classes([MultiPartParser, FormParser])
 def upload_profile_photo(request):
     try:
+        # Obtener el perfil del usuario
         profile = Profile.objects.get(user=request.user)
     except Profile.DoesNotExist:
         return Response({"error": "El perfil no existe."}, status=404)
 
-    # Validar que se envió un archivo en la solicitud
     if 'photo' not in request.FILES:
         return Response({"error": "No se encontró un archivo para subir."}, status=400)
 
     photo = request.FILES['photo']
-    
+
     # Validar tipo de archivo
     if photo.content_type not in ['image/jpeg', 'image/png']:
         return Response({"error": "Tipo de archivo no válido."}, status=400)
-    
-    # Validar tamaño del archivo (máximo 5 MB)
+
+    # Validar tamaño del archivo
     MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
     if photo.size > MAX_FILE_SIZE:
         return Response({"error": "El archivo excede el tamaño máximo permitido de 5 MB."}, status=400)
 
+    # Validar si el archivo es una imagen válida
     try:
-        # Subir la foto a Cloudinary
+        img = Image.open(photo)
+        img.verify()
+    except (IOError, Image.DecompressionBombError):
+        return Response({"error": "El archivo está corrupto o no es una imagen válida."}, status=400)
+
+    try:
+        # Subir a Cloudinary
         upload_result = upload(photo, folder="profiles", overwrite=True, resource_type="image")
         photo_url = upload_result.get("secure_url")
-
         if not photo_url:
             return Response({"error": "Error al subir la imagen a Cloudinary."}, status=500)
 
@@ -271,8 +282,14 @@ def upload_profile_photo(request):
             "message": "Foto subida exitosamente.",
             "photo_url": photo_url
         }, status=200)
+
     except CloudinaryError as e:
-        return Response({"error": "Error de Cloudinary"}, status=500)
+        if "Quota exceeded" in str(e):
+            return Response({"error": "Cuota de Cloudinary excedida."}, status=500)
+        return Response({"error": "Error de Cloudinary: " + str(e)}, status=500)
+
+    except ConnectionError:
+        return Response({"error": "No hay conexión a Internet."}, status=500)
     except Exception as e:
         return Response({"error": f"Error inesperado: {str(e)}"}, status=500)
 
