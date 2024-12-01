@@ -23,9 +23,25 @@ class RequestVerificationCodeView(APIView):
         if not email:
             return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Verificar si el correo está registrado
+        # Verificar si usuario con este correo está registrado
         if User.objects.filter(email=email).exists():
             return Response({"error": "This email is already registered."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Count expired codes in the last hour
+        one_hour_ago = now() - timedelta(hours=1)
+        expired_codes_count = EmailVerification.objects.filter(
+            email=email,
+            is_used=False,
+            code_expiration__lt=now(),
+            created_at__gte=one_hour_ago,
+        ).count()
+
+        # Limit to 3 expired codes per hour
+        if expired_codes_count >= 3:
+            return Response(
+                {"error": "Too many attempts. Please try again in an hour."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
 
 
         # Generate a 6-digit numerical code
