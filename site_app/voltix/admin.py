@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     User, Profile, Invoice, Measurement, Notification, 
-    NotificationSettings, InvoiceComparison
+    NotificationSettings, InvoiceComparison, EmailVerification
 )
 
 class UserAdmin(admin.ModelAdmin):
@@ -104,4 +104,23 @@ class InvoiceComparisonAdmin(admin.ModelAdmin):
     display_comparison_results.short_description = "Comparison Results (JSON)"
 
 admin.site.register(InvoiceComparison, InvoiceComparisonAdmin)
+
+
+class EmailVerificationAdmin(admin.ModelAdmin):
+    fields = ['email', 'masked_verification_code', 'code_expiration', 'is_used', 'attempts', 'created_at']
+    list_display = ['email', 'masked_verification_code', 'code_expiration', 'is_used', 'attempts', 'created_at']
+    readonly_fields = ['masked_verification_code', 'created_at']
+    search_fields = ['email']
+    list_filter = ['is_used', 'code_expiration', 'created_at']
+
+    def masked_verification_code(self, obj):
+        if obj.verification_code:
+            # Mask the hashed code with asterisks except for the last 4 characters
+            return f"{'*' * (len(obj.verification_code) - 4)}{obj.verification_code[-4:]}"
+        return "No Code Set"
+
+    masked_verification_code.short_description = "Verification Code (Masked)"
+
+admin.site.register(EmailVerification, EmailVerificationAdmin)
+
 

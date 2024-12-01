@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .email-header {
+            background: #007bff;
+            color: #ffffff;
+            text-align: center;
+            padding: 10px;
+        }
+        .email-body {
+            padding: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #ffffff;
+            background: #007bff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .btn:hover {
+            background: #0056b3;
+            color: #ffffff;
+        }
+        .email-footer {
+            background: #f4f4f4;
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #888888;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>Código de Verificación - Voltix</h1>
+        </div>
+        <div class="email-body">
+            <p>Estimado Usuario,</p>
+            <p>Gracias por registrarte con nosotros. Tu código de verificación es:</p>
+            <h2>{{ code }}</h2>
+            <p>Este código expirará en 10 minutos.</p>
+            <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+            <a href="mailto:voltix899@gmail.com" class="btn">Contáctanos</a>
+        </div>
+        <div class="email-footer">
+            <p>&copy; 2024 Voltix. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>
