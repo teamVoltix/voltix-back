@@ -7,6 +7,7 @@ from io import BytesIO
 from django.core.files.uploadedfile import SimpleUploadedFile
 from voltix.models import User, Profile
 from django.db import connections  # Importar conexiones
+from threading import Thread
 
 class UploadProfilePhotoTests(TestCase):
     
@@ -142,6 +143,97 @@ class UploadProfilePhotoTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['error'], "El archivo excede el tamaño máximo permitido de 5 MB.")
+        
+    def test_upload_profile_photo_unauthenticated(self):
+    # Desautenticar al usuario
+        self.client.force_authenticate(user=None)
+
+    # Crear un archivo simulado
+        test_image = SimpleUploadedFile(
+            "test_image.jpg",
+            b"fake_image_content",
+            content_type="image/jpeg"
+    )
+
+        response = self.client.post(
+            reverse('upload_profile_photo'),
+            {'photo': test_image},
+            format='multipart'
+    )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data['detail'], "Authentication credentials were not provided.")
+        
+    @patch('userprofile.views.upload')
+    def test_upload_profile_photo_cloudinary_quota_exceeded(self, mock_upload):
+        # Simular un error de cuota excedida
+        mock_upload.side_effect = Exception("Quota exceeded")
+
+        test_image = SimpleUploadedFile(
+            "test_image.jpg",
+            b"fake_image_content",
+            content_type="image/jpeg"
+        )
+
+        response = self.client.post(
+            reverse('upload_profile_photo'),
+            {'photo': test_image},
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("Error inesperado: Quota exceeded", response.data['error'])
+  
+  
+    @patch('userprofile.views.upload')
+    def test_upload_profile_photo_no_internet(self, mock_upload):
+        # Simular una excepción de red
+        mock_upload.side_effect = Exception("Network error")
+
+        test_image = SimpleUploadedFile(
+            "test_image.jpg",
+            b"fake_image_content",
+            content_type="image/jpeg"
+        )
+
+        response = self.client.post(
+            reverse('upload_profile_photo'),
+            {'photo': test_image},
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("Error inesperado: Network error", response.data['error'])
+
+    
+
+    @patch('userprofile.views.upload')
+    def test_upload_profile_photo_concurrent_requests(self, mock_upload):
+        mock_upload.return_value = {
+            "secure_url": "https://example.com/test-photo.jpg"
+        }
+
+        def upload_request():
+            test_image = SimpleUploadedFile(
+                "test_image.jpg",
+                b"fake_image_content",
+                content_type="image/jpeg"
+            )
+            self.client.post(
+                reverse('upload_profile_photo'),
+                {'photo': test_image},
+                format='multipart'
+            )
+
+        threads = [Thread(target=upload_request) for _ in range(5)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+        # Añadir verificaciones adicionales si es necesario
+
+
 
 
 
