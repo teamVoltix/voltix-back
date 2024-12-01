@@ -125,5 +125,24 @@ class UploadProfilePhotoTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['error'], "Tipo de archivo no válido.")
+        
+    def test_upload_profile_photo_large_file(self):
+    # Crear un archivo simulado muy grande
+        large_file = SimpleUploadedFile(
+        "large_image.jpg",
+        b"0" * (10 * 1024 * 1024),  # 10 MB
+        content_type="image/jpeg"
+    )
+
+        response = self.client.post(
+            reverse('upload_profile_photo'),
+            {'photo': large_file},
+            format='multipart'
+    )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], "El archivo excede el tamaño máximo permitido de 5 MB.")
+
+
 
 

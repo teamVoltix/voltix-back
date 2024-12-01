@@ -249,6 +249,11 @@ def upload_profile_photo(request):
     # Validar tipo de archivo
     if photo.content_type not in ['image/jpeg', 'image/png']:
         return Response({"error": "Tipo de archivo no válido."}, status=400)
+    
+    # Validar tamaño del archivo (máximo 5 MB)
+    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+    if photo.size > MAX_FILE_SIZE:
+        return Response({"error": "El archivo excede el tamaño máximo permitido de 5 MB."}, status=400)
 
     try:
         # Subir la foto a Cloudinary
