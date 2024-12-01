@@ -108,4 +108,22 @@ class UploadProfilePhotoTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertIn("Cloudinary", response.data['error'])
+        
+    def test_upload_profile_photo_invalid_file_type(self):
+    # Crear un archivo simulado con un tipo no permitido
+        invalid_file = SimpleUploadedFile(
+        "test_file.txt",
+        b"This is a text file, not an image",
+        content_type="text/plain"
+    )
+
+        response = self.client.post(
+            reverse('upload_profile_photo'),
+            {'photo': invalid_file},
+            format='multipart'
+    )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], "Tipo de archivo no válido.")
+
 

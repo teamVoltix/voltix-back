@@ -245,6 +245,10 @@ def upload_profile_photo(request):
         return Response({"error": "No se encontró un archivo para subir."}, status=400)
 
     photo = request.FILES['photo']
+    
+    # Validar tipo de archivo
+    if photo.content_type not in ['image/jpeg', 'image/png']:
+        return Response({"error": "Tipo de archivo no válido."}, status=400)
 
     try:
         # Subir la foto a Cloudinary
