@@ -6,46 +6,75 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.mail import send_mail
 from django.utils.timezone import now, timedelta
-from voltix.models import EmailVerification
+from voltix.models import EmailVerification, User
 import random
 import string
+from rest_framework.permissions import AllowAny
+# from django.contrib.auth import get_user_model
+# User = get_user_model()
 
-
+#1
 class RequestVerificationCodeView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
     def post(self, request):
         email = request.data.get('email')
         if not email:
             return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar si el correo está registrado
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "This email is already registered."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Check for existing verification record
-        verification, created = EmailVerification.objects.get_or_create(email=email)
+
+        # Generate a 6-digit numerical code
+        code = f"{random.randint(100000, 999999)}"
+
+        # Set the default expiration time
+        expiration_time = now() + timedelta(minutes=10)
+
+        # Create or update the verification record
+        verification, created = EmailVerification.objects.get_or_create(
+            email=email,
+            defaults={
+                'code_expiration': expiration_time,
+                'is_used': False,
+            }
+        )
 
         if not created and not verification.is_code_expired():
             return Response({"message": "A code has already been sent. Please try again later."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
-        # Generate a 6-digit numerical code
-        code = f"{random.randint(100000, 999999)}"  # 6-digit code
+        # Update the code and expiration for existing records
         verification.set_verification_code(code)
-        verification.code_expiration = now() + timedelta(minutes=10)
+        verification.code_expiration = expiration_time
         verification.is_used = False
         verification.save()
 
-        # Send the code via email
-        send_mail(
-            'Your Verification Code',
-            f'Your verification code is {code}. It expires in 10 minutes.',
-            'no-reply@example.com',
-            [email],
-            fail_silently=False,
-        )
+        # # Send the code via email
+        # send_mail(
+        #     'Your Verification Code',
+        #     f'Your verification code is {code}. It expires in 10 minutes.',
+        #     'no-reply@example.com',
+        #     [email],
+        #     fail_silently=False,
+        # )
 
-        return Response({"message": "Verification code sent."}, status=status.HTTP_200_OK)
+        # return Response({"message": "Verification code sent."}, status=status.HTTP_200_OK)
+
+        return Response({"message": "Verification code generated and logged."}, status=status.HTTP_200_OK)
+
 
 
 
 #2
 
 class ValidateVerificationCodeView(APIView):
+
+    authentication_classes = []  # Disable authentication
+    permission_classes = [AllowAny]
+
     def post(self, request):
         email = request.data.get('email')
         code = request.data.get('code')
@@ -79,15 +108,16 @@ class ValidateVerificationCodeView(APIView):
         return Response({"message": "Email verified successfully."}, status=status.HTTP_200_OK)
 
 #3
-
+#serializer de registration
 from django.contrib.auth import get_user_model
 from rest_framework.serializers import ModelSerializer
 from rest_framework.exceptions import ValidationError
 
 
-User = get_user_model()
+
 
 class RegistrationSerializer(ModelSerializer):
+
     class Meta:
         model = User
         fields = ['email', 'password', 'fullname', 'dni']
@@ -103,6 +133,10 @@ class RegistrationSerializer(ModelSerializer):
         return user
 
 class RegistrationView(APIView):
+
+    authentication_classes = []  # Disable authentication
+    permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
