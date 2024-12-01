@@ -1,6 +1,12 @@
 from __future__ import absolute_import, unicode_literals
-import multiprocessing
-multiprocessing.set_start_method('forkserver', force=True)
+
+# import multiprocessing
+# multiprocessing.set_start_method('forkserver', force=True)
+import sys
+if sys.platform != 'win32':  # Check if the platform is not Windows
+    import multiprocessing
+    multiprocessing.set_start_method('forkserver', force=True)
+
 
 import os
 from celery import Celery

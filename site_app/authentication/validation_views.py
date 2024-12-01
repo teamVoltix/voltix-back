@@ -68,18 +68,19 @@ class RequestVerificationCodeView(APIView):
         verification.is_used = False
         verification.save()
 
-        # # Send the code via email
-        # send_mail(
-        #     'Your Verification Code',
-        #     f'Your verification code is {code}. It expires in 10 minutes.',
-        #     'no-reply@example.com',
-        #     [email],
-        #     fail_silently=False,
-        # )
+        # Send the code via email
+        send_mail(
+            'Your Verification Code',
+            f'Your verification code is {code}. It expires in 10 minutes.',
+            'no-reply@example.com',
+            [email],
+            fail_silently=False,
+        )
 
-        # return Response({"message": "Verification code sent."}, status=status.HTTP_200_OK)
+        return Response({"message": "Verification code sent."}, status=status.HTTP_200_OK)
 
-        return Response({"message": "Verification code generated and logged."}, status=status.HTTP_200_OK)
+        
+        # return Response({"message": "Verification code generated and logged."}, status=status.HTTP_200_OK)
 
 
 
