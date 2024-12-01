@@ -136,14 +136,16 @@ from pathlib import Path
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ['DB_NAME'],
+        'NAME': os.environ['DB_NAME'],  # Base de datos de desarrollo
         'USER': os.environ['DB_USER'],
         'PASSWORD': os.environ['DATABASE_PASSWORD'],
         'HOST': os.environ['DB_HOST'],
         'PORT': int(os.environ['DB_PORT']),
         'CONN_MAX_AGE': 0,  # Deshabilita conexiones persistentes
+        
     }
 }
+
 
 # to print database conection details
 # print(os.environ.get('DB_NAME'))
@@ -234,3 +236,7 @@ CLOUDINARY = {
     'api_key': os.getenv('CLOUDINARY_API_KEY'),
     'api_secret': os.getenv('CLOUDINARY_API_SECRET'),
 }
+
+
+
+

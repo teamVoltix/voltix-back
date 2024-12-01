@@ -263,6 +263,7 @@ def upload_profile_photo(request):
             "photo_url": photo_url
         }, status=200)
     except CloudinaryError as e:
-        return Response({"error": f"Error de Cloudinary: {str(e)}"}, status=500)
+        return Response({"error": "Error de Cloudinary"}, status=500)
     except Exception as e:
         return Response({"error": f"Error inesperado: {str(e)}"}, status=500)
+
