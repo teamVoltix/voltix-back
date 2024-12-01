@@ -3,6 +3,8 @@ from django.utils.timezone import now
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.utils.timezone import now, timedelta
+from django.contrib.auth.hashers import make_password, check_password
 
 class UserManager(BaseUserManager):
     def create_user(self, dni, fullname, email, password=None, **extra_fields):
@@ -139,15 +141,22 @@ class InvoiceComparison(models.Model):
     def __str__(self):
         return f"Comparison {self.id} - User: {self.user.fullname} - Invoice: {self.invoice.id}"
 
-# class Token(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tokens')
-#     token = models.CharField(max_length=512, unique=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     expires_at = models.DateTimeField()
+class EmailVerification(models.Model):
+    email = models.EmailField(unique=True)
+    verification_code = models.CharField(max_length=128)  # Hashed code
+    code_expiration = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    attempts = models.IntegerField(default=0)  # Track retry attempts
+    created_at = models.DateTimeField(auto_now_add=True)
 
-#     def is_valid(self):
-#         return now() < self.expires_at
+    def set_verification_code(self, code):
+        self.verification_code = make_password(code)
 
-#     def __str__(self):
-#         return f"Token for {self.user.fullname} (valid: {self.is_valid()})"
+    def check_verification_code(self, code):
+        return check_password(code, self.verification_code)
+
+    def is_code_expired(self):
+        return now() > self.code_expiration
+
+    def __str__(self):
+        return f"Verification for {self.email}"

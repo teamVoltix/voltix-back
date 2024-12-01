@@ -8,7 +8,12 @@ from rest_framework_simplejwt.views import (
 )
 from .views import UserRegistrationView, LoginView
 from .views import protected_view, logout_view, ChangePasswordView, password_reset_request_view, password_reset_view
-
+# nueva logica de registracion
+from .validation_views import (
+    RequestVerificationCodeView,
+    ValidateVerificationCodeView,
+    RegistrationView, 
+)
 
 
 
@@ -27,4 +32,9 @@ urlpatterns = [
     # path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('protected/', protected_view, name='protected'),
+
+    #nuevas rutas de nueva logica de registracion con validacion
+    path('email-verification/request/', RequestVerificationCodeView.as_view(), name='request_verification_code'),
+    path('email-verification/validate/', ValidateVerificationCodeView.as_view(), name='validate_verification_code'),
+    path('email-verification/register/', RegistrationView.as_view(), name='email_verification_register'),
 ]
