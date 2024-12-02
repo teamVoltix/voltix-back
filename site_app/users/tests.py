@@ -87,3 +87,63 @@ class GetAllUsersTestCase(TestCase):
 
         # Verificar el mensaje de error
         self.assertEqual(response.json(), {"detail": 'Method "POST" not allowed.'})
+        
+    def test_get_all_users_empty_database(self):
+    # Vaciar la base de datos de usuarios
+        User.objects.all().delete()
+
+        # Llamar al endpoint
+        url = reverse('get_all_users')
+        response = self.client.get(url)
+
+        # Verificar que la respuesta es 200 OK
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verificar que la respuesta contenga una lista vacía
+        expected_data = {
+            "message": "Usuarios obtenidos exitosamente",
+            "usuarios": []  # Lista vacía
+        }
+        self.assertDictEqual(response.json(), expected_data)
+        
+    def test_get_all_users_response_structure(self):
+    # Llamar al endpoint
+        url = reverse('get_all_users')
+        response = self.client.get(url)
+
+        # Verificar que la respuesta es 200 OK
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Obtener la lista de usuarios
+        usuarios = response.json().get("usuarios", [])
+
+        # Verificar que cada usuario tiene los campos esperados
+        expected_keys = {"user_id", "fullname", "dni", "email", "created_at", "updated_at"}
+        for usuario in usuarios:
+            self.assertEqual(set(usuario.keys()), expected_keys)
+            
+    def test_get_all_users_sorted_by_created_at(self):
+    # Crear un tercer usuario para verificar el orden
+        self.user3 = User.objects.create_user(
+            dni="55555555C",
+            fullname="Third User",
+            email="thirduser@example.com",
+            password="password789"
+        )
+
+        # Llamar al endpoint
+        url = reverse('get_all_users')
+        response = self.client.get(url)
+
+        # Verificar que la respuesta es 200 OK
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Obtener la lista de usuarios de la respuesta
+        usuarios = response.json().get("usuarios", [])
+
+        # Verificar que los usuarios están ordenados por created_at
+        created_at_list = [user['created_at'] for user in usuarios]
+        self.assertEqual(created_at_list, sorted(created_at_list))
+
+
+

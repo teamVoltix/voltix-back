@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes
+from datetime import timezone
 
 def index(request):
     return HttpResponse("Bienvenido a Users.")
@@ -66,13 +67,19 @@ def index(request):
 def get_all_users(request):
     if request.method == 'GET':
         try:
-            # Obtener todos los usuarios
-            users = User.objects.all().values(
+            # Obtener todos los usuarios ordenados por created_at ascendente
+            users = User.objects.all().order_by('created_at').values(
                 'user_id', 'fullname', 'dni', 'email', 'created_at', 'updated_at'
             )
-            users_list = list(users)
+            users_list = [
+                {
+                    **user,
+                    "created_at": user['created_at'].astimezone(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
+                    "updated_at": user['updated_at'].astimezone(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
+                }
+                for user in users
+            ]
 
-            # Respuesta JSON con los usuarios
             return JsonResponse({
                 "message": "Usuarios obtenidos exitosamente",
                 "usuarios": users_list
