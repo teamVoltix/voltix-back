@@ -47,3 +47,47 @@ jobs:
           tags: |
               ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:latest
               ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:${{ github.sha }}
+
+  deploy:
+    needs: build-and-test
+    runs-on:  [self-hosted, voltix-r2]
+    env:
+      DB_HOST: '${{ secrets.DB_HOST }}'
+      DB_PORT: '${{ secrets.DB_PORT }}'
+      DB_NAME: '${{ secrets.DB_NAME }}'
+      DB_USER: '${{ secrets.DB_USER }}'
+      DATABASE_PASSWORD: '${{ secrets.DATABASE_PASSWORD }}'
+      SECRET_KEY: '${{ secrets.SECRET_KEY }}'
+      DJ_USERNAME: '${{ secrets.DJ_USERNAME }}'
+      DJ_PASSWORD: '${{ secrets.DJ_PASSWORD }}'
+      DJ_EMAIL: '${{ secrets.DJ_EMAIL }}'
+      DNI: '${{ secrets.DNI }}'
+      CORS_ALLOW_ALL_ORIGINS: '${{ secrets.CORS_ALLOW_ALL_ORIGINS }}'
+      CSRF_TRUSTED_ORIGINS: '${{ secrets.CSRF_TRUSTED_ORIGINS }}'
+      USE_DRF_SETTINGS: '${{ secrets.USE_DRF_SETTINGS }}'
+      DEBUG: '${{ secrets.DEBUG }}'
+      CELERY_BROKER_URL: '${{ secrets.CELERY_BROKER_URL }}'
+      CELERY_RESULT_BACKEND: '${{ secrets.CELERY_RESULT_BACKEND }}'
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Delete Previous 
+        run: |
+          docker-compose -f docker-compose.dev.yaml stop voltix-back && docker-compose -f docker-compose.dev.yaml rm voltix-back
+
+      - name: Pull and Deploy
+        run: |
+          docker-compose -f docker-compose.dev.yaml pull && docker-compose -f docker-compose.dev.yaml up -d   
+
+      - name: Remove old Images
+        run: |
+          docker rmi $(docker images -f dangling=true -q )
+      
+      - name: Post Deploy Tasks
+        run: |
+          docker-compose -f docker-compose.dev.yaml exec -it voltix-back python3 manage.py collectstatic --noinput
+          docker-compose -f docker-compose.dev.yaml exec -it voltix-back python3 manage.py makemigrations
+          docker-compose -f docker-compose.dev.yaml exec -it voltix-back python3 manage.py migrate
