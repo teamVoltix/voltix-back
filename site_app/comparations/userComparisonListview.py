@@ -41,7 +41,7 @@ class UserComparisonListView(APIView):
             comparisons = InvoiceComparison.objects.filter(user=request.user)
 
             if not comparisons.exists():
-                return Response({"message": "No comparisons found."}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"message": "No comparisons found."}, status=status.HTTP_404_NOT_FOUND, content_type='application/json')
 
             comparison_data = [
                 {
@@ -54,10 +54,10 @@ class UserComparisonListView(APIView):
                 for comparison in comparisons
             ]
 
-            return Response(comparison_data, status=status.HTTP_200_OK)
+            return Response(comparison_data, status=status.HTTP_200_OK, content_type='application/json')
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR, content_type='application/json')
 
 
 
@@ -117,10 +117,10 @@ class UserComparisonDetailView(APIView):
                 "result": comparison.comparison_results
             }
 
-            return Response(comparison_data, status=status.HTTP_200_OK)
+            return Response(comparison_data, status=status.HTTP_200_OK )
 
         except InvoiceComparison.DoesNotExist:
             return Response({"error": "Comparison not found."}, status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR )
