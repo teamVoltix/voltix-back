@@ -145,6 +145,10 @@ def profile_view(request):
     }
 )
 
+
+
+
+
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def patch_profile(request):
@@ -154,9 +158,24 @@ def patch_profile(request):
         return Response({"error": "El perfil no existe."}, status=status.HTTP_404_NOT_FOUND)
 
     data = request.data
+    if not data:
+        return Response(
+            {"error": "No data provided."}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     allowed_fields = ['birth_date', 'address', 'phone_number', 'photo']
     updated_fields = {}
 
+    # Validar campos en el request
+    for field in data.keys():
+        if field not in allowed_fields:
+            return Response(
+                {"error_invalid_field": f"Field '{field}' is not allowed."},  # Cambiado para que coincida con el test
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    # Actualizar los campos permitidos
     for field in allowed_fields:
         if field in data:
             try:
@@ -171,6 +190,7 @@ def patch_profile(request):
         "message": "Perfil actualizado exitosamente.",
         "updated_fields": updated_fields
     }, status=status.HTTP_200_OK)
+
 
 
 from rest_framework.parsers import MultiPartParser, FormParser
