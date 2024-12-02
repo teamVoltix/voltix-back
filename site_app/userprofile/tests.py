@@ -10,6 +10,8 @@ from PIL import Image
 import io
 from django.core.exceptions import ValidationError
 import json
+from django.db.models.signals import post_save
+from voltix.signals import create_user_profile, save_user_profile
 
 
 def generate_test_image():
@@ -313,4 +315,103 @@ class PatchProfileTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response.data["detail"], "Authentication credentials were not provided.")
+        
+        
+        
+    ##########################################
+    ############ test get profile ############
+    
+class ProfileViewTestCase(TestCase):
+
+    def setUp(self):
+        # Crear un usuario de prueba
+        self.user = User.objects.create_user(
+            dni="12345678A",
+            fullname="Test User",
+            email="testuser@example.com",
+            password="password123"
+        )
+        # Inicializar el cliente API y autenticar al usuario
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_get_profile_with_existing_profile(self):
+    # Asegurarse de que el perfil existe antes de continuar
+        profile, created = Profile.objects.get_or_create(
+            user=self.user,
+            defaults={
+                "birth_date": "1990-01-01",
+                "address": "123 Test Street",
+                "phone_number": "123456789",
+                "photo_url": "http://example.com/photo.jpg"
+            }
+        )
+
+        # Llamar al endpoint
+        url = reverse("profile_view")
+        response = self.client.get(url)
+
+        # Verificar que la respuesta es 200 OK
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verificar los datos retornados
+        expected_data = {
+            'fullname': self.user.fullname,
+            'dni': self.user.dni,
+            'email': self.user.email,
+            'birth_date': profile.birth_date,
+            'address': profile.address,
+            'phone_number': profile.phone_number,
+            'photo': profile.photo_url,
+        }
+        self.assertDictEqual(response.json(), expected_data)
+
+
+    def test_get_profile_creates_profile_if_not_exists(self):
+        # Desconectar las señales para evitar la creación automática del perfil
+        post_save.disconnect(create_user_profile, sender=User)
+        post_save.disconnect(save_user_profile, sender=User)
+
+        try:
+            # Asegurarse de que el perfil no exista
+            Profile.objects.filter(user=self.user).delete()
+            self.assertFalse(Profile.objects.filter(user=self.user).exists())
+
+            # Llamar al endpoint
+            url = reverse("profile_view")
+            response = self.client.get(url)
+
+            # Verificar que la respuesta es 200 OK
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+            # Verificar que el perfil fue creado automáticamente
+            self.assertTrue(Profile.objects.filter(user=self.user).exists())
+
+            # Verificar los datos retornados
+            profile = Profile.objects.get(user=self.user)
+            expected_data = {
+                'fullname': self.user.fullname,
+                'dni': self.user.dni,
+                'email': self.user.email,
+                'birth_date': profile.birth_date,
+                'address': profile.address,
+                'phone_number': profile.phone_number,
+                'photo': profile.photo_url,
+            }
+            self.assertDictEqual(response.json(), expected_data)
+        finally:
+            # Reconectar las señales para no afectar otros tests
+            post_save.connect(create_user_profile, sender=User)
+            post_save.connect(save_user_profile, sender=User)
+
+    def test_get_profile_unauthenticated(self):
+        # Desautenticar al cliente
+        self.client.force_authenticate(user=None)
+
+        # Llamar al endpoint
+        url = reverse("profile_view")
+        response = self.client.get(url)
+
+        # Verificar que la respuesta es 401 Unauthorized
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)   
         
