@@ -26,8 +26,6 @@ DJ_EMAIL=adminvoltix@igorwker.com
     # email="adminvoltix@igorwker.com",
     # password="1234567@"
 
-#URLS
-#BACKEND_URL=http://127.0.0.1:8000
 
 #CSRF
 CORS_ALLOW_ALL_ORIGINS=True
