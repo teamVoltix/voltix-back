@@ -23,7 +23,7 @@ services:
     pull_policy: always
     build:
       context: .
-    image: i004-voltix-backend
+    image: igrowker/i004-voltix-backend
     restart: always
     environment:
       - DJANGO_SUPERUSER_USERNAME=${DJ_USERNAME}
