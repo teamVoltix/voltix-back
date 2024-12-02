@@ -8,6 +8,8 @@ from voltix.models import User, Profile
 from django.db import connections
 from PIL import Image
 import io
+from django.core.exceptions import ValidationError
+import json
 
 
 def generate_test_image():
@@ -219,7 +221,7 @@ class UploadProfilePhotoTests(TestCase):
         self.assertIn("No hay conexión a Internet", response.data['error'])
 
 
-
+####################################
 ##### TEST ACTUALIZACION PERFIL ####
 
 
@@ -311,3 +313,4 @@ class PatchProfileTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response.data["detail"], "Authentication credentials were not provided.")
+        
