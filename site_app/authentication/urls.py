@@ -14,6 +14,7 @@ from .validation_views import (
     ValidateVerificationCodeView,
     RegistrationView, 
 )
+from .tokenRefreshView import CustomTokenRefreshView
 
 
 
@@ -27,10 +28,14 @@ urlpatterns = [
     path('password/reset/<uidb64>/<token>/', password_reset_view, name='password_reset'),
 
 
-    # paths de tokens and to do cheks
+    # paths de tokens and to do cheks + con fns de Django
     # path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     # path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    #cusrom refresh/ token function
+    path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
+
     path('protected/', protected_view, name='protected'),
 
     #nuevas rutas de nueva logica de registracion con validacion
