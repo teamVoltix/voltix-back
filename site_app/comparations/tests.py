@@ -4,6 +4,7 @@ from rest_framework import status
 from voltix.models import User, Invoice, Measurement, InvoiceComparison
 from datetime import date, datetime, timedelta
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 import json
 
 
@@ -103,3 +104,22 @@ class CompareInvoiceAndMeasurementTest(APITestCase):
             self.assertIn("error", response_data)
         except ValueError:
             print(response.content)
+    def test_compare_invoice_extreme_values(self):
+        """Test para valores extremos en la comparación"""
+        self.invoice.data = {"detalles_consumo": {"consumo_total": 999999}}
+        self.invoice.save()
+        payload = {"invoice": self.invoice.id}
+        response = self.client.post(self.compare_url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        self.assertEqual(response_data["result"]["coincidencia_general"], False)
+    def test_invalid_invoice_dates(self):
+        """Test para fechas inválidas en la factura"""
+        invoice = Invoice(
+            user=self.user,  # Asegúrate de usar 'user', no 'User'
+            billing_period_start=datetime(2023, 2, 1),
+            billing_period_end=datetime(2023, 1, 31),  # Fecha de inicio posterior al fin
+            data={"detalles_consumo": {"consumo_total": 300}}
+        )
+        with self.assertRaises(ValidationError):  # Cambiado a ValidationError
+            invoice.full_clean()  # Lanza error por fechas inválidas
