@@ -5,33 +5,33 @@ import json
 
 # Añade el directorio raíz del proyecto al PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "site_app.settings")  
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "site_app.settings")
 django.setup()
 
-from voltix.models import Measurement, User  
+from voltix.models import Measurement, User
 
 def load_measurements(file_path):
     """
-    Carga datos de mediciones desde un archivo JSON
+    Carga datos de mediciones desde un archivo JSON.
     """
     with open(file_path, 'r') as file:
         data = json.load(file)
 
+    # Buscar un usuario genérico
+    default_user = User.objects.first()  # Usa el primer usuario disponible como predeterminado
+
+    if not default_user:
+        print("No se encontró ningún usuario en la base de datos. No se pueden cargar las mediciones.")
+        return
+
     for item in data:
         try:
-            # Busca el usuario por DNI
-            user = User.objects.get(dni=item["user_dni"])
-
-            # Crea la medición
+            # Asignar usuario predeterminado a todas las mediciones
             Measurement.objects.create(
-                user=user,
-                date=item["date"],
-                value=item["value"],
-                data=item["data"]  # Campo JSON
+                user=default_user,
+                data=item  # Carga directamente todo el JSON en el campo `data`
             )
-            print(f"Medición creada para el usuario {user.fullname}")
-        except User.DoesNotExist:
-            print(f"Usuario con DNI {item['user_dni']} no encontrado. Saltando...")
+            print(f"Medición creada correctamente para el usuario {default_user.fullname}.")
         except Exception as e:
             print(f"Error al crear medición: {e}")
 

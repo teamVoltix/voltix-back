@@ -1,32 +1,27 @@
 [
     {
-        "user_dni": "00000012A",
-        "date": "2024-11-23",
-        "value": 150.75,
-        "data": {
-            "periodo_medicion": {
-                "inicio": "2024-11-01",
-                "fin": "2024-11-23"
-            },
-            "consumo_total": 150.75,
-            "consumo_por_franja_horaria": {
-                "punta": 100.0,
-                "valle": 50.75
-            },
-            "potencia_maxima_demandada": {
-                "punta": 6.5,
-                "valle": 4.5
-            },
-            "tension_promedio": 235,
-            "corriente_promedio": {
-                "punta": 22.5,
-                "valle": 12.0
-            },
-            "factor_de_potencia_promedio": 0.93,
-            "eventos_registrados": {
-                "interrupciones": 1,
-                "caidas_de_tension": 0
-            }
-        }
-    }
+        "consumo_total": 220,
+        "periodo_medicion": {
+          "fin": "25/08/2024",
+          "inicio": "22/07/2024"
+        },
+        "tension_promedio": 230,
+        "corriente_promedio": {
+          "punta": 24.0,
+          "valle": 13.5
+        },
+        "eventos_registrados": {
+          "interrupciones": 1,
+          "caidas_de_tension": 1
+        },
+        "potencia_maxima_demandada": {
+          "punta": 6.0,
+          "valle": 3.5
+        },
+        "consumo_por_franja_horaria": {
+          "punta": 150.0,
+          "valle": 70.0
+        },
+        "factor_de_potencia_promedio": 0.94
+      }
 ]
