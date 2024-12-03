@@ -164,3 +164,33 @@ class InvoiceTests(TestCase):
                 billing_period_end=datetime.date(2023, 1, 31),
             )
             invoice.clean()
+
+"""
+Explicación de cada test y como ejecutarlo:
+
+1. **`test_upload_valid_pdf`**:
+   Verifica que el sistema acepta y procesa correctamente un archivo PDF válido. Confirma que los datos como el texto OCR y los datos parseados se devuelven correctamente.
+
+2. **`test_get_invoice_detail`**:
+   Verifica que se puede obtener el detalle de una factura existente por su ID. Comprueba que los datos coincidan con los esperados.
+
+3. **`test_upload_invalid_file_type`**:
+   Verifica que el sistema rechaza archivos con extensiones o tipos MIME no permitidos (por ejemplo, `.txt`). Comprueba que se genera un error 400 con el mensaje adecuado.
+
+4. **`test_get_nonexistent_invoice_detail`**:
+   Comprueba que intentar obtener el detalle de una factura que no existe devuelve un error 404, asegurando que el sistema maneja casos de elementos inexistentes correctamente.
+
+5. **`test_upload_large_pdf_file`**:
+   Verifica que el sistema rechaza un archivo PDF que excede el tamaño máximo permitido (5 MB). Confirma que se genera un error 400 con el mensaje adecuado.
+
+6. **`test_unauthorized_access`**:
+   Asegura que un usuario no autenticado no puede acceder al endpoint de subida de facturas, devolviendo un error 401.
+
+7. **`test_invoice_date_validation`**:
+   Valida el rango de fechas de facturación:
+   - **Positivo:** Fechas válidas no generan errores.
+   - **Negativo:** Fechas inválidas (inicio después del fin) generan un `ValidationError`.
+
+Ejecutar los tests:
+    python site_app/manage.py test invoices.tests2 --keepdb
+"""
