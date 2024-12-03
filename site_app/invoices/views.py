@@ -516,49 +516,77 @@ class InvoiceProcessView(APIView):
             mandato_match = re.search(r"Codigo de mandato\s*([\d]+)", ocr_text)
             mandato = mandato_match.group(1).strip() if mandato_match else None
 
-            # Extraer "costo_potencia"
-            try:
-                # Encontrar las posiciones de las palabras clave "Valle" y "Total"
-                valle_positions = [m.start() for m in re.finditer("Valle", ocr_text)]
-                total_positions = [m.start() for m in re.finditer("Total", ocr_text)]
+            # Extraer el valor de "costo_punta" (antes de "€\n\nValle")
+            costo_punta_match = re.search(r"([\d,\.]+)\s*€\s*\n\n\s*Valle", ocr_text)
+            if costo_punta_match:
+                try:
+                    costo_punta_raw = costo_punta_match.group(1)
+                    costo_punta = float(costo_punta_raw.replace(",", ".")) / 100  # Mover el punto 2 posiciones a la izquierda
+                except ValueError:
+                    costo_punta = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                costo_punta = 0.0  # Valor por defecto si no se encuentra el patrón
 
-                if len(valle_positions) >= 2 and len(total_positions) >= 2:
-                    # Capturar el número antes del segundo "Valle"
-                    texto_antes_valle = ocr_text[:valle_positions[1]]
-                    numero_antes_valle = re.findall(r"(\d+)", texto_antes_valle)
-                    valor_antes_valle = int(numero_antes_valle[-1]) if numero_antes_valle else 0
+            # Extraer el valor de "costo_valle" (antes de " €\n\nTotal importe potencia")
+            costo_valle_match = re.search(r"([\d,\.]+)\s*€\s*\n\n\s*Total importe potencia", ocr_text)
+            if costo_valle_match:
+                try:
+                    costo_valle_raw = costo_valle_match.group(1)
+                    costo_valle = float(costo_valle_raw.replace(",", ".")) / 100  # Mover el punto 2 posiciones a la izquierda
+                except ValueError:
+                    costo_valle = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                costo_valle = 0.0  # Valor por defecto si no se encuentra el patrón
 
-                    # Capturar el número antes del segundo "Total"
-                    texto_antes_total = ocr_text[:total_positions[1]]
-                    numero_antes_total = re.findall(r"(\d+)", texto_antes_total)
-                    valor_antes_total = int(numero_antes_total[-1]) if numero_antes_total else 0
+            # Calcular el valor total de "costo_potencia" y limitar a 2 decimales
+            costo_potencia = round(costo_punta + costo_valle, 2)
 
-                    # Sumar los valores
-                    suma_potencia = valor_antes_valle + valor_antes_total
 
-                    # Formatear el valor: agregar un punto entre el segundo y tercer dígito desde la derecha
-                    suma_potencia_str = str(suma_potencia)
-                    if len(suma_potencia_str) > 2:
-                        costo_potencia = float(f"{suma_potencia_str[:-2]}.{suma_potencia_str[-2:]}")
-                    else:
-                        costo_potencia = float(f"0.{suma_potencia_str.zfill(2)}")
-                else:
-                    costo_potencia = 0  # Valor por defecto si no se encuentran las palabras clave
-            except Exception as e:
-                logger.error(f"Error al calcular 'costo_potencia': {str(e)}")
-                costo_potencia = 0  # Valor por defecto en caso de error
 
-            # Extraer "costo_energia"
-            costo_energia_match = re.search(r"Energia consumida.*?(\d{1,3},\d{2}) €", ocr_text)
-            costo_energia = float(costo_energia_match.group(1).replace(",", ".")) if costo_energia_match else None
+            # Extraer valor de "costo_energia" (antes de " €\n\nEnergia consumida")
+            costo_energia_match = re.search(r"([\d,\.]+)\s*€\s*\n\n\s*Energia consumida", ocr_text)
+            if costo_energia_match:
+                try:
+                    costo_energia_raw = costo_energia_match.group(1)
+                    costo_energia = float(costo_energia_raw.replace(",", "."))
+                except ValueError:
+                    costo_energia = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                costo_energia = 0.0  # Valor por defecto si no se encuentra el patrón
+
 
             # Extraer "descuentos"
             descuentos_match = re.search(r"Descuentos.*?(-?\d{1,3},\d{2}) €", ocr_text)
             descuentos = float(descuentos_match.group(1).replace(",", ".")) if descuentos_match else None
 
             # Extraer "impuestos"
-            impuestos_match = re.search(r"Impuesto sobre electricidad.*?(\d{1,3},\d{2}) €", ocr_text)
-            impuestos = float(impuestos_match.group(1).replace(",", ".")) if impuestos_match else None
+            # Extraer primer valor de "impuestos" (antes de " €\n\nTOTAL ENERGÍA")
+            impuestos_valor1_match = re.search(r"([\d,\.]+)\s*€\s*\n\n\s*TOTAL ENERGÍA", ocr_text)
+            if impuestos_valor1_match:
+                try:
+                    impuestos_valor1_raw = impuestos_valor1_match.group(1)
+                    impuestos_valor1 = float(impuestos_valor1_raw.replace(",", "."))
+                except ValueError:
+                    impuestos_valor1 = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                impuestos_valor1 = 0.0  # Valor por defecto si no se encuentra el patrón
+
+
+            # Extraer segundo valor de "impuestos" (antes de "TOTAL IMPORTE FACTURA")
+            impuestos_valor2_match = re.search(r"([\d,\.]+)\s*€\s*\n\n\s*TOTAL IMPORTE FACTURA", ocr_text)
+            if impuestos_valor2_match:
+                try:
+                    impuestos_valor2_raw = impuestos_valor2_match.group(1)
+                    impuestos_valor2 = float(impuestos_valor2_raw.replace(",", "."))
+                except ValueError:
+                    impuestos_valor2 = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                impuestos_valor2 = 0.0  # Valor por defecto si no se encuentra el patrón
+
+            # Calcular el valor total de "impuestos"
+            impuestos = impuestos_valor1 + impuestos_valor2
+
+
 
             # Extraer "total_a_pagar"
             total_a_pagar_match = re.search(r"TOTAL IMPORTE FACTURA\s*\n\n\s*([\d,\.]+)\s*€", ocr_text)
