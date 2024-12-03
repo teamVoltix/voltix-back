@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 from rest_framework import status
+from django.core.exceptions import ValidationError
 from voltix.models import Invoice, User
 import datetime
 
@@ -139,3 +140,27 @@ class InvoiceTests(TestCase):
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         finally:
             os.unlink(temp_file.name)
+
+    def test_invoice_date_validation(self):
+        """
+        Probar que el rango de fechas en las facturas se valida correctamente.
+        """
+        # Caso positivo: Fechas válidas
+        try:
+            invoice = Invoice(
+                user=self.user,
+                billing_period_start=datetime.date(2023, 1, 1),
+                billing_period_end=datetime.date(2023, 1, 31),
+            )
+            invoice.clean()  # No debería lanzar excepción
+        except ValidationError:
+            self.fail("El método clean lanzó ValidationError inesperadamente para fechas válidas.")
+
+        # Caso negativo: Fecha de inicio después de la fecha de fin
+        with self.assertRaises(ValidationError):
+            invoice = Invoice(
+                user=self.user,
+                billing_period_start=datetime.date(2023, 2, 1),
+                billing_period_end=datetime.date(2023, 1, 31),
+            )
+            invoice.clean()
