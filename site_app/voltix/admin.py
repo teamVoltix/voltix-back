@@ -34,8 +34,8 @@ def format_json_field(obj, field_name):
         return "Invalid JSON"
 
 class InvoiceAdmin(admin.ModelAdmin):
-    fields = ['user', 'billing_period_start', 'billing_period_end', 'data', 'created_at', 'updated_at']
-    list_display = ['id', 'user', 'billing_period_start', 'billing_period_end', 'display_data', 'created_at', 'updated_at']
+    fields = ['user', 'billing_period_start', 'billing_period_end', 'data', 'image_url', 'created_at', 'updated_at']
+    list_display = ['id', 'user', 'billing_period_start', 'billing_period_end', 'display_data', 'image_url', 'created_at', 'updated_at']
     search_fields = ['user__dni', 'user__fullname']
     list_filter = ['billing_period_start', 'billing_period_end']
     readonly_fields = ['created_at', 'updated_at']

@@ -69,6 +69,7 @@ class Invoice(models.Model):
     billing_period_start = models.DateField()  # Fecha de inicio del período de facturación
     billing_period_end = models.DateField()  # Fecha de fin del período de facturación
     data = models.JSONField()  # Datos JSON (por ejemplo, OCR o metadatos)
+    image_url = models.URLField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación
     updated_at = models.DateTimeField(auto_now=True)  # Fecha de última actualización
 
