@@ -82,19 +82,19 @@ class RequestVerificationCodeView(APIView):
         html_message = render_to_string('verification_email.html', {'code': code})
 
         #esta comentado envio de email
-        # send_mail(
-        #     'Your Verification Code',
-        #     None,
-        #     'no-reply@example.com',
-        #     [email],
-        #     fail_silently=False,
-        #     html_message=html_message,
-        # )
+        send_mail(
+            'Your Verification Code',
+            None,
+            'no-reply@example.com',
+            [email],
+            fail_silently=False,
+            html_message=html_message,
+        )
         response_data =     {
         "status": "success",
         "message": "Verification code sent successfully!",
         "data": {
-            "verification_code": code,
+            # "verification_code": code,
             "instructions": "Please use this code to verify your email within 10 minutes.",
         }
     },
