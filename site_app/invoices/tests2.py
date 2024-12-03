@@ -58,7 +58,6 @@ class InvoiceTests(TestCase):
         finally:
             os.unlink(temp_file.name)  # Elimina el archivo temporal después de cerrar todos los manejadores
 
-
     def test_get_invoice_detail(self):
         """
         Probar que se puede obtener el detalle de una factura existente.
@@ -67,3 +66,33 @@ class InvoiceTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.invoice.id)
         self.assertEqual(response.data["user"], self.user.id)
+
+    def test_upload_invalid_file_type(self):
+        """
+        Probar que subir un archivo con un tipo no válido genera un error.
+        """
+        with tempfile.NamedTemporaryFile(suffix=".txt", mode="wb", delete=False) as temp_file:
+            temp_file.write(b"Invalid Content")
+            temp_file.flush()
+            temp_file.seek(0)
+
+        try:
+            with open(temp_file.name, "rb") as file:
+                uploaded_file = SimpleUploadedFile(
+                    "test_invoice.txt", file.read(), content_type="text/plain"
+                )
+                response = self.client.post(self.upload_url, {"file": uploaded_file}, format="multipart")
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("file", response.data["details"])  # Cambiado para verificar dentro de "details"
+            self.assertIn("Invalid file type", str(response.data["details"]["file"]))  # Verifica el mensaje de error
+        finally:
+            os.unlink(temp_file.name)
+
+    def test_get_nonexistent_invoice_detail(self):
+        """
+        Probar que obtener el detalle de una factura inexistente devuelve un error 404.
+        """
+        nonexistent_id = 9999
+        response = self.client.get(self.detail_url(nonexistent_id))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
