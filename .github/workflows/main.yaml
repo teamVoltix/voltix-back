@@ -50,7 +50,7 @@ jobs:
 
   deploy:
     needs: build-and-test
-    runs-on:  [self-hosted, voltix-r2]
+    runs-on:  [self-hosted]
     env:
       DB_HOST: '${{ secrets.DB_HOST }}'
       DB_PORT: '${{ secrets.DB_PORT }}'
