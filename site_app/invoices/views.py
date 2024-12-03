@@ -361,8 +361,30 @@ class InvoiceProcessView(APIView):
                 consumo_valle = None
 
             # Extraer "consumo_total"
+            import re
+
+            ocr_text = """
+            Consumo Total
+
+            1,112,537 kWh
+            """
+
+            # Buscar el valor después de "Consumo Total"
             consumo_total_match = re.search(r"Consumo Total\s*\n\n\s*(\d{1,3}(?:,\d{3})+)", ocr_text)
-            consumo_total = consumo_total_match.group(1).replace(",", "") if consumo_total_match else None
+
+            # Procesar el valor encontrado
+            if consumo_total_match:
+                consumo_total = consumo_total_match.group(1).replace(",", "")  # Quitar comas
+                consumo_total = float(consumo_total[:-3] + '.' + consumo_total[-3:])  # Insertar el punto y convertir a float
+            else:
+                consumo_total = None  # Si no se encuentra el valor
+
+            # Resultado para el JSON
+            resultado_json = {
+                "consumo_total": consumo_total
+            }
+
+            print(resultado_json)
 
             # Extraer "precio_efectivo_energia"
             precio_efectivo_energia_match = re.search(r"ha salido a\s*([\d,\.]+) €/kWh", normalized_text)
@@ -395,7 +417,7 @@ class InvoiceProcessView(APIView):
                 "detalles_consumo": {
                     "consumo_punta": consumo_punta,
                     "consumo_valle": consumo_valle,
-                    "consumo_total": int(consumo_total) if consumo_total else None,
+                    "consumo_total": consumo_total,
                     "precio_efectivo_energia": precio_efectivo_energia,
                 },
             }
