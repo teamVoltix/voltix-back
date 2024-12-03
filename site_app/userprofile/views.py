@@ -6,13 +6,14 @@ from rest_framework import status
 from voltix.models import Profile
 from datetime import date
 from django.core.exceptions import ValidationError
-from cloudinary.uploader import upload
+from cloudinary.uploader import upload, destroy
 from cloudinary.exceptions import Error as CloudinaryError
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from PIL import Image
 from rest_framework.parsers import MultiPartParser, FormParser
 from datetime import datetime
+from voltix.utils.upload_cloudinary import process_and_upload_image
 
 
 
@@ -265,55 +266,42 @@ from cloudinary.exceptions import Error as CloudinaryError
 @parser_classes([MultiPartParser, FormParser])
 def upload_profile_photo(request):
     try:
-        # Obtener el perfil del usuario
+        # Obtener el perfil del usuario autenticado
         profile = Profile.objects.get(user=request.user)
+
+        if 'photo' not in request.FILES:
+            return Response({"error": "No se encontró un archivo para subir."}, status=400)
+
+        photo = request.FILES['photo']
+
+        try:
+            # Eliminar la imagen anterior de Cloudinary (si existe)
+            if profile.photo_url:
+                public_id = profile.photo_url.split('/')[-1].split('.')[0]  # Extraer el public_id de la URL
+                destroy(public_id)  # Elimina la imagen anterior en Cloudinary
+
+            # Validar, procesar y subir la nueva imagen
+            # Aquí llamamos a la función `process_and_upload_image`
+            photo_url = process_and_upload_image(photo)
+
+            # Actualizar el perfil con la URL de la nueva foto
+            profile.photo_url = photo_url
+            profile.save()
+
+            return Response({
+                "message": "Foto subida exitosamente.",
+                "photo_url": photo_url
+            }, status=200)
+
+        except ValueError as e:  # Errores de validación o procesamiento
+            return Response({"error": str(e)}, status=400)
+        except CloudinaryError as e:  # Errores específicos de Cloudinary
+            return Response({"error": f"Error de Cloudinary: {str(e)}"}, status=500)
+
     except Profile.DoesNotExist:
         return Response({"error": "El perfil no existe."}, status=404)
 
-    if 'photo' not in request.FILES:
-        return Response({"error": "No se encontró un archivo para subir."}, status=400)
-
-    photo = request.FILES['photo']
-
-    # Validar tipo de archivo
-    if photo.content_type not in ['image/jpeg', 'image/png']:
-        return Response({"error": "Tipo de archivo no válido."}, status=400)
-
-    # Validar tamaño del archivo
-    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
-    if photo.size > MAX_FILE_SIZE:
-        return Response({"error": "El archivo excede el tamaño máximo permitido de 5 MB."}, status=400)
-
-    # Validar si el archivo es una imagen válida
-    try:
-        img = Image.open(photo)
-        img.verify()
-    except (IOError, Image.DecompressionBombError):
-        return Response({"error": "El archivo está corrupto o no es una imagen válida."}, status=400)
-
-    try:
-        # Subir a Cloudinary
-        upload_result = upload(photo, folder="profiles", overwrite=True, resource_type="image")
-        photo_url = upload_result.get("secure_url")
-        if not photo_url:
-            return Response({"error": "Error al subir la imagen a Cloudinary."}, status=500)
-
-        # Actualizar el perfil con la URL de la foto
-        profile.photo_url = photo_url
-        profile.save()
-
-        return Response({
-            "message": "Foto subida exitosamente.",
-            "photo_url": photo_url
-        }, status=200)
-
-    except CloudinaryError as e:
-        if "Quota exceeded" in str(e):
-            return Response({"error": "Cuota de Cloudinary excedida."}, status=500)
-        return Response({"error": "Error de Cloudinary: " + str(e)}, status=500)
-
-    except ConnectionError:
-        return Response({"error": "No hay conexión a Internet."}, status=500)
-    except Exception as e:
+    except Exception as e:  # Cualquier otro error no manejado
         return Response({"error": f"Error inesperado: {str(e)}"}, status=500)
+
 
