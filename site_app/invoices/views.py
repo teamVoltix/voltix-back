@@ -18,9 +18,9 @@ from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .serializers import InvoiceUploadSerializer
+from voltix.models import Invoice
 
 logger = logging.getLogger(__name__)
-
 
 class InvoiceProcessView(APIView):
     permission_classes = [IsAuthenticated]
@@ -114,6 +114,28 @@ class InvoiceProcessView(APIView):
 
                 # Convertir OCR a JSON
                 parsed_data = self.convert_ocr_to_json(ocr_text_combined)
+
+                # Guardar los datos en la base de datos
+                if "error" not in parsed_data:
+                    try:
+                        Invoice.objects.create(
+                            user=request.user,  # Relacionar la factura con el usuario autenticado
+                            billing_period_start=parsed_data["periodo_facturacion"].get("inicio"),
+                            billing_period_end=parsed_data["periodo_facturacion"].get("fin"),
+                            data=parsed_data,  # Guardar todo el JSON en el campo 'data'
+                        )
+
+                        logger.info("Factura guardada exitosamente en la base de datos.")
+                    except Exception as db_error:
+                        logger.error(f"Error al guardar en la base de datos: {str(db_error)}")
+                        return Response(
+                            {
+                                "status": "error",
+                                "message": "Error al guardar los datos en la base de datos.",
+                                "details": str(db_error),
+                            },
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        )
 
                 # Eliminar el archivo PDF subido
                 if os.path.exists(file_path):
@@ -268,8 +290,9 @@ class InvoiceProcessView(APIView):
             numero_referencia = numero_referencia_match.group(1).strip() if numero_referencia_match else None
 
             # Extraer "fecha_emision"
-            fecha_emision_match = re.search(r"Fecha emisión factura:\s*(\d{2}/\d{2}/\d{4})", normalized_text)
+            fecha_emision_match = re.search(r"Fecha emisión factur[a|:]*\s*(\d{2}/\d{2}/\d{4})", normalized_text, re.IGNORECASE)
             fecha_emision = format_date_to_yyyy_mm_dd(fecha_emision_match.group(1)) if fecha_emision_match else None
+
 
             # Extraer "periodo_inicio"
             periodo_inicio_match = re.search(r"Periodo de facturación: del\s*(\d{2}/\d{2}/\d{4})", normalized_text)
@@ -382,8 +405,6 @@ class InvoiceProcessView(APIView):
         except Exception as e:
             logger.error(f"Error al convertir OCR a JSON para Endesa: {str(e)}")
             return {"error": "Error al convertir OCR a JSON para Endesa."}
-
-
 
 ################################################################################################################################
 
