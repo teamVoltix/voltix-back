@@ -142,7 +142,14 @@ def compare_invoice_and_measurement(request):
         }
 
         total_consumption_kWh = consumo_total_measurement
-        price_per_kWh = 0.1121
+        
+        # Obtener el precio por kWh de la factura
+        price_per_kWh = invoice.data.get("detalles_consumo", {}).get("precio_efectivo_energia", 0.1121)
+
+        # Verificar si el precio es válido
+        if price_per_kWh <= 0:
+            return Response({"error": "Invalid price_per_kWh extracted from invoice."}, status=400)
+
         electricity_tax_rate = 0.051127
         vat_rate = 0.21
 
@@ -192,7 +199,6 @@ def compare_invoice_and_measurement(request):
             "measurement_created_at": measurement.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             "result": response_data
         }
-
 
         return Response(response, status=200)
     except Exception as e:
