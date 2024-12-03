@@ -654,29 +654,29 @@ class InvoiceProcessView(APIView):
 
             # Construir JSON con los valores extraídos
             parsed_data = {
-                "nombre_cliente": nombre_cliente if nombre_cliente else "XXXXXXXXX",
-                "numero_referencia": numero_referencia if numero_referencia else "XXXXXXXXX",
-                "fecha_emision": fecha_emision if fecha_emision else "1990-01-01",
+                "nombre_cliente": nombre_cliente,
+                "numero_referencia": numero_referencia,
+                "fecha_emision": fecha_emision,
                 "periodo_facturacion": {
-                    "inicio": periodo_inicio if periodo_inicio else "1990-01-01",
-                    "fin": periodo_fin if periodo_fin else "1990-01-01",
-                    "dias": dias if dias else "00",
+                    "inicio": periodo_inicio,
+                    "fin": periodo_fin,
+                    "dias": dias,
                 },
-                "forma_pago": forma_pago if forma_pago else "XXXXXXXXX",
-                "fecha_cargo": fecha_cargo if fecha_cargo else "1990-01-01",
-                "mandato": mandato if mandato else "XXXXXXXXX",
+                "forma_pago": forma_pago,
+                "fecha_cargo": fecha_cargo,
+                "mandato": mandato,
                 "desglose_cargos": {
-                    "costo_potencia": costo_potencia if costo_potencia else 0,
-                    "costo_energia": costo_energia if costo_energia else 0,
+                    "costo_potencia": costo_potencia,
+                    "costo_energia": costo_energia,
                     "descuentos": descuentos if descuentos else 0,
-                    "impuestos": impuestos if impuestos else 0,
-                    "total_a_pagar": total_a_pagar if total_a_pagar else 0,
+                    "impuestos": impuestos,
+                    "total_a_pagar": total_a_pagar,
                 },
                 "detalles_consumo": {
-                    "consumo_punta": consumo_punta if consumo_punta else 0,
-                    "consumo_valle": consumo_valle if consumo_valle else 0,
-                    "consumo_total": consumo_total if consumo_total else 0,
-                    "precio_efectivo_energia": precio_efectivo_energia if precio_efectivo_energia else 0,
+                    "consumo_punta": consumo_punta,
+                    "consumo_valle": consumo_valle,
+                    "consumo_total": consumo_total,
+                    "precio_efectivo_energia": precio_efectivo_energia,
                 },
             }
 
