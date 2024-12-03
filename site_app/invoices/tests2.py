@@ -44,7 +44,6 @@ class InvoiceTests(TestCase):
             temp_file.flush()  # Asegúrate de que los datos se escriben en disco
             temp_file.seek(0)
 
-        # Abre el archivo nuevamente para leerlo con SimpleUploadedFile
         try:
             with open(temp_file.name, "rb") as file:
                 uploaded_file = SimpleUploadedFile(
@@ -84,8 +83,8 @@ class InvoiceTests(TestCase):
                 response = self.client.post(self.upload_url, {"file": uploaded_file}, format="multipart")
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertIn("file", response.data["details"])  # Cambiado para verificar dentro de "details"
-            self.assertIn("Invalid file type", str(response.data["details"]["file"]))  # Verifica el mensaje de error
+            self.assertIn("file", response.data["details"])
+            self.assertIn("Invalid file type", str(response.data["details"]["file"]))
         finally:
             os.unlink(temp_file.name)
 
@@ -96,3 +95,47 @@ class InvoiceTests(TestCase):
         nonexistent_id = 9999
         response = self.client.get(self.detail_url(nonexistent_id))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_upload_large_pdf_file(self):
+        """
+        Probar que subir un archivo PDF demasiado grande genera un error.
+        """
+        with tempfile.NamedTemporaryFile(suffix=".pdf", mode="wb", delete=False) as temp_file:
+            temp_file.write(b"A" * (5 * 1024 * 1024 + 1))  # Generar un archivo de más de 5 MB
+            temp_file.flush()
+            temp_file.seek(0)
+
+        try:
+            with open(temp_file.name, "rb") as file:
+                uploaded_file = SimpleUploadedFile(
+                    "large_test_invoice.pdf", file.read(), content_type="application/pdf"
+                )
+                response = self.client.post(self.upload_url, {"file": uploaded_file}, format="multipart")
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("file", response.data["details"])
+            self.assertIn("File size exceeds 5 MB", str(response.data["details"]["file"]))
+        finally:
+            os.unlink(temp_file.name)
+
+    def test_unauthorized_access(self):
+        """
+        Probar que un usuario no autenticado no puede acceder al endpoint de subida.
+        """
+        self.client.force_authenticate(user=None)  # Eliminar autenticación
+
+        with tempfile.NamedTemporaryFile(suffix=".pdf", mode="wb", delete=False) as temp_file:
+            temp_file.write(b"%PDF-1.4 Valid PDF Content")
+            temp_file.flush()
+            temp_file.seek(0)
+
+        try:
+            with open(temp_file.name, "rb") as file:
+                uploaded_file = SimpleUploadedFile(
+                    "test_invoice.pdf", file.read(), content_type="application/pdf"
+                )
+                response = self.client.post(self.upload_url, {"file": uploaded_file}, format="multipart")
+
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        finally:
+            os.unlink(temp_file.name)
