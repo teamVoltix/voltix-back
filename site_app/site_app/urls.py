@@ -48,7 +48,7 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('comparations/', include('comparations.urls')),
     path('api/measurements/report/download/', download_report, name='download_report'),
-    path('api/notifications/', NotificationListView.as_view(), name='notification-list'),   
+    path('api/notifications/', include('notify_service.urls')),   
     
     
     

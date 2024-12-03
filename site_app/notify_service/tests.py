@@ -1,3 +1,6 @@
+from django.test import TestCase
+
+# Create your tests here.
 from django.contrib.contenttypes.models import ContentType
 from rest_framework_simplejwt.tokens import RefreshToken
 from voltix.models import Notification
@@ -33,7 +36,7 @@ class NotificationTests(APITestCase):
         self.notification2 = Notification.objects.create(
             user=self.user,
             message="Recomendación sobre seguridad",
-            type="recomendacion",
+            type="alerta",
             created_at=timezone.now() - timezone.timedelta(days=5),
             content_type=content_type,
             object_id=12  # Reemplaza con un ID válido de tu modelo relacionado
@@ -42,7 +45,7 @@ class NotificationTests(APITestCase):
         self.notification3 = Notification.objects.create(
             user=self.user,
             message="Recordatorio de cita médica",
-            type="recordatorio",
+            type="alerta",
             created_at=timezone.now() - timezone.timedelta(days=10),
             content_type=content_type,
             object_id=13  # Reemplaza con un ID válido de tu modelo relacionado
@@ -68,6 +71,7 @@ class NotificationTests(APITestCase):
         end_date = '2024-11-29'
         response = self.client.get(f'/api/notifications/?start_date={start_date}&end_date={end_date}', 
                                    **self.get_authentication_headers())
+        print(response.data)  # Debug: Print the response data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)  # Debe devolver 2 notificaciones (dentro de ese rango)
 
@@ -75,6 +79,7 @@ class NotificationTests(APITestCase):
         # Test para obtener notificaciones por tipo
         response = self.client.get('/api/notifications/?type=alerta', 
                                    **self.get_authentication_headers())
+        print(response.data)  # Debug: Print the response data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)  # Debe devolver solo 1 notificación de tipo 'alerta'
         self.assertEqual(response.data[0]['type'], 'alerta')  # Verifica que sea del tipo 'alerta'
