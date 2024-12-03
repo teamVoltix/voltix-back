@@ -47,14 +47,15 @@ def download_report(request):
 
         consumption_details = {
             "Invoice": {
-                "invoice": comparison_results['consumption_details']['total_consumption_kwh']['invoice'],
-                "measurement": comparison_results['consumption_details']['total_consumption_kwh']['measurement'],
-                "difference": comparison_results['consumption_details']['total_consumption_kwh']['difference'],
+                "invoice": comparison_results['detalles_consumo']['total_consumption_kwh']['invoice'],
+                "measurement": comparison_results['detalles_consumo']['total_consumption_kwh']['measurement'],
+                "difference": comparison_results['detalles_consumo']['total_consumption_kwh']['difference'],
             }
         }
         print(f"Consumption details extracted: {consumption_details}")
 
-        total_estimated = comparison_results.get("total_estimated_with_time_of_use")
+        total_estimated = comparison_results.get("total_a_pagar", {}).get("factura")
+        total_estimated_with_time_of_use = comparison_results.get("total_a_pagar", {}).get("factura")
 
         # Renderizado manual del HTML
         html_template = f"""
@@ -63,7 +64,7 @@ def download_report(request):
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Comparations Report</title>
+            <title>Informe de Comparación</title>
             <style>
                 body {{ font-family: Arial, sans-serif; margin: 20px; color: #333; }}
                 h1 {{ text-align: center; color: #4CAF50; }}
@@ -77,35 +78,35 @@ def download_report(request):
             </style>
         </head>
         <body>
-            <h1>Comparations Report</h1>
-            <h2>Billing Period</h2>
-            <p><strong>Status:</strong> {billing_period['status']}</p>
-            <p><strong>Invoice Start Date:</strong> {billing_period['invoice_start_date']}</p>
-            <p><strong>Invoice End Date:</strong> {billing_period['invoice_end_date']}</p>
-            <p><strong>Measurement Start Date:</strong> {billing_period['measurement_start_date']}</p>
-            <p><strong>Measurement End Date:</strong> {billing_period['measurement_end_date']}</p>
-            <p><strong>Days Billed:</strong> {billing_period['days_billed']}</p>
-            <h2>Consumption Details</h2>
+            <h1>Informe de Comparación</h1>
+            <h2>Periodo de Facturación</h2>
+            <p><strong>Estado:</strong> {billing_period['status']}</p>
+            <p><strong>Fecha de Inicio de la Factura:</strong> {billing_period['invoice_start_date']}</p>
+            <p><strong>Fecha de Fin de la Factura:</strong> {billing_period['invoice_end_date']}</p>
+            <p><strong>Comienzo periodo de Medición:</strong> {billing_period['measurement_start_date']}</p>
+            <p><strong>Fin periodo de Medición:</strong> {billing_period['measurement_end_date']}</p>
+            <p><strong>Días Facturados:</strong> {billing_period['days_billed']}</p>
+            <h2>Detalles de Consumo</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Type</th>
-                        <th>Invoice</th>
-                        <th>Measurement</th>
-                        <th>Difference</th>
+                        <th>Tipo</th>
+                        <th>Factura</th>
+                        <th>Medición</th>
+                        <th>Diferencia</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Invoice</td>
+                        <td>Factura</td>
                         <td>{consumption_details['Invoice']['invoice']}</td>
                         <td>{consumption_details['Invoice']['measurement']}</td>
                         <td>{consumption_details['Invoice']['difference']}</td>
                     </tr>
                 </tbody>
             </table>
-            <h2>Total Estimated</h2>
-            <p><strong>Total Estimated with Time of Use:</strong> {total_estimated}</p>
+            <h2>Total Estimado</h2>
+            <p><strong>Total Estimado con el tiempo de uso:</strong> {total_estimated}</p>
         </body>
         </html>
         """
