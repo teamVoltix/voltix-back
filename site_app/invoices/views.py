@@ -428,6 +428,51 @@ class InvoiceProcessView(APIView):
             logger.error(f"Error al convertir OCR a JSON para Endesa: {str(e)}")
             return {"error": "Error al convertir OCR a JSON para Endesa."}
 
+    def extract_iberdrola_data(self, ocr_text):
+        """
+        Extrae los datos específicos de las facturas de Iberdrola a partir del texto OCR.
+        """
+        try:
+            # Construir JSON
+            parsed_data = {
+                "nombre_cliente": "XXXXXXXXX",
+                "numero_referencia": "XXXXXXXXX",
+                "fecha_emision": "1990-01-01",
+                "periodo_facturacion": {
+                    "inicio": "1990-01-01",
+                    "fin": "1990-01-01",
+                    "dias": "00",
+                },
+                "forma_pago": "teste forma de pago",
+                "fecha_cargo": "1990-01-01",
+                "mandato": "XXXXXXXXX",
+                "desglose_cargos": {
+                    "costo_potencia": 000,
+                    "costo_energia": 000,
+                    "descuentos": 000,
+                    "impuestos": 000,
+                    "total_a_pagar": 000,
+                },
+                "detalles_consumo": {
+                    "consumo_punta": 000,
+                    "consumo_valle": 000,
+                    "consumo_total": 000,
+                    "precio_efectivo_energia": 000,
+                },
+            }
+
+            return parsed_data
+
+        except Exception as e:
+            logger.error(f"Error al convertir OCR a JSON para Iberdrola: {str(e)}")
+            return {
+                "error": "Error al convertir OCR a JSON para Iberdrola."
+            }
+
+
+
+    
+
 ################################################################################################################################
 
 
