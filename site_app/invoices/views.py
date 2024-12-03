@@ -433,31 +433,222 @@ class InvoiceProcessView(APIView):
         Extrae los datos específicos de las facturas de Iberdrola a partir del texto OCR.
         """
         try:
-            # Construir JSON
+            import re
+            from datetime import datetime
+
+            # Mapeo de meses en español a números
+            meses = {
+                "enero": "01", "febrero": "02", "marzo": "03", "abril": "04",
+                "mayo": "05", "junio": "06", "julio": "07", "agosto": "08",
+                "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12"
+            }
+
+            # Inicializar valores por defecto
+            nombre_cliente = None
+            numero_referencia = None
+            fecha_emision = None
+            periodo_inicio = None
+            periodo_fin = None
+            dias = None
+            forma_pago = None
+            fecha_cargo = None
+            mandato = None
+            costo_potencia = None
+            costo_energia = None
+            descuentos = None
+            impuestos = None
+            total_a_pagar = None
+            consumo_punta = None
+            consumo_valle = None
+            consumo_total = None
+            precio_efectivo_energia = None
+
+            # Extraer "nombre_cliente"
+            nombre_cliente_match = re.search(r"(?:\n)([A-Z\s]+)\n.*Potencia punta", ocr_text)
+            nombre_cliente = nombre_cliente_match.group(1).strip() if nombre_cliente_match else None
+
+            # Extraer "numero_referencia"
+            numero_referencia_match = re.search(r"N\* DE CONTRATO:\s*([\d]+)", ocr_text)
+            numero_referencia = numero_referencia_match.group(1).strip() if numero_referencia_match else None
+
+            # Extraer "fecha_emision"
+            fecha_emision_match = re.search(
+                r"FECHA DE EMISIÓN:.*?\n\n.*?\n\n(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})", ocr_text, re.DOTALL
+            )
+            if fecha_emision_match:
+                dia, mes_texto, anio = fecha_emision_match.groups()
+                mes_numero = meses.get(mes_texto.lower())
+                if mes_numero:
+                    fecha_emision = f"{anio}-{mes_numero}-{dia.zfill(2)}"
+
+
+            # Extraer "periodo_facturacion"
+            periodo_match = re.search(
+                r"PERIODO DE FACTURACIÓN.*?\n\n(\d{1,2}/\d{1,2}/\d{4})\s+(\d{1,2}/\d{1,2}/\d{4})", ocr_text, re.DOTALL
+            )
+            if periodo_match:
+                try:
+                    # Convertir las fechas al formato YYYY-MM-DD
+                    periodo_inicio = datetime.strptime(periodo_match.group(1), "%d/%m/%Y").strftime("%Y-%m-%d")
+                    periodo_fin = datetime.strptime(periodo_match.group(2), "%d/%m/%Y").strftime("%Y-%m-%d")
+                except ValueError:
+                    periodo_inicio, periodo_fin = None, None
+
+
+            # Extraer "dias"
+            dias_match = re.search(r"FECHA DE EMISIÓN:.*?\n\n.*?\n\n(\d+)", ocr_text, re.DOTALL)
+            dias = int(dias_match.group(1)) if dias_match else None
+
+
+            # Extraer "forma_pago"
+            forma_pago_match = re.search(r"Forma de pago\s*([^\n]+)", ocr_text)
+            forma_pago = forma_pago_match.group(1).strip() if forma_pago_match else None
+
+            # Extraer "fecha_cargo"
+            fecha_cargo_match = re.search(r"FECHA PREVISTA DE COBRO:\s*(\d{2}/\d{2}/\d{4})", ocr_text)
+            if fecha_cargo_match:
+                try:
+                    fecha_cargo = datetime.strptime(fecha_cargo_match.group(1), "%d/%m/%Y").strftime("%Y-%m-%d")
+                except ValueError:
+                    fecha_cargo = None
+
+            # Extraer "mandato"
+            mandato_match = re.search(r"Codigo de mandato\s*([\d]+)", ocr_text)
+            mandato = mandato_match.group(1).strip() if mandato_match else None
+
+            # Extraer "costo_potencia"
+            try:
+                # Encontrar las posiciones de las palabras clave "Valle" y "Total"
+                valle_positions = [m.start() for m in re.finditer("Valle", ocr_text)]
+                total_positions = [m.start() for m in re.finditer("Total", ocr_text)]
+
+                if len(valle_positions) >= 2 and len(total_positions) >= 2:
+                    # Capturar el número antes del segundo "Valle"
+                    texto_antes_valle = ocr_text[:valle_positions[1]]
+                    numero_antes_valle = re.findall(r"(\d+)", texto_antes_valle)
+                    valor_antes_valle = int(numero_antes_valle[-1]) if numero_antes_valle else 0
+
+                    # Capturar el número antes del segundo "Total"
+                    texto_antes_total = ocr_text[:total_positions[1]]
+                    numero_antes_total = re.findall(r"(\d+)", texto_antes_total)
+                    valor_antes_total = int(numero_antes_total[-1]) if numero_antes_total else 0
+
+                    # Sumar los valores
+                    suma_potencia = valor_antes_valle + valor_antes_total
+
+                    # Formatear el valor: agregar un punto entre el segundo y tercer dígito desde la derecha
+                    suma_potencia_str = str(suma_potencia)
+                    if len(suma_potencia_str) > 2:
+                        costo_potencia = float(f"{suma_potencia_str[:-2]}.{suma_potencia_str[-2:]}")
+                    else:
+                        costo_potencia = float(f"0.{suma_potencia_str.zfill(2)}")
+                else:
+                    costo_potencia = 0  # Valor por defecto si no se encuentran las palabras clave
+            except Exception as e:
+                logger.error(f"Error al calcular 'costo_potencia': {str(e)}")
+                costo_potencia = 0  # Valor por defecto en caso de error
+
+            # Extraer "costo_energia"
+            costo_energia_match = re.search(r"Energia consumida.*?(\d{1,3},\d{2}) €", ocr_text)
+            costo_energia = float(costo_energia_match.group(1).replace(",", ".")) if costo_energia_match else None
+
+            # Extraer "descuentos"
+            descuentos_match = re.search(r"Descuentos.*?(-?\d{1,3},\d{2}) €", ocr_text)
+            descuentos = float(descuentos_match.group(1).replace(",", ".")) if descuentos_match else None
+
+            # Extraer "impuestos"
+            impuestos_match = re.search(r"Impuesto sobre electricidad.*?(\d{1,3},\d{2}) €", ocr_text)
+            impuestos = float(impuestos_match.group(1).replace(",", ".")) if impuestos_match else None
+
+            # Extraer "total_a_pagar"
+            total_a_pagar_match = re.search(r"TOTAL IMPORTE FACTURA\s*\n\n\s*([\d,\.]+)\s*€", ocr_text)
+            if total_a_pagar_match:
+                try:
+                    total_a_pagar_raw = total_a_pagar_match.group(1)
+                    total_a_pagar = float(total_a_pagar_raw.replace(",", "."))
+                except ValueError:
+                    total_a_pagar = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                total_a_pagar = 0.0  # Valor por defecto si no se encuentra el patrón
+
+
+            # Extraer "consumo_punta"
+            try:
+                # Buscar el valor después de "desagregados han sido punta:"
+                consumo_punta_match = re.search(r"desagregados han sido punta:\s*([\d,\.]+)\s*kWh", ocr_text, re.IGNORECASE)
+                
+                if consumo_punta_match:
+                    # Extraer el valor y convertirlo en float
+                    consumo_punta = float(consumo_punta_match.group(1).replace(",", "").replace(".", "."))
+                    consumo_punta = round(consumo_punta, 2)  # Asegurar dos decimales
+                else:
+                    consumo_punta = 0.00  # Valor por defecto si no se encuentra el patrón
+            except Exception as e:
+                logger.error(f"Error al extraer 'consumo_punta': {str(e)}")
+                consumo_punta = 0.00  # Valor por defecto en caso de error
+
+
+            # Extraer "consumo_valle"
+            try:
+                # Buscar el contexto específico de "Las potencias máximas demandadas"
+                consumo_valle_match = re.search(
+                    r"([\d,\.]+)\s*kWh,\s*\n=4\s*\nLas potencias máximas demandadas", ocr_text, re.IGNORECASE
+                )
+
+                if consumo_valle_match:
+                    # Extraer el valor encontrado y convertirlo en formato decimal
+                    consumo_valle = float(consumo_valle_match.group(1).replace(",", "."))
+                else:
+                    consumo_valle = 0.00  # Valor predeterminado si no se encuentra
+            except Exception as e:
+                logger.error(f"Error al extraer 'consumo_valle': {str(e)}")
+                consumo_valle = 0.00  # Valor predeterminado en caso de error
+
+            # Extraer "consumo_total"
+            consumo_total_match = re.search(r"(\d{1,3},\d{2})\s*kWh", ocr_text)
+            if consumo_total_match:
+                consumo_total = float(consumo_total_match.group(1).replace(",", "."))
+            else:
+                consumo_total = 0
+
+            # Extraer "precio_efectivo_energia"
+            precio_efectivo_energia_match = re.search(r"([\d,\.]+)\s*€/kWh", ocr_text)
+            if precio_efectivo_energia_match:
+                precio_efectivo_energia_raw = precio_efectivo_energia_match.group(1)
+                # Normalizar el valor reemplazando posibles errores como comas y puntos
+                try:
+                    precio_efectivo_energia = float(precio_efectivo_energia_raw.replace(",", "."))
+                except ValueError:
+                    # Si el formato no es válido, asignamos 0 como predeterminado
+                    precio_efectivo_energia = 0
+            else:
+                precio_efectivo_energia = 0
+
+            # Construir JSON con los valores extraídos
             parsed_data = {
-                "nombre_cliente": "XXXXXXXXX",
-                "numero_referencia": "XXXXXXXXX",
-                "fecha_emision": "1990-01-01",
+                "nombre_cliente": nombre_cliente if nombre_cliente else "XXXXXXXXX",
+                "numero_referencia": numero_referencia if numero_referencia else "XXXXXXXXX",
+                "fecha_emision": fecha_emision if fecha_emision else "1990-01-01",
                 "periodo_facturacion": {
-                    "inicio": "1990-01-01",
-                    "fin": "1990-01-01",
-                    "dias": "00",
+                    "inicio": periodo_inicio if periodo_inicio else "1990-01-01",
+                    "fin": periodo_fin if periodo_fin else "1990-01-01",
+                    "dias": dias if dias else "00",
                 },
-                "forma_pago": "teste forma de pago",
-                "fecha_cargo": "1990-01-01",
-                "mandato": "XXXXXXXXX",
+                "forma_pago": forma_pago if forma_pago else "XXXXXXXXX",
+                "fecha_cargo": fecha_cargo if fecha_cargo else "1990-01-01",
+                "mandato": mandato if mandato else "XXXXXXXXX",
                 "desglose_cargos": {
-                    "costo_potencia": 000,
-                    "costo_energia": 000,
-                    "descuentos": 000,
-                    "impuestos": 000,
-                    "total_a_pagar": 000,
+                    "costo_potencia": costo_potencia if costo_potencia else 0,
+                    "costo_energia": costo_energia if costo_energia else 0,
+                    "descuentos": descuentos if descuentos else 0,
+                    "impuestos": impuestos if impuestos else 0,
+                    "total_a_pagar": total_a_pagar if total_a_pagar else 0,
                 },
                 "detalles_consumo": {
-                    "consumo_punta": 000,
-                    "consumo_valle": 000,
-                    "consumo_total": 000,
-                    "precio_efectivo_energia": 000,
+                    "consumo_punta": consumo_punta if consumo_punta else 0,
+                    "consumo_valle": consumo_valle if consumo_valle else 0,
+                    "consumo_total": consumo_total if consumo_total else 0,
+                    "precio_efectivo_energia": precio_efectivo_energia if precio_efectivo_energia else 0,
                 },
             }
 
@@ -468,6 +659,10 @@ class InvoiceProcessView(APIView):
             return {
                 "error": "Error al convertir OCR a JSON para Iberdrola."
             }
+
+
+
+
 
 
 
