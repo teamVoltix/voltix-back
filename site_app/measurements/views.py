@@ -127,8 +127,7 @@ class MeasurementDetailView(APIView):
 
     def get(self, request, measurement_id):
         try:
-            # Retrieve the measurement by ID
-            measurement = Measurement.objects.filter(pk=measurement_id)
+            measurement = Measurement.objects.filter(pk=measurement_id,user=request.user)
 
             if not measurement.exists():
                 return Response(
@@ -136,7 +135,6 @@ class MeasurementDetailView(APIView):
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            # Annotate the measurement with comparison status
             annotated_measurement = annotate_comparison_status(measurement, "measurement").first()
 
             if not annotated_measurement:
@@ -144,8 +142,7 @@ class MeasurementDetailView(APIView):
                     {"error": f"Measurement with ID {measurement_id} not found after annotation."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-
-            # Prepare the response data
+            
             response_data = {
                 "id": annotated_measurement.id,
                 "measurement_start": annotated_measurement.measurement_start,

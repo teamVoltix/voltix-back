@@ -454,6 +454,7 @@ class InvoiceProcessView(APIView):
 
 from .serializers import InvoiceSerializer
 from voltix.utils.comparison_status import annotate_comparison_status
+from django.http import JsonResponse
 
 class InvoiceDetailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -462,7 +463,8 @@ class InvoiceDetailView(APIView):
         operation_summary="Obtener factura por ID con estado de comparación",
         operation_description=(
             "Permite a un usuario autenticado obtener los detalles de una factura específica por su ID, "
-            "incluido el estado de comparación relacionado."
+            "siempre y cuando la factura pertenezca al usuario autenticado. "
+            "También incluye el estado de comparación relacionado."
         ),
         responses={
             200: openapi.Response(
@@ -486,10 +488,10 @@ class InvoiceDetailView(APIView):
                 },
             ),
             404: openapi.Response(
-                description="Factura no encontrada.",
+                description="Factura no encontrada o no pertenece al usuario autenticado.",
                 examples={
                     "application/json": {
-                        "detail": "Factura no encontrada."
+                        "detail": "Factura con ID 123 no encontrada."
                     }
                 },
             ),
@@ -502,44 +504,48 @@ class InvoiceDetailView(APIView):
                 },
             ),
         },
+        manual_parameters=[
+            openapi.Parameter(
+                name="invoice_id",
+                in_=openapi.IN_PATH,
+                description="ID de la factura que se desea obtener.",
+                type=openapi.TYPE_INTEGER,
+                required=True,
+            )
+        ]
     )
+
     def get(self, request, invoice_id):
         try:
-            # Retrieve the invoice by ID
-            invoice_queryset = Invoice.objects.filter(pk=invoice_id)
+            invoice_queryset = Invoice.objects.filter(pk=invoice_id, user=request.user)
 
             if not invoice_queryset.exists():
-                return Response(
-                    {"detail": "Factura no encontrada."},
+                return JsonResponse(
+                    {"error": f"Factura con ID {invoice_id} no encontrada."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            # Annotate the invoice with comparison status
             annotated_invoice = annotate_comparison_status(invoice_queryset, "invoice").first()
 
             if not annotated_invoice:
-                return Response(
+                return JsonResponse(
                     {"detail": "Factura no encontrada después de la anotación."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            # Serialize the invoice data
             serializer = InvoiceSerializer(annotated_invoice)
-
-            # Add the comparison status to the serialized data
             response_data = serializer.data
             response_data["comparison_status"] = annotated_invoice.comparison_status
 
             return Response(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
-            return Response(
+            return JsonResponse(
                 {
                     "error": "Ocurrió un error al obtener los detalles de la factura.",
                     "details": str(e),
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
 
 
