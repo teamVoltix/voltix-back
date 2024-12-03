@@ -5,6 +5,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils.timezone import now, timedelta
 from django.contrib.auth.hashers import make_password, check_password
+from django.core.exceptions import ValidationError
 
 class UserManager(BaseUserManager):
     def create_user(self, dni, fullname, email, password=None, **extra_fields):
@@ -73,6 +74,11 @@ class Invoice(models.Model):
 
     def __str__(self):
         return f"Invoice {self.id} - User: {self.user.fullname}"
+    
+    def clean(self):
+        super().clean()
+        if self.billing_period_start > self.billing_period_end:
+            raise ValidationError("La fecha de inicio no puede ser posterior a la fecha de fin.")
 
 
 class Measurement(models.Model):
