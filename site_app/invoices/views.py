@@ -806,16 +806,55 @@ class InvoiceProcessView(APIView):
                 dias = None
 
             # Extraer "forma_pago"
-                
+            try:
+                forma_pago_match = re.search(r"Forma de pago:\s*(.+)", ocr_text)
+                forma_pago = forma_pago_match.group(1).strip() if forma_pago_match else None
+            except Exception as e:
+                logger.error(f"Error al extraer 'forma_pago': {str(e)}")
+                forma_pago = None
 
             # Extraer "fecha_cargo"
-                
+            try:
+                fecha_cargo_match = re.search(r"Fecha de cargo:\n\n(\d{2}/\d{2}/\d{4})", ocr_text)
+                if fecha_cargo_match:
+                    fecha_cargo_raw = fecha_cargo_match.group(1)
+                    fecha_cargo = datetime.strptime(fecha_cargo_raw, "%d/%m/%Y").strftime("%Y-%m-%d")
+                else:
+                    fecha_cargo = None
+            except Exception as e:
+                logger.error(f"Error al extraer 'fecha_cargo': {str(e)}")
+                fecha_cargo = None
 
             # Extraer "mandato"
 
 
-            # Extraer valor de "costo_energia" (antes de " €\n\nEnergia consumida")
+            # Extraer "costo_potencia"
+            try:
+                # Buscar el primer valor después de "€/kW día\n\n"
+                costo_potencia_primero_match = re.search(r"€/kW día\n\n\s*([\d,\.]+)", ocr_text)
+                if costo_potencia_primero_match:
+                    # Convertir el valor capturado al formato decimal
+                    costo_potencia_primero_raw = costo_potencia_primero_match.group(1)
+                    costo_potencia_primero = float(costo_potencia_primero_raw.replace(",", "."))
+                else:
+                    costo_potencia_primero = 0.0  # Valor por defecto si no se encuentra el patrón
 
+                # Buscar el segundo valor después de "€/kW día\n\n" a partir del final del primer match
+                ocr_text_remaining = ocr_text[costo_potencia_primero_match.end():] if costo_potencia_primero_match else ocr_text
+                costo_potencia_segundo_match = re.search(r"€/kW día\n\n\s*([\d,\.]+)", ocr_text_remaining)
+                if costo_potencia_segundo_match:
+                    # Convertir el valor capturado al formato decimal
+                    costo_potencia_segundo_raw = costo_potencia_segundo_match.group(1)
+                    costo_potencia_segundo = float(costo_potencia_segundo_raw.replace(",", "."))
+                else:
+                    costo_potencia_segundo = 0.0  # Valor por defecto si no se encuentra el patrón
+
+                # Calcular la suma de ambos valores
+                costo_potencia = round(costo_potencia_primero + costo_potencia_segundo, 2)
+
+            except Exception as e:
+                logger.error(f"Error al calcular 'costo_potencia': {str(e)}")
+                costo_potencia = 0.0  # Valor predeterminado en caso de error
 
             # Extraer "descuentos"
                 
@@ -854,11 +893,11 @@ class InvoiceProcessView(APIView):
                     "fin": fin,
                     "dias": dias,
                 },
-                "forma_pago": "teste forma de pago",
-                "fecha_cargo": "1990-01-01",
-                "mandato": "XXXXXXXXX",
+                "forma_pago": forma_pago,
+                "fecha_cargo": fecha_cargo,
+                "mandato": "SIN CODIGO DE MANDATO",
                 "desglose_cargos": {
-                    "costo_potencia": 000,
+                    "costo_potencia": costo_potencia,
                     "costo_energia": 000,
                     "descuentos": 000,
                     "impuestos": 000,
