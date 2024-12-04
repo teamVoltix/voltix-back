@@ -730,19 +730,80 @@ class InvoiceProcessView(APIView):
             precio_efectivo_energia = None
 
             # Extraer "nombre_cliente"
-                
+            nombre_cliente_match = re.search(r"Titular del contrato:\s*(.*?)\n", ocr_text)
+            nombre_cliente = nombre_cliente_match.group(1).strip() if nombre_cliente_match else None
 
             # Extraer "numero_referencia"
-                
+            try:
+                numero_referencia_match = re.search(
+                    r"Referencia del contrato de sumi\n\ntro \(LIDERA COMERCIALIZADORA ENERGIA\):\s*(.+)",
+                    ocr_text
+                )
+                numero_referencia = numero_referencia_match.group(1).strip() if numero_referencia_match else None
+            except Exception as e:
+                logger.error(f"Error al extraer 'numero_referencia': {str(e)}")
+                numero_referencia = None
 
             # Extraer "fecha_emision"
-                
+            try:
+                fecha_emision_match = re.search(
+                    r"Fecha emi\n\nn factura:\s*(.+)",
+                    ocr_text
+                )
+                if fecha_emision_match:
+                    raw_fecha_emision = fecha_emision_match.group(1).strip()
+                    # Utilizar la función de mapeo de meses
+                    match = re.match(r"(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})", raw_fecha_emision)
+                    if match:
+                        dia, mes_texto, anio = match.groups()
+                        mes = meses.get(mes_texto.lower())
+                        if mes:
+                            fecha_emision = f"{anio}-{mes}-{dia.zfill(2)}"
+                        else:
+                            fecha_emision = None
+                    else:
+                        fecha_emision = None
+                else:
+                    fecha_emision = None
+            except Exception as e:
+                logger.error(f"Error al extraer 'fecha_emision': {str(e)}")
+                fecha_emision = None
 
             # Extraer "periodo_facturacion"
-                
+            try:
+                periodo_match = re.search(
+                    r"Periodo de consumo:\n\nDe\s*(\d{1,2}/\d{1,2}/\d{4})\s*al\s*(\d{1,2}/\d{1,2}/\d{4})",
+                    ocr_text
+                )
+                if periodo_match:
+                    raw_inicio = periodo_match.group(1).strip()
+                    raw_fin = periodo_match.group(2).strip()
+                    
+                    # Convertir las fechas al formato YYYY-MM-DD
+                    def convertir_fecha(fecha_raw):
+                        try:
+                            return datetime.strptime(fecha_raw, "%d/%m/%Y").strftime("%Y-%m-%d")
+                        except ValueError:
+                            logger.error(f"Error al convertir fecha: {fecha_raw}")
+                            return None
 
-            # Extraer "dias"
+                    inicio = convertir_fecha(raw_inicio)
+                    fin = convertir_fecha(raw_fin)
+                else:
+                    inicio = None
+                    fin = None
+            except Exception as e:
+                logger.error(f"Error al extraer 'periodo_facturacion': {str(e)}")
+                inicio = None
+                fin = None
 
+            # Extraer "días"
+            try:
+                dias_match = re.search(r"(\d+)\s+Días", ocr_text)
+                dias = int(dias_match.group(1).strip()) if dias_match else None
+            except Exception as e:
+                logger.error(f"Error al extraer 'días': {str(e)}")
+                dias = None
 
             # Extraer "forma_pago"
                 
@@ -785,13 +846,13 @@ class InvoiceProcessView(APIView):
 
             # Construir JSON
             parsed_data = {
-                "nombre_cliente": "LIDERA TESTE",
-                "numero_referencia": "XXXXXXXXX",
-                "fecha_emision": "1990-01-01",
+                "nombre_cliente": nombre_cliente,
+                "numero_referencia": numero_referencia,
+                "fecha_emision": fecha_emision,
                 "periodo_facturacion": {
-                    "inicio": "1990-01-01",
-                    "fin": "1990-01-01",
-                    "dias": "00",
+                    "inicio": inicio,
+                    "fin": fin,
+                    "dias": dias,
                 },
                 "forma_pago": "teste forma de pago",
                 "fecha_cargo": "1990-01-01",
