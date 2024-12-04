@@ -695,130 +695,379 @@ class InvoiceProcessView(APIView):
             }
 
     def extract_lidera_data(self, ocr_text):
-            """
-            Extrae los datos específicos de las facturas de Lidera Energia a partir del texto OCR.
-            """
-            try:
-                # Construir JSON
-                parsed_data = {
-                    "nombre_cliente": "LIDERA TESTE",
-                    "numero_referencia": "XXXXXXXXX",
-                    "fecha_emision": "1990-01-01",
-                    "periodo_facturacion": {
-                        "inicio": "1990-01-01",
-                        "fin": "1990-01-01",
-                        "dias": "00",
-                    },
-                    "forma_pago": "teste forma de pago",
-                    "fecha_cargo": "1990-01-01",
-                    "mandato": "XXXXXXXXX",
-                    "desglose_cargos": {
-                        "costo_potencia": 000,
-                        "costo_energia": 000,
-                        "descuentos": 000,
-                        "impuestos": 000,
-                        "total_a_pagar": 000,
-                    },
-                    "detalles_consumo": {
-                        "consumo_punta": 000,
-                        "consumo_valle": 000,
-                        "consumo_total": 000,
-                        "precio_efectivo_energia": 000,
-                    },
-                }
+        """
+        Extrae los datos específicos de las facturas de Lidera Energia a partir del texto OCR.
+        """
+        try:
+            import re
+            from datetime import datetime
 
-                return parsed_data
+            # Mapeo de meses en español a números
+            meses = {
+                "enero": "01", "febrero": "02", "marzo": "03", "abril": "04",
+                "mayo": "05", "junio": "06", "julio": "07", "agosto": "08",
+                "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12"
+            }
 
-            except Exception as e:
-                logger.error(f"Error al convertir OCR a JSON para Lidera Energia: {str(e)}")
-                return {
-                    "error": "Error al convertir OCR a JSON para Lidera Energia."
-                }
-    
+            # Inicializar valores por defecto
+            nombre_cliente = None
+            numero_referencia = None
+            fecha_emision = None
+            periodo_inicio = None
+            periodo_fin = None
+            dias = None
+            forma_pago = None
+            fecha_cargo = None
+            mandato = None
+            costo_potencia = None
+            costo_energia = None
+            descuentos = None
+            impuestos = None
+            total_a_pagar = None
+            consumo_punta = None
+            consumo_valle = None
+            consumo_total = None
+            precio_efectivo_energia = None
+
+            # Extraer "nombre_cliente"
+                
+
+            # Extraer "numero_referencia"
+                
+
+            # Extraer "fecha_emision"
+                
+
+            # Extraer "periodo_facturacion"
+                
+
+            # Extraer "dias"
+
+
+            # Extraer "forma_pago"
+                
+
+            # Extraer "fecha_cargo"
+                
+
+            # Extraer "mandato"
+
+
+            # Extraer valor de "costo_energia" (antes de " €\n\nEnergia consumida")
+
+
+            # Extraer "descuentos"
+                
+
+            # Extraer "impuestos"
+
+
+            # Extraer segundo valor de "impuestos" (antes de "TOTAL IMPORTE FACTURA")
+                
+
+            # Calcular el valor total de "impuestos"
+
+
+            # Extraer "total_a_pagar"
+
+
+            # Extraer "consumo_punta"
+
+
+            # Extraer "consumo_valle"
+                
+
+            # Extraer "consumo_total"
+                
+
+            # Extraer "precio_efectivo_energia"
+                
+
+            # Construir JSON
+            parsed_data = {
+                "nombre_cliente": "LIDERA TESTE",
+                "numero_referencia": "XXXXXXXXX",
+                "fecha_emision": "1990-01-01",
+                "periodo_facturacion": {
+                    "inicio": "1990-01-01",
+                    "fin": "1990-01-01",
+                    "dias": "00",
+                },
+                "forma_pago": "teste forma de pago",
+                "fecha_cargo": "1990-01-01",
+                "mandato": "XXXXXXXXX",
+                "desglose_cargos": {
+                    "costo_potencia": 000,
+                    "costo_energia": 000,
+                    "descuentos": 000,
+                    "impuestos": 000,
+                    "total_a_pagar": 000,
+                },
+                "detalles_consumo": {
+                    "consumo_punta": 000,
+                    "consumo_valle": 000,
+                    "consumo_total": 000,
+                    "precio_efectivo_energia": 000,
+                },
+            }
+
+            return parsed_data
+
+        except Exception as e:
+            logger.error(f"Error al convertir OCR a JSON para Lidera Energia: {str(e)}")
+            return {
+                "error": "Error al convertir OCR a JSON para Lidera Energia."
+            }
+
     def extract_naturgy_data(self, ocr_text):
-            """
-            Extrae los datos específicos de las facturas de Naturgy a partir del texto OCR.
-            """
-            try:
-                # Construir JSON
-                parsed_data = {
-                    "nombre_cliente": "NATURGY TESTE",
-                    "numero_referencia": "XXXXXXXXX",
-                    "fecha_emision": "1990-01-01",
-                    "periodo_facturacion": {
-                        "inicio": "1990-01-01",
-                        "fin": "1990-01-01",
-                        "dias": "00",
-                    },
-                    "forma_pago": "teste forma de pago",
-                    "fecha_cargo": "1990-01-01",
-                    "mandato": "XXXXXXXXX",
-                    "desglose_cargos": {
-                        "costo_potencia": 000,
-                        "costo_energia": 000,
-                        "descuentos": 000,
-                        "impuestos": 000,
-                        "total_a_pagar": 000,
-                    },
-                    "detalles_consumo": {
-                        "consumo_punta": 000,
-                        "consumo_valle": 000,
-                        "consumo_total": 000,
-                        "precio_efectivo_energia": 000,
-                    },
-                }
+        """
+        Extrae los datos específicos de las facturas de Naturgy a partir del texto OCR.
+        """
+        try:
+            import re
+            from datetime import datetime
 
-                return parsed_data
+            # Mapeo de meses en español a números
+            meses = {
+                "enero": "01", "febrero": "02", "marzo": "03", "abril": "04",
+                "mayo": "05", "junio": "06", "julio": "07", "agosto": "08",
+                "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12"
+            }
 
-            except Exception as e:
-                logger.error(f"Error al convertir OCR a JSON para Naturgy: {str(e)}")
-                return {
-                    "error": "Error al convertir OCR a JSON para Naturgy."
-                }
+            # Inicializar valores por defecto
+            nombre_cliente = None
+            numero_referencia = None
+            fecha_emision = None
+            periodo_inicio = None
+            periodo_fin = None
+            dias = None
+            forma_pago = None
+            fecha_cargo = None
+            mandato = None
+            costo_potencia = None
+            costo_energia = None
+            descuentos = None
+            impuestos = None
+            total_a_pagar = None
+            consumo_punta = None
+            consumo_valle = None
+            consumo_total = None
+            precio_efectivo_energia = None
 
+            # Extraer "nombre_cliente"
+                
+
+            # Extraer "numero_referencia"
+                
+
+            # Extraer "fecha_emision"
+                
+
+            # Extraer "periodo_facturacion"
+                
+
+            # Extraer "dias"
+
+
+            # Extraer "forma_pago"
+                
+
+            # Extraer "fecha_cargo"
+                
+
+            # Extraer "mandato"
+
+
+            # Extraer valor de "costo_energia" (antes de " €\n\nEnergia consumida")
+
+
+            # Extraer "descuentos"
+                
+
+            # Extraer "impuestos"
+
+
+            # Extraer segundo valor de "impuestos" (antes de "TOTAL IMPORTE FACTURA")
+                
+
+            # Calcular el valor total de "impuestos"
+
+
+            # Extraer "total_a_pagar"
+
+
+            # Extraer "consumo_punta"
+
+
+            # Extraer "consumo_valle"
+                
+
+            # Extraer "consumo_total"
+                
+
+            # Extraer "precio_efectivo_energia"
+                
+
+            # Construir JSON
+            parsed_data = {
+                "nombre_cliente": "NATURGY TESTE",
+                "numero_referencia": "XXXXXXXXX",
+                "fecha_emision": "1990-01-01",
+                "periodo_facturacion": {
+                    "inicio": "1990-01-01",
+                    "fin": "1990-01-01",
+                    "dias": "00",
+                },
+                "forma_pago": "teste forma de pago",
+                "fecha_cargo": "1990-01-01",
+                "mandato": "XXXXXXXXX",
+                "desglose_cargos": {
+                    "costo_potencia": 000,
+                    "costo_energia": 000,
+                    "descuentos": 000,
+                    "impuestos": 000,
+                    "total_a_pagar": 000,
+                },
+                "detalles_consumo": {
+                    "consumo_punta": 000,
+                    "consumo_valle": 000,
+                    "consumo_total": 000,
+                    "precio_efectivo_energia": 000,
+                },
+            }
+
+            return parsed_data
+
+        except Exception as e:
+            logger.error(f"Error al convertir OCR a JSON para Naturgy: {str(e)}")
+            return {
+                "error": "Error al convertir OCR a JSON para Naturgy."
+            }
+    
     def extract_edistribucion_data(self, ocr_text):
-            """
-            Extrae los datos específicos de las facturas de E-distribución a partir del texto OCR.
-            """
-            try:
-                # Construir JSON
-                parsed_data = {
-                    "nombre_cliente": "E-DISTRIBUCION TESTE",
-                    "numero_referencia": "XXXXXXXXX",
-                    "fecha_emision": "1990-01-01",
-                    "periodo_facturacion": {
-                        "inicio": "1990-01-01",
-                        "fin": "1990-01-01",
-                        "dias": "00",
-                    },
-                    "forma_pago": "teste forma de pago",
-                    "fecha_cargo": "1990-01-01",
-                    "mandato": "XXXXXXXXX",
-                    "desglose_cargos": {
-                        "costo_potencia": 000,
-                        "costo_energia": 000,
-                        "descuentos": 000,
-                        "impuestos": 000,
-                        "total_a_pagar": 000,
-                    },
-                    "detalles_consumo": {
-                        "consumo_punta": 000,
-                        "consumo_valle": 000,
-                        "consumo_total": 000,
-                        "precio_efectivo_energia": 000,
-                    },
-                }
+        """
+        Extrae los datos específicos de las facturas de E-Distribución a partir del texto OCR.
+        """
+        try:
+            import re
+            from datetime import datetime
 
-                return parsed_data
+            # Mapeo de meses en español a números
+            meses = {
+                "enero": "01", "febrero": "02", "marzo": "03", "abril": "04",
+                "mayo": "05", "junio": "06", "julio": "07", "agosto": "08",
+                "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12"
+            }
 
-            except Exception as e:
-                logger.error(f"Error al convertir OCR a JSON para E-distribución: {str(e)}")
-                return {
-                    "error": "Error al convertir OCR a JSON para E-distribución."
-                }
+            # Inicializar valores por defecto
+            nombre_cliente = None
+            numero_referencia = None
+            fecha_emision = None
+            periodo_inicio = None
+            periodo_fin = None
+            dias = None
+            forma_pago = None
+            fecha_cargo = None
+            mandato = None
+            costo_potencia = None
+            costo_energia = None
+            descuentos = None
+            impuestos = None
+            total_a_pagar = None
+            consumo_punta = None
+            consumo_valle = None
+            consumo_total = None
+            precio_efectivo_energia = None
+
+            # Extraer "nombre_cliente"
+                
+
+            # Extraer "numero_referencia"
+                
+
+            # Extraer "fecha_emision"
+                
+
+            # Extraer "periodo_facturacion"
+                
+
+            # Extraer "dias"
 
 
+            # Extraer "forma_pago"
+                
 
+            # Extraer "fecha_cargo"
+                
+
+            # Extraer "mandato"
+
+
+            # Extraer valor de "costo_energia" (antes de " €\n\nEnergia consumida")
+
+
+            # Extraer "descuentos"
+                
+
+            # Extraer "impuestos"
+
+
+            # Extraer segundo valor de "impuestos" (antes de "TOTAL IMPORTE FACTURA")
+                
+
+            # Calcular el valor total de "impuestos"
+
+
+            # Extraer "total_a_pagar"
+
+
+            # Extraer "consumo_punta"
+
+
+            # Extraer "consumo_valle"
+                
+
+            # Extraer "consumo_total"
+                
+
+            # Extraer "precio_efectivo_energia"
+                
+
+            # Construir JSON
+            parsed_data = {
+                "nombre_cliente": "E-DISTRIBUCIÓN TESTE",
+                "numero_referencia": "XXXXXXXXX",
+                "fecha_emision": "1990-01-01",
+                "periodo_facturacion": {
+                    "inicio": "1990-01-01",
+                    "fin": "1990-01-01",
+                    "dias": "00",
+                },
+                "forma_pago": "teste forma de pago",
+                "fecha_cargo": "1990-01-01",
+                "mandato": "XXXXXXXXX",
+                "desglose_cargos": {
+                    "costo_potencia": 000,
+                    "costo_energia": 000,
+                    "descuentos": 000,
+                    "impuestos": 000,
+                    "total_a_pagar": 000,
+                },
+                "detalles_consumo": {
+                    "consumo_punta": 000,
+                    "consumo_valle": 000,
+                    "consumo_total": 000,
+                    "precio_efectivo_energia": 000,
+                },
+            }
+
+            return parsed_data
+
+        except Exception as e:
+            logger.error(f"Error al convertir OCR a JSON para E-Distribución: {str(e)}")
+            return {
+                "error": "Error al convertir OCR a JSON para E-Distribución."
+            }
     
 
 ################################################################################################################################
