@@ -108,12 +108,12 @@ class InvoiceProcessView(APIView):
                 # Subir la primera página a Cloudinary
                 if images:
                     first_page_image = images[0]  # Usar solo la primera página
-                    processed_image = self.process_image(first_page_image)  # Procesar la imagen
+                   
 
-                    # Convertir la imagen procesada a un formato compatible con Cloudinary
-                    image_for_upload = Image.fromarray(processed_image)
+                    # Convertir la imagen original (sin procesar) a un formato compatible con Cloudinary
+                    original_image = Image.open(BytesIO(first_page_image))  # Convertir bytes a PIL Image
                     image_io = BytesIO()
-                    image_for_upload.save(image_io, format='PNG')
+                    original_image.save(image_io, format='PNG')  # Guardar como PNG en un flujo en memoria
                     image_io.seek(0)
 
                     # Crear un InMemoryUploadedFile para subir a Cloudinary
