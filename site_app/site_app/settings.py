@@ -131,16 +131,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'site_app.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 from pathlib import Path
 
@@ -159,13 +149,6 @@ DATABASES = {
 }
 
 
-# to print database conection details
-# print(os.environ.get('DB_NAME'))
-# print(os.environ.get('DB_USER'))
-# print(os.environ.get('DB_HOST'))
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {

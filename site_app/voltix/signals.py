@@ -49,9 +49,5 @@ def create_notification_for_discrepancies(sender, instance, created, **kwargs):
                 content_type=ContentType.objects.get_for_model(instance),
                 object_id=instance.id
             )
-            #send_reminder_to_user.apply_async((instance.id,), countdown=300) #5 minutos (300 segundos)
-             
-             #Programar el recordatorio para dentro de 7 días
-            #send_reminder_to_user.apply_async((instance.id,), countdown=7*24*60*60)  # 7 días en segundos
             
             send_reminder_to_user.apply_async((instance.id,), countdown=60)  # 1 minuto (60 segundos)

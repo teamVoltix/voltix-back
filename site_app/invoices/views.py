@@ -1229,48 +1229,6 @@ class InvoiceProcessView(APIView):
             return {
                 "error": "Error al convertir OCR a JSON para E-Distribución."
             }
-    
-
-################################################################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-    # def delete(self, request, *args, **kwargs):
-    #     """
-    #     Cleanup method to delete temporary files after processing.
-    #     """
-    #     file_name = request.data.get('file_name')
-    #     if not file_name:
-    #         logger.warning("File name not provided for deletion.")
-    #         return Response({'status': 'error', 'message': 'File name not provided.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    #     file_path = os.path.join(TEMP_FOLDER, file_name)
-    #     if os.path.exists(file_path):
-    #         try:
-    #             os.remove(file_path)
-    #             logger.info(f"File '{file_name}' deleted successfully.")
-    #             return Response({'status': 'success', 'message': 'File deleted successfully.'}, status=status.HTTP_200_OK)
-    #         except Exception as e:
-    #             logger.error(f"Error while deleting file '{file_name}': {str(e)}")
-    #             return Response({
-    #                 'status': 'error',
-    #                 'message': 'An error occurred while deleting the file.',
-    #                 'details': str(e)
-    #             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    #     else:
-    #         logger.warning(f"File '{file_name}' not found for deletion.")
-    #         return Response({'status': 'error', 'message': 'File not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-
 
 ################################################################################################################################
 ############################################ GET - VISUALIZAR FATURA POR ID ####################################################

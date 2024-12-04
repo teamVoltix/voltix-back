@@ -10,16 +10,6 @@ from rest_framework.views import APIView
 from voltix.utils.comparison_status import annotate_comparison_status
 from rest_framework import status
 
-# Esquema de respuesta para una medición
-# measurement_schema = openapi.Schema(
-#     type=openapi.TYPE_OBJECT,
-#     properties={
-#         'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID de la medición'),
-#         'date': openapi.Schema(type=openapi.TYPE_STRING, format='date', description='Fecha de la medición'),
-#         'value': openapi.Schema(type=openapi.TYPE_NUMBER, description='Valor de la medición'),
-#         'data': openapi.Schema(type=openapi.TYPE_OBJECT, description='Datos adicionales en formato JSON'),
-#     }
-# )
 
 def index(request):
     return HttpResponse("MEASUREMENTS YEY")
