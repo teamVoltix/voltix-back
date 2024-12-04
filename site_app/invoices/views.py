@@ -829,46 +829,69 @@ class InvoiceProcessView(APIView):
 
 
             # Extraer "costo_potencia"
-            try:
-                # Buscar el primer valor después de "€/kW día\n\n"
-                costo_potencia_primero_match = re.search(r"€/kW día\n\n\s*([\d,\.]+)", ocr_text)
-                if costo_potencia_primero_match:
-                    # Convertir el valor capturado al formato decimal
-                    costo_potencia_primero_raw = costo_potencia_primero_match.group(1)
-                    costo_potencia_primero = float(costo_potencia_primero_raw.replace(",", "."))
-                else:
-                    costo_potencia_primero = 0.0  # Valor por defecto si no se encuentra el patrón
+            def extract_costo_potencia(ocr_text):
+                """
+                Extrae y calcula el costo de potencia sumando los valores flotantes encontrados después de "Días"
+                y antes del siguiente "€/KW día" o variantes como "E/KW día".
+                """
+                import re
 
-                # Buscar el segundo valor después de "€/kW día\n\n" a partir del final del primer match
-                ocr_text_remaining = ocr_text[costo_potencia_primero_match.end():] if costo_potencia_primero_match else ocr_text
-                costo_potencia_segundo_match = re.search(r"€/kW día\n\n\s*([\d,\.]+)", ocr_text_remaining)
-                if costo_potencia_segundo_match:
-                    # Convertir el valor capturado al formato decimal
-                    costo_potencia_segundo_raw = costo_potencia_segundo_match.group(1)
-                    costo_potencia_segundo = float(costo_potencia_segundo_raw.replace(",", "."))
-                else:
-                    costo_potencia_segundo = 0.0  # Valor por defecto si no se encuentra el patrón
+                try:
+                    # Localizar la sección en el OCR donde aparece "DETALLE DE LA FACTURA"
+                    potencia_section_match = re.search(r"DETALLE DE LA FACTURA", ocr_text, re.IGNORECASE)
+                    if not potencia_section_match:
+                        print("No se encontró la sección 'DETALLE DE LA FACTURA' en el OCR.")
+                        return 0.0  # Retornar 0 si no se encuentra la sección
 
-                # Calcular la suma de ambos valores
-                costo_potencia = round(costo_potencia_primero + costo_potencia_segundo, 2)
+                    # Limitar el análisis del OCR al texto después de "DETALLE DE LA FACTURA"
+                    ocr_text_after_potencia = ocr_text[potencia_section_match.end():]
 
-            except Exception as e:
-                logger.error(f"Error al calcular 'costo_potencia': {str(e)}")
-                costo_potencia = 0.0  # Valor predeterminado en caso de error
+                    # Inicializar lista para valores encontrados
+                    valores = []
+
+                    # Buscar todas las ocurrencias relevantes en formato "Días ... €/KW día\n\n<valor>"
+                    # Ahora también acepta "E/KW día" en lugar de "€/KW día"
+                    dias_matches = re.finditer(
+                        r"Días.*?[€E]/KW día\n\n([\d,\.]+)",  # Modificado para aceptar € o E
+                        ocr_text_after_potencia,
+                        re.IGNORECASE
+                    )
+                    for match in dias_matches:
+                        valor_raw = match.group(1)  # Capturar el valor después de "€/KW día\n\n" o "E/KW día\n\n"
+                        try:
+                            valor = float(valor_raw.replace(",", "."))  # Convertir a float
+                            valores.append(valor)  # Guardar el valor en la lista
+                        except ValueError:
+                            print(f"Valor inválido encontrado: {valor_raw}")
+
+                    # Sumar todos los valores capturados
+                    costo_potencia = round(sum(valores), 2)
+                    return costo_potencia
+
+                except Exception as e:
+                    print(f"Error al calcular 'costo_potencia': {str(e)}")
+                    return 0.0  # Valor predeterminado en caso de error
+
+
+            # Extraer "costo_potencia"
+
 
             # Extraer "descuentos"
                 
 
             # Extraer "impuestos"
 
-
-            # Extraer segundo valor de "impuestos" (antes de "TOTAL IMPORTE FACTURA")
-                
-
-            # Calcular el valor total de "impuestos"
-
+            match = re.search(r"Impuesto Electricidad\n\n([\d.,]+)", ocr_text, re.IGNORECASE)
+            impuestos = float(match.group(1).replace(",", ".")) if match else 0.0
 
             # Extraer "total_a_pagar"
+
+            match = re.search(r"TOTAL IMPORTE FACTURA\n\n([\d.,]+)", ocr_text, re.IGNORECASE)
+            if match:
+                total_a_pagar_raw = match.group(1)
+                total_a_pagar = float(total_a_pagar_raw.replace(".", "").replace(",", ".") if "," in total_a_pagar_raw else total_a_pagar_raw.replace(",", ""))
+            else:
+                total_a_pagar = 0.0
 
 
             # Extraer "consumo_punta"
@@ -897,11 +920,11 @@ class InvoiceProcessView(APIView):
                 "fecha_cargo": fecha_cargo,
                 "mandato": "SIN CODIGO DE MANDATO",
                 "desglose_cargos": {
-                    "costo_potencia": costo_potencia,
-                    "costo_energia": 000,
+                    "costo_potencia": extract_costo_potencia(ocr_text),
+                    "costo_energia": costo_energia,
                     "descuentos": 000,
-                    "impuestos": 000,
-                    "total_a_pagar": 000,
+                    "impuestos": impuestos,
+                    "total_a_pagar": total_a_pagar,
                 },
                 "detalles_consumo": {
                     "consumo_punta": 000,
