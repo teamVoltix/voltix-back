@@ -21,6 +21,7 @@ from .serializers import InvoiceUploadSerializer
 from voltix.models import Invoice
 from voltix.utils.upload_cloudinary import process_and_upload_image
 from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
 logger = logging.getLogger(__name__)
@@ -115,8 +116,18 @@ class InvoiceProcessView(APIView):
                     image_for_upload.save(image_io, format='PNG')
                     image_io.seek(0)
 
+                    # Crear un InMemoryUploadedFile para subir a Cloudinary
+                    processed_photo = InMemoryUploadedFile(
+                        image_io,  # Archivo en memoria
+                        field_name='ImageField',  # Nombre del campo
+                        name='processed_image.png',  # Nombre del archivo
+                        content_type='image/png',  # Tipo MIME
+                        size=image_io.tell(),  # Tamaño del archivo
+                        charset=None  # Charset, None para imágenes
+                    )
+
                     try:
-                        photo_url = process_and_upload_image(image_io, folder="invoices")
+                        photo_url = process_and_upload_image(processed_photo, folder="invoices")
                     except Exception as cloudinary_error:
                         logger.error(f"Error al subir la imagen a Cloudinary: {str(cloudinary_error)}")
                         return Response(
