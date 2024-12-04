@@ -883,6 +883,50 @@ class InvoiceImageView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="Obtener la URL de la imagen de una factura",
+        operation_description=(
+            "Permite a un usuario autenticado obtener la URL de la imagen asociada a una factura específica. "
+            "La factura debe pertenecer al usuario autenticado."
+        ),
+        responses={
+            200: openapi.Response(
+                description="URL de la imagen de la factura obtenida exitosamente.",
+                examples={
+                    "application/json": {
+                        "status": "success",
+                        "image_url": "https://example.com/images/factura123.jpg"
+                    }
+                },
+            ),
+            404: openapi.Response(
+                description="Factura no encontrada o no pertenece al usuario autenticado.",
+                examples={
+                    "application/json": {
+                        "status": "error",
+                        "message": "No se encontró una factura con ID 123."
+                    }
+                },
+            ),
+            401: openapi.Response(
+                description="No autenticado.",
+                examples={
+                    "application/json": {
+                        "detail": "No se han proporcionado credenciales de autenticación."
+                    }
+                },
+            ),
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                name="invoice_id",
+                in_=openapi.IN_PATH,
+                description="ID de la factura para obtener su URL de imagen.",
+                type=openapi.TYPE_INTEGER,
+                required=True,
+            )
+        ]
+    )
     def get(self, request, invoice_id):
         try:
             # Buscar la factura por ID y verificar que pertenece al usuario autenticado
