@@ -428,6 +428,274 @@ class InvoiceProcessView(APIView):
             logger.error(f"Error al convertir OCR a JSON para Endesa: {str(e)}")
             return {"error": "Error al convertir OCR a JSON para Endesa."}
 
+    def extract_iberdrola_data(self, ocr_text):
+        """
+        Extrae los datos específicos de las facturas de Iberdrola a partir del texto OCR.
+        """
+        try:
+            import re
+            from datetime import datetime
+
+            # Mapeo de meses en español a números
+            meses = {
+                "enero": "01", "febrero": "02", "marzo": "03", "abril": "04",
+                "mayo": "05", "junio": "06", "julio": "07", "agosto": "08",
+                "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12"
+            }
+
+            # Inicializar valores por defecto
+            nombre_cliente = None
+            numero_referencia = None
+            fecha_emision = None
+            periodo_inicio = None
+            periodo_fin = None
+            dias = None
+            forma_pago = None
+            fecha_cargo = None
+            mandato = None
+            costo_potencia = None
+            costo_energia = None
+            descuentos = None
+            impuestos = None
+            total_a_pagar = None
+            consumo_punta = None
+            consumo_valle = None
+            consumo_total = None
+            precio_efectivo_energia = None
+
+            # Extraer "nombre_cliente"
+            nombre_cliente_match = re.search(r"(?:\n)([A-Z\s]+)\n.*Potencia punta", ocr_text)
+            nombre_cliente = nombre_cliente_match.group(1).strip() if nombre_cliente_match else None
+
+            # Extraer "numero_referencia"
+            numero_referencia_match = re.search(r"N\* DE CONTRATO:\s*([\d]+)", ocr_text)
+            numero_referencia = numero_referencia_match.group(1).strip() if numero_referencia_match else None
+
+            # Extraer "fecha_emision"
+            fecha_emision_match = re.search(
+                r"FECHA DE EMISIÓN:.*?\n\n.*?\n\n(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})", ocr_text, re.DOTALL
+            )
+            if fecha_emision_match:
+                dia, mes_texto, anio = fecha_emision_match.groups()
+                mes_numero = meses.get(mes_texto.lower())
+                if mes_numero:
+                    fecha_emision = f"{anio}-{mes_numero}-{dia.zfill(2)}"
+
+
+            # Extraer "periodo_facturacion"
+            periodo_match = re.search(
+                r"PERIODO DE FACTURACIÓN.*?\n\n(\d{1,2}/\d{1,2}/\d{4})\s+(\d{1,2}/\d{1,2}/\d{4})", ocr_text, re.DOTALL
+            )
+            if periodo_match:
+                try:
+                    # Convertir las fechas al formato YYYY-MM-DD
+                    periodo_inicio = datetime.strptime(periodo_match.group(1), "%d/%m/%Y").strftime("%Y-%m-%d")
+                    periodo_fin = datetime.strptime(periodo_match.group(2), "%d/%m/%Y").strftime("%Y-%m-%d")
+                except ValueError:
+                    periodo_inicio, periodo_fin = None, None
+
+
+            # Extraer "dias"
+            dias_match = re.search(r"FECHA DE EMISIÓN:.*?\n\n.*?\n\n(\d+)", ocr_text, re.DOTALL)
+            dias = int(dias_match.group(1)) if dias_match else None
+
+
+            # Extraer "forma_pago"
+            forma_pago_match = re.search(r"Forma de pago\s*([^\n]+)", ocr_text)
+            forma_pago = forma_pago_match.group(1).strip() if forma_pago_match else None
+
+            # Extraer "fecha_cargo"
+            fecha_cargo_match = re.search(r"FECHA PREVISTA DE COBRO:\s*(\d{2}/\d{2}/\d{4})", ocr_text)
+            if fecha_cargo_match:
+                try:
+                    fecha_cargo = datetime.strptime(fecha_cargo_match.group(1), "%d/%m/%Y").strftime("%Y-%m-%d")
+                except ValueError:
+                    fecha_cargo = None
+
+            # Extraer "mandato"
+            mandato_match = re.search(r"Codigo de mandato\s*([\d]+)", ocr_text)
+            mandato = mandato_match.group(1).strip() if mandato_match else None
+
+            # Extraer el valor de "costo_punta" (antes de "€\n\nValle")
+            costo_punta_match = re.search(r"([\d,\.]+)\s*€\s*\n\n\s*Valle", ocr_text)
+            if costo_punta_match:
+                try:
+                    costo_punta_raw = costo_punta_match.group(1)
+                    costo_punta = float(costo_punta_raw.replace(",", ".")) / 100  # Mover el punto 2 posiciones a la izquierda
+                except ValueError:
+                    costo_punta = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                costo_punta = 0.0  # Valor por defecto si no se encuentra el patrón
+
+            # Extraer el valor de "costo_valle" (antes de " €\n\nTotal importe potencia")
+            costo_valle_match = re.search(r"([\d,\.]+)\s*€\s*\n\n\s*Total importe potencia", ocr_text)
+            if costo_valle_match:
+                try:
+                    costo_valle_raw = costo_valle_match.group(1)
+                    costo_valle = float(costo_valle_raw.replace(",", ".")) / 100  # Mover el punto 2 posiciones a la izquierda
+                except ValueError:
+                    costo_valle = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                costo_valle = 0.0  # Valor por defecto si no se encuentra el patrón
+
+            # Calcular el valor total de "costo_potencia" y limitar a 2 decimales
+            costo_potencia = round(costo_punta + costo_valle, 2)
+
+
+
+            # Extraer valor de "costo_energia" (antes de " €\n\nEnergia consumida")
+            costo_energia_match = re.search(r"([\d,\.]+)\s*€\s*\n\n\s*Energia consumida", ocr_text)
+            if costo_energia_match:
+                try:
+                    costo_energia_raw = costo_energia_match.group(1)
+                    costo_energia = float(costo_energia_raw.replace(",", "."))
+                except ValueError:
+                    costo_energia = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                costo_energia = 0.0  # Valor por defecto si no se encuentra el patrón
+
+
+            # Extraer "descuentos"
+            descuentos_match = re.search(r"Descuentos.*?(-?\d{1,3},\d{2}) €", ocr_text)
+            descuentos = float(descuentos_match.group(1).replace(",", ".")) if descuentos_match else None
+
+            # Extraer "impuestos"
+            # Extraer primer valor de "impuestos" (antes de " €\n\nTOTAL ENERGÍA")
+            impuestos_valor1_match = re.search(r"([\d,\.]+)\s*€\s*\n\n\s*TOTAL ENERGÍA", ocr_text)
+            if impuestos_valor1_match:
+                try:
+                    impuestos_valor1_raw = impuestos_valor1_match.group(1)
+                    impuestos_valor1 = float(impuestos_valor1_raw.replace(",", "."))
+                except ValueError:
+                    impuestos_valor1 = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                impuestos_valor1 = 0.0  # Valor por defecto si no se encuentra el patrón
+
+
+            # Extraer segundo valor de "impuestos" (antes de "TOTAL IMPORTE FACTURA")
+            impuestos_valor2_match = re.search(r"([\d,\.]+)\s*€\s*\n\n\s*TOTAL IMPORTE FACTURA", ocr_text)
+            if impuestos_valor2_match:
+                try:
+                    impuestos_valor2_raw = impuestos_valor2_match.group(1)
+                    impuestos_valor2 = float(impuestos_valor2_raw.replace(",", "."))
+                except ValueError:
+                    impuestos_valor2 = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                impuestos_valor2 = 0.0  # Valor por defecto si no se encuentra el patrón
+
+            # Calcular el valor total de "impuestos"
+            impuestos = impuestos_valor1 + impuestos_valor2
+
+
+
+            # Extraer "total_a_pagar"
+            total_a_pagar_match = re.search(r"TOTAL IMPORTE FACTURA\s*\n\n\s*([\d,\.]+)\s*€", ocr_text)
+            if total_a_pagar_match:
+                try:
+                    total_a_pagar_raw = total_a_pagar_match.group(1)
+                    total_a_pagar = float(total_a_pagar_raw.replace(",", "."))
+                except ValueError:
+                    total_a_pagar = 0.0  # Valor por defecto si el formato no es válido
+            else:
+                total_a_pagar = 0.0  # Valor por defecto si no se encuentra el patrón
+
+
+            # Extraer "consumo_punta"
+            try:
+                # Buscar el valor después de "desagregados han sido punta:"
+                consumo_punta_match = re.search(r"desagregados han sido punta:\s*([\d,\.]+)\s*kWh", ocr_text, re.IGNORECASE)
+                
+                if consumo_punta_match:
+                    # Extraer el valor y convertirlo en float
+                    consumo_punta = float(consumo_punta_match.group(1).replace(",", "").replace(".", "."))
+                    consumo_punta = round(consumo_punta, 2)  # Asegurar dos decimales
+                else:
+                    consumo_punta = 0.00  # Valor por defecto si no se encuentra el patrón
+            except Exception as e:
+                logger.error(f"Error al extraer 'consumo_punta': {str(e)}")
+                consumo_punta = 0.00  # Valor por defecto en caso de error
+
+
+            # Extraer "consumo_valle"
+            try:
+                # Buscar el contexto específico de "Las potencias máximas demandadas"
+                consumo_valle_match = re.search(
+                    r"([\d,\.]+)\s*kWh,\s*\n=4\s*\nLas potencias máximas demandadas", ocr_text, re.IGNORECASE
+                )
+
+                if consumo_valle_match:
+                    # Extraer el valor encontrado y convertirlo en formato decimal
+                    consumo_valle = float(consumo_valle_match.group(1).replace(",", "."))
+                else:
+                    consumo_valle = 0.00  # Valor predeterminado si no se encuentra
+            except Exception as e:
+                logger.error(f"Error al extraer 'consumo_valle': {str(e)}")
+                consumo_valle = 0.00  # Valor predeterminado en caso de error
+
+            # Extraer "consumo_total"
+            consumo_total_match = re.search(r"(\d{1,3},\d{2})\s*kWh", ocr_text)
+            if consumo_total_match:
+                consumo_total = float(consumo_total_match.group(1).replace(",", "."))
+            else:
+                consumo_total = 0
+
+            # Extraer "precio_efectivo_energia"
+            precio_efectivo_energia_match = re.search(r"([\d,\.]+)\s*€/kWh", ocr_text)
+            if precio_efectivo_energia_match:
+                precio_efectivo_energia_raw = precio_efectivo_energia_match.group(1)
+                # Normalizar el valor reemplazando posibles errores como comas y puntos
+                try:
+                    precio_efectivo_energia = float(precio_efectivo_energia_raw.replace(",", "."))
+                except ValueError:
+                    # Si el formato no es válido, asignamos 0 como predeterminado
+                    precio_efectivo_energia = 0
+            else:
+                precio_efectivo_energia = 0
+
+            # Construir JSON con los valores extraídos
+            parsed_data = {
+                "nombre_cliente": nombre_cliente,
+                "numero_referencia": numero_referencia,
+                "fecha_emision": fecha_emision,
+                "periodo_facturacion": {
+                    "inicio": periodo_inicio,
+                    "fin": periodo_fin,
+                    "dias": dias,
+                },
+                "forma_pago": forma_pago,
+                "fecha_cargo": fecha_cargo,
+                "mandato": mandato,
+                "desglose_cargos": {
+                    "costo_potencia": costo_potencia,
+                    "costo_energia": costo_energia,
+                    "descuentos": descuentos if descuentos else 0,
+                    "impuestos": impuestos,
+                    "total_a_pagar": total_a_pagar,
+                },
+                "detalles_consumo": {
+                    "consumo_punta": consumo_punta,
+                    "consumo_valle": consumo_valle,
+                    "consumo_total": consumo_total,
+                    "precio_efectivo_energia": precio_efectivo_energia,
+                },
+            }
+
+            return parsed_data
+
+        except Exception as e:
+            logger.error(f"Error al convertir OCR a JSON para Iberdrola: {str(e)}")
+            return {
+                "error": "Error al convertir OCR a JSON para Iberdrola."
+            }
+
+
+
+
+
+
+
+    
+
 ################################################################################################################################
 
 
