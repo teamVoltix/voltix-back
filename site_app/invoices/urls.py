@@ -1,13 +1,14 @@
 from django.urls import path
 
 from . import views
-from .views import InvoiceProcessView, InvoiceDetailView
+from .views import InvoiceProcessView, InvoiceDetailView, InvoiceImageView
 from .userInvoiceListview import UserInvoiceListView
 
 urlpatterns = [
     path("upload/", InvoiceProcessView.as_view(), name="invoice-upload"),
     path('<int:invoice_id>/', InvoiceDetailView.as_view(), name='invoice_detail'),
     path("", UserInvoiceListView.as_view(), name="invoice_list"),
+    path('<int:invoice_id>/image/', InvoiceImageView.as_view(), name='invoice-image'),
 ]
 
 

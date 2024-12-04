@@ -24,6 +24,7 @@ from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
+
 logger = logging.getLogger(__name__)
 
 class InvoiceProcessView(APIView):
@@ -876,3 +877,31 @@ class InvoiceDetailView(APIView):
             )
 
 
+class InvoiceImageView(APIView):
+    """
+    Endpoint para obtener la URL de la imagen de una factura por ID.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, invoice_id):
+        try:
+            # Buscar la factura por ID y verificar que pertenece al usuario autenticado
+            invoice = Invoice.objects.filter(id=invoice_id, user=request.user).first()
+
+            if not invoice:
+                return Response(
+                    {"status": "error", "message": f"No se encontró una factura con ID {invoice_id}."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            # Devolver la URL de la imagen
+            return Response(
+                {"status": "success", "image_url": invoice.image_url},
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return Response(
+                {"status": "error", "message": "Ocurrió un error al obtener la imagen de la factura.", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
