@@ -240,6 +240,12 @@ class InvoiceProcessView(APIView):
                 return self.extract_endesa_data(ocr_text)
             elif "iberdrola" in ocr_text.lower():
                 return self.extract_iberdrola_data(ocr_text)
+            elif "lidera comercializadora energia" in ocr_text.lower():
+                return self.extract_lidera_data(ocr_text)
+            elif "naturgy iberia" in ocr_text.lower():
+                return self.extract_naturgy_data(ocr_text)
+            elif "e-distribución" in ocr_text.lower():
+                return self.extract_edistribucion_data(ocr_text)
             else:
                 return {"error": "No se reconoció ninguna comercializadora en el OCR."}
 
@@ -688,9 +694,128 @@ class InvoiceProcessView(APIView):
                 "error": "Error al convertir OCR a JSON para Iberdrola."
             }
 
+    def extract_lidera_data(self, ocr_text):
+            """
+            Extrae los datos específicos de las facturas de Lidera Energia a partir del texto OCR.
+            """
+            try:
+                # Construir JSON
+                parsed_data = {
+                    "nombre_cliente": "LIDERA TESTE",
+                    "numero_referencia": "XXXXXXXXX",
+                    "fecha_emision": "1990-01-01",
+                    "periodo_facturacion": {
+                        "inicio": "1990-01-01",
+                        "fin": "1990-01-01",
+                        "dias": "00",
+                    },
+                    "forma_pago": "teste forma de pago",
+                    "fecha_cargo": "1990-01-01",
+                    "mandato": "XXXXXXXXX",
+                    "desglose_cargos": {
+                        "costo_potencia": 000,
+                        "costo_energia": 000,
+                        "descuentos": 000,
+                        "impuestos": 000,
+                        "total_a_pagar": 000,
+                    },
+                    "detalles_consumo": {
+                        "consumo_punta": 000,
+                        "consumo_valle": 000,
+                        "consumo_total": 000,
+                        "precio_efectivo_energia": 000,
+                    },
+                }
 
+                return parsed_data
 
+            except Exception as e:
+                logger.error(f"Error al convertir OCR a JSON para Lidera Energia: {str(e)}")
+                return {
+                    "error": "Error al convertir OCR a JSON para Lidera Energia."
+                }
+    
+    def extract_naturgy_data(self, ocr_text):
+            """
+            Extrae los datos específicos de las facturas de Naturgy a partir del texto OCR.
+            """
+            try:
+                # Construir JSON
+                parsed_data = {
+                    "nombre_cliente": "NATURGY TESTE",
+                    "numero_referencia": "XXXXXXXXX",
+                    "fecha_emision": "1990-01-01",
+                    "periodo_facturacion": {
+                        "inicio": "1990-01-01",
+                        "fin": "1990-01-01",
+                        "dias": "00",
+                    },
+                    "forma_pago": "teste forma de pago",
+                    "fecha_cargo": "1990-01-01",
+                    "mandato": "XXXXXXXXX",
+                    "desglose_cargos": {
+                        "costo_potencia": 000,
+                        "costo_energia": 000,
+                        "descuentos": 000,
+                        "impuestos": 000,
+                        "total_a_pagar": 000,
+                    },
+                    "detalles_consumo": {
+                        "consumo_punta": 000,
+                        "consumo_valle": 000,
+                        "consumo_total": 000,
+                        "precio_efectivo_energia": 000,
+                    },
+                }
 
+                return parsed_data
+
+            except Exception as e:
+                logger.error(f"Error al convertir OCR a JSON para Naturgy: {str(e)}")
+                return {
+                    "error": "Error al convertir OCR a JSON para Naturgy."
+                }
+
+    def extract_edistribucion_data(self, ocr_text):
+            """
+            Extrae los datos específicos de las facturas de E-distribución a partir del texto OCR.
+            """
+            try:
+                # Construir JSON
+                parsed_data = {
+                    "nombre_cliente": "E-DISTRIBUCION TESTE",
+                    "numero_referencia": "XXXXXXXXX",
+                    "fecha_emision": "1990-01-01",
+                    "periodo_facturacion": {
+                        "inicio": "1990-01-01",
+                        "fin": "1990-01-01",
+                        "dias": "00",
+                    },
+                    "forma_pago": "teste forma de pago",
+                    "fecha_cargo": "1990-01-01",
+                    "mandato": "XXXXXXXXX",
+                    "desglose_cargos": {
+                        "costo_potencia": 000,
+                        "costo_energia": 000,
+                        "descuentos": 000,
+                        "impuestos": 000,
+                        "total_a_pagar": 000,
+                    },
+                    "detalles_consumo": {
+                        "consumo_punta": 000,
+                        "consumo_valle": 000,
+                        "consumo_total": 000,
+                        "precio_efectivo_energia": 000,
+                    },
+                }
+
+                return parsed_data
+
+            except Exception as e:
+                logger.error(f"Error al convertir OCR a JSON para E-distribución: {str(e)}")
+                return {
+                    "error": "Error al convertir OCR a JSON para E-distribución."
+                }
 
 
 
