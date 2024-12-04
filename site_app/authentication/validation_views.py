@@ -1,6 +1,4 @@
 # este archivo contiene funcionalidad para endpoint validacion y validate
-# views.py
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,8 +9,6 @@ import random
 import string
 from rest_framework.permissions import AllowAny
 from django.template.loader import render_to_string
-# from django.contrib.auth import get_user_model
-# User = get_user_model()
 
 #1
 class RequestVerificationCodeView(APIView):
@@ -68,15 +64,6 @@ class RequestVerificationCodeView(APIView):
         verification.code_expiration = expiration_time
         verification.is_used = False
         verification.save()
-
-        # Send the code via email
-        # send_mail(
-        #     'Your Verification Code',
-        #     f'Your verification code is {code}. It expires in 10 minutes.',
-        #     'no-reply@example.com',
-        #     [email],
-        #     fail_silently=False,
-        # )
 
         # Render the HTML email content
         html_message = render_to_string('verification_email.html', {'code': code})

@@ -41,18 +41,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index),  # La ruta actual de voltix
     path("api/auth/", include("authentication.urls")),
+    path('api/profile/', include('userprofile.urls')),
+    path('users/', include('users.urls')),
     path("api/invoices/", include("invoices.urls")),
     path('api/measurements/', include('measurements.urls')),
-    path('api/profile/', include('userprofile.urls')),
-    # path('api/notifications/', include('notifications.urls')),
-    path('users/', include('users.urls')),
     path('comparations/', include('comparations.urls')),
     path('api/measurements/report/download/', download_report, name='download_report'),
-    path('api/notifications/', include('notify_service.urls')),   
-    
-    
-    
-
+    #notifications
+    path('api/notifications/general/', include('notifications.urls')),
+    path('api/notifications/service/', include('notify_service.urls')),   
     # Rutas de Swagger
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

@@ -8,8 +8,15 @@ from voltix.models import NotificationSettings
 from .serializers import NotificationSettingsSerializer
 
 
+
 class NotificationSettingsView(APIView):
     permission_classes = [IsAuthenticated]
+
+    """
+    Notification Settings API
+    
+    Allows users to manage their notification settings.
+    """
 
     @swagger_auto_schema(
         operation_summary="Actualizar configuración de notificaciones",
