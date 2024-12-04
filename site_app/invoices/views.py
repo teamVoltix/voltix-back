@@ -19,6 +19,9 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .serializers import InvoiceUploadSerializer
 from voltix.models import Invoice
+from voltix.utils.upload_cloudinary import process_and_upload_image
+from io import BytesIO
+
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +103,28 @@ class InvoiceProcessView(APIView):
 
                 # Convertir PDF a imágenes
                 images = self.pdf_to_images(file_path)
+                
+                # Subir la primera página a Cloudinary
+                if images:
+                    first_page_image = images[0]  # Usar solo la primera página
+                    processed_image = self.process_image(first_page_image)  # Procesar la imagen
+
+                    # Convertir la imagen procesada a un formato compatible con Cloudinary
+                    image_for_upload = Image.fromarray(processed_image)
+                    image_io = BytesIO()
+                    image_for_upload.save(image_io, format='PNG')
+                    image_io.seek(0)
+
+                    try:
+                        photo_url = process_and_upload_image(image_io, folder="invoices")
+                    except Exception as cloudinary_error:
+                        logger.error(f"Error al subir la imagen a Cloudinary: {str(cloudinary_error)}")
+                        return Response(
+                            {"status": "error", "message": "Error al subir la imagen.", "details": str(cloudinary_error)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        )
+                else:
+                    photo_url = None  # Si no hay imágenes, no habrá URL asociada
 
                 # Procesar las dos primeras páginas (si existen)
                 processed_images = []
@@ -123,6 +148,7 @@ class InvoiceProcessView(APIView):
                             billing_period_start=parsed_data["periodo_facturacion"].get("inicio"),
                             billing_period_end=parsed_data["periodo_facturacion"].get("fin"),
                             data=parsed_data,  # Guardar todo el JSON en el campo 'data'
+                            image_url=photo_url,  # Guardar la URL de la primera página en el modelo
                         )
 
                         logger.info("Factura guardada exitosamente en la base de datos.")
