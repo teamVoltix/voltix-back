@@ -80,11 +80,11 @@ jobs:
       
       - name: Delete Previous 
         run: |
-          docker-compose -f docker-compose.dev.yaml stop voltix-back && docker-compose -f docker-compose.dev.yaml rm voltix-back
+          docker-compose -f docker-compose.prod.yaml stop voltix-back && docker-compose -f docker-compose.prod.yaml rm voltix-back
 
       - name: Pull and Deploy
         run: |
-          docker-compose -f docker-compose.dev.yaml pull && docker-compose -f docker-compose.dev.yaml up -d   
+          docker-compose -f docker-compose.prod.yaml pull && docker-compose -f docker-compose.prod.yaml up -d   
 
       - name: Remove old Images
         run: |
@@ -92,6 +92,6 @@ jobs:
       
       - name: Post Deploy Tasks
         run: |
-          docker-compose -f docker-compose.dev.yaml exec -it voltix-back python3 manage.py collectstatic --noinput
-          docker-compose -f docker-compose.dev.yaml exec -it voltix-back python3 manage.py makemigrations
-          docker-compose -f docker-compose.dev.yaml exec -it voltix-back python3 manage.py migrate
+          docker-compose -f docker-compose.prod.yaml exec -it voltix-back python3 manage.py collectstatic --noinput
+          docker-compose -f docker-compose.prod.yaml exec -it voltix-back python3 manage.py makemigrations
+          docker-compose -f docker-compose.prod.yaml exec -it voltix-back python3 manage.py migrate
