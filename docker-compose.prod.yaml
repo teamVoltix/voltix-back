@@ -21,6 +21,8 @@ services:
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
       - USE_DRF_SETTINGS=${USE_DRF_SETTINGS}
       - DEBUG=${DEBUG}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}           
     working_dir: /usr/share/app
     volumes:
      - ./facturas:/tmp
