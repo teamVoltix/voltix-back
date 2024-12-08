@@ -242,6 +242,7 @@ class ChangePasswordView(APIView):
     },
 )
 @api_view(['POST'])
+@permission_classes([AllowAny])  # Permitir acceso sin autenticación
 @csrf_exempt
 def password_reset_request_view(request):
     data = json.loads(request.body)
@@ -291,6 +292,7 @@ def password_reset_request_view(request):
     },
 )
 @api_view(['POST'])
+@permission_classes([AllowAny])  # Permitir acceso sin autenticación
 @csrf_exempt
 def password_reset_view(request, uidb64, token):
     data = json.loads(request.body)
@@ -314,5 +316,4 @@ def password_reset_view(request, uidb64, token):
         user.save()
         return JsonResponse({"detail": "Tu contraseña ha sido restablecida exitosamente."}, status=status.HTTP_200_OK)
     else:
-        # Cambiar el código a 400
         return JsonResponse({"error": "El enlace de restablecimiento no es válido o ha expirado."}, status=status.HTTP_400_BAD_REQUEST)
