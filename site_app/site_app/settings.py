@@ -140,7 +140,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'OPTIONS': {
-             'options': '-c search_path={schema}'  # Usar un schema diferente
+             'options': f'-c search_path={schema}'  # Usar un schema diferente
          },
         'NAME': os.environ['DB_NAME'],  # Base de datos de desarrollo
         'USER': os.environ['DB_USER'],
