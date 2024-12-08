@@ -23,6 +23,7 @@ services:
       - DEBUG=${DEBUG}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}      
       - BACKEND_URL=${BACKEND_URL}           
     working_dir: /usr/share/app
     volumes:
