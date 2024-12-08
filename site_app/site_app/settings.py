@@ -134,10 +134,14 @@ WSGI_APPLICATION = 'site_app.wsgi.application'
 
 from pathlib import Path
 
+schema = os.environ.get('DB_SCHEMA', "public") # si no encuentra el schema enviado por el .env, es publico por defecto
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'OPTIONS': {
+             'options': '-c search_path={schema}'  # Usar un schema diferente
+         },
         'NAME': os.environ['DB_NAME'],  # Base de datos de desarrollo
         'USER': os.environ['DB_USER'],
         'PASSWORD': os.environ['DATABASE_PASSWORD'],

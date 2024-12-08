@@ -72,7 +72,7 @@ jobs:
       CLOUDINARY_API_KEY: '${{ secrets.CLOUDINARY_API_KEY }}'
       CLOUDINARY_API_SECRET: '${{ secrets.CLOUDINARY_API_SECRET }}'
       BACKEND_URL: '${{ secrets.BACKEND_URL }}'      
-
+      DB_SCHEMA: '${{ secrets.DB_SCHEMA }}'
 
     steps:
 
@@ -99,5 +99,7 @@ jobs:
       - name: Post Deploy Tasks
         run: |
           docker-compose -f docker-compose.prod.yaml exec -it voltix-back python3 manage.py collectstatic --noinput
+          docker-compose -f docker-compose.prod.yaml exec -it voltix-back find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+          docker-compose -f docker-compose.prod.yaml exec -it voltix-back find . -path "*/migrations/*.pyc"  -delete          
           docker-compose -f docker-compose.prod.yaml exec -it voltix-back python3 manage.py makemigrations
           docker-compose -f docker-compose.prod.yaml exec -it voltix-back python3 manage.py migrate
