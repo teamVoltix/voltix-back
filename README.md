@@ -83,20 +83,12 @@ Conectar utilizando el terminal (macOS/Linux):
 psql 'postgres://avnadmin:<PASSWORD>@<host>:<port>/defaultdb?sslmode=require'
 ```
 
-Comando	
-\l	
+| Comando    | Descripción                         |
+|------------|-------------------------------------|
+| `\l`       | Lista todas las bases de datos      |
+| `\dt`      | Lista todas las tablas             |
+| `\d <tabla>` | Muestra los detalles de una tabla |
 
-\dt	
-
-\d <tabla>	
-
-Descripción
-
-Lista todas las bases de datos
-
-Lista todas las tablas
-
-Muestra los detalles de una tabla
 
 ### Ejecución del Servidor de Desarrollo
 
