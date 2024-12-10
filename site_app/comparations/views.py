@@ -181,12 +181,12 @@ def compare_invoice_and_measurement(request):
             "coincidencia_general": all(value["matches"] for value in consumption_details.values()) and total_to_pay_matches and dates_match
         }
 
-        InvoiceComparison.objects.create(
+        comparison = InvoiceComparison.objects.create(
             user=request.user,
             invoice=invoice,
             measurement=measurement,
             comparison_results=response_data,
-            is_comparison_valid=response_data["coincidencia_general"]
+            is_comparison_valid=response_data["coincidencia_general"]       
         )
         
         response = {
@@ -197,6 +197,7 @@ def compare_invoice_and_measurement(request):
             "measurement_id": measurement.id,
             "invoice_created_at": invoice.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             "measurement_created_at": measurement.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "comparison_id": comparison.id,
             "result": response_data
         }
 
