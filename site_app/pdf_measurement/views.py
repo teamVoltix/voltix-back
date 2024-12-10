@@ -32,7 +32,7 @@ def download_report(request):
 
         # Preparar datos para el reporte
         billing_period = {
-            "status": "Valid" if comparison.is_comparison_valid else "Invalid",
+            "status": "Sin discrepancia" if comparison.is_comparison_valid else "Con discrepancia",
             "invoice_start_date": comparison.invoice.billing_period_start,
             "invoice_end_date": comparison.invoice.billing_period_end,
             "measurement_start_date": comparison.measurement.measurement_start,
@@ -67,12 +67,12 @@ def download_report(request):
             <title>Informe de Comparación</title>
             <style>
                 body {{ font-family: Arial, sans-serif; margin: 20px; color: #333; }}
-                h1 {{ text-align: center; color: #4CAF50; }}
-                h2 {{ color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 5px; }}
+                h1 {{ text-align: center; color: #0158A3; }}
+                h2 {{ color: #333; border-bottom: 2px solid #0158A3; padding-bottom: 5px; }}
                 table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
                 th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
-                th {{ background-color: #4CAF50; color: white; }}
-                tr:nth-child(even) {{ background-color: #f2f2f2; }}
+                th {{ background-color: #0158A3; color: white; }}
+                tr:nth-child(even) {{ background-color: #0158A3; }}
                 tr:hover {{ background-color: #ddd; }}
                 p {{ line-height: 1.6; }}
             </style>
