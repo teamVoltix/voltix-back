@@ -2,6 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path
 
 # Solución para macOS y fork safety
 os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'

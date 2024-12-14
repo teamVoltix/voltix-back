@@ -71,33 +71,39 @@ AUTH_USER_MODEL = 'voltix.User'
 
 # Application definition
 
-INSTALLED_APPS = [
+BASE_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tesseract',
-    'corsheaders',
+]
 
-    #apps nuestras
-    'voltix',
-    'authentication',
-    'invoices',
-    'measurements',
-    'notifications',
-    'userprofile',
-    'users',
-    'pdf_measurement',
-    'notify_service',
+LOCAL_APPS = [
+    'site_app',
+    'apps.voltix',
+    'apps.authentication',
+    'apps.invoices',
+    'apps.measurements',
+    'apps.notifications',
+    'apps.userprofile',
+    'apps.users',
+    'apps.pdf_measurement',
+    'apps.notify_service',
+    'apps.tesseract',
 
-   #apps externas 
+]
+
+THIRD_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
+    'corsheaders',
 ]
+
+INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

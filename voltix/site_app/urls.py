@@ -16,13 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from voltix.views import index
+from apps.voltix.views import index
 from django.urls import re_path
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from pdf_measurement.views import download_report
-from notify_service.views import NotificationListView
+from apps.pdf_measurement.views import download_report
+from apps.notify_service.views import NotificationListView
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -40,21 +40,21 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index),  # La ruta actual de voltix
-    path("api/auth/", include("authentication.urls")),
-    path('api/profile/', include('userprofile.urls')),
-    path('users/', include('users.urls')),
-    path("api/invoices/", include("invoices.urls")),
-    path('api/measurements/', include('measurements.urls')),
-    path('comparations/', include('comparations.urls')),
+    path("api/auth/", include("apps.authentication.urls")),
+    path('api/profile/', include('apps.userprofile.urls')),
+    path('users/', include('apps.users.urls')),
+    path("api/invoices/", include("apps.invoices.urls")),
+    path('api/measurements/', include('apps.measurements.urls')),
+    path('comparations/', include('apps.comparations.urls')),
     path('api/measurements/report/download/', download_report, name='download_report'),
     #notifications
-    path('api/notifications/general/', include('notifications.urls')),
-    path('api/notifications/service/', include('notify_service.urls')),   
+    path('api/notifications/general/', include('apps.notifications.urls')),
+    path('api/notifications/service/', include('apps.notify_service.urls')),   
     # Rutas de Swagger
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redocs/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
     # Ruta de Tesseract
-    path('tesseract/', include('tesseract.urls')),
+    path('tesseract/', include('apps.tesseract.urls')),
 ]
