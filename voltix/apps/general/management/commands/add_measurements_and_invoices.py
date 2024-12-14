@@ -13,7 +13,7 @@ class Command(BaseCommand):
 
         start_month = 6  # June
         end_month = 11  # November
-        year = 2023
+        year = 2024
 
         for user in users:
             for month in range(start_month, end_month + 1):

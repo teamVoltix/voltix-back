@@ -25,7 +25,7 @@ class Command(BaseCommand):
                     dni=user_data["dni"],
                     fullname=user_data["fullname"],
                     email=user_data["email"],
-                    password="1234aA@"
+                    password="1234Aa@"
                 )
                 self.stdout.write(self.style.SUCCESS(f"User '{user.fullname}' created successfully!"))
             else:
