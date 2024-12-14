@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.voltix.models import NotificationSettings
+from apps.general.models import NotificationSettings
 
 class NotificationSettingsSerializer(serializers.ModelSerializer):
     class Meta:

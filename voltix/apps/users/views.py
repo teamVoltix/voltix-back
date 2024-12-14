@@ -2,7 +2,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.http import JsonResponse
 from rest_framework.decorators import api_view  # Import necesario
-from apps.voltix.models import User
+from apps.general.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from rest_framework.permissions import AllowAny

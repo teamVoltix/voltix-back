@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from apps.voltix.models import Profile
+from apps.general.models import Profile
 from datetime import date
 from django.core.exceptions import ValidationError
 from cloudinary.uploader import upload, destroy
@@ -13,7 +13,7 @@ from drf_yasg import openapi
 from PIL import Image
 from rest_framework.parsers import MultiPartParser, FormParser
 from datetime import datetime
-from apps.voltix.utils.upload_cloudinary import process_and_upload_image
+from apps.general.utils.upload_cloudinary import process_and_upload_image
 
 
 

@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from apps.voltix.views import index
+from apps.general.views import index
 from django.urls import re_path
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view

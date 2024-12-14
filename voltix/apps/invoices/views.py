@@ -18,8 +18,8 @@ from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .serializers import InvoiceUploadSerializer
-from apps.voltix.models import Invoice
-from apps.voltix.utils.upload_cloudinary import process_and_upload_image
+from apps.general.models import Invoice
+from apps.general.utils.upload_cloudinary import process_and_upload_image
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
@@ -1236,7 +1236,7 @@ class InvoiceProcessView(APIView):
 
 
 from .serializers import InvoiceSerializer
-from apps.voltix.utils.comparison_status import annotate_comparison_status
+from apps.general.utils.comparison_status import annotate_comparison_status
 from django.http import JsonResponse
 
 class InvoiceDetailView(APIView):

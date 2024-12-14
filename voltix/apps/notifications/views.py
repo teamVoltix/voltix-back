@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status, serializers  # Importamos serializers
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from apps.voltix.models import NotificationSettings
+from apps.general.models import NotificationSettings
 from .serializers import NotificationSettingsSerializer
 
 

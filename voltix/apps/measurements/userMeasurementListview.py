@@ -2,12 +2,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from apps.voltix.models import Measurement
+from apps.general.models import Measurement
 from .serializers import MeasurementSerializer
-from apps.voltix.utils.comparison_status import annotate_comparison_status
+from apps.general.utils.comparison_status import annotate_comparison_status
 # swagger imports
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.http import JsonResponse
 
 measurement_schema = openapi.Schema(
     type=openapi.TYPE_OBJECT,
@@ -133,10 +134,10 @@ class UserMeasurementListView(APIView):
                 "measurements": serializer.data,
             }
 
-            return Response(response_data, status=status.HTTP_200_OK)
+            return JsonResponse(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
-            return Response(
+            return JsonResponse(
                 {
                     "status": "error",
                     "message": "An error occurred while retrieving measurements.",

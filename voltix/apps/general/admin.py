@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import (
+from apps.general.models import (
     User, Profile, Invoice, Measurement, Notification, 
     NotificationSettings, InvoiceComparison, EmailVerification
 )

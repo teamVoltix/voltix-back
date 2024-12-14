@@ -1,7 +1,7 @@
 from celery import shared_task
 from datetime import timedelta
 from django.utils import timezone
-from apps.voltix.models import InvoiceComparison, Notification, NotificationSettings, User
+from apps.general.models import InvoiceComparison, Notification, NotificationSettings, User
 from django.contrib.contenttypes.models import ContentType
 
 

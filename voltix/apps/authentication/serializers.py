@@ -56,7 +56,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
 from django.core.validators import validate_email
 import re
-from apps.voltix.models import User  # Ensure User is your custom model or default Django User model
+from apps.general.models import User  # Ensure User is your custom model or default Django User model
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     fullname = serializers.CharField(max_length=255)

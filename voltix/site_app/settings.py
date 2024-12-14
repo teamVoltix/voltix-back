@@ -67,7 +67,7 @@ DEBUG = os.environ['DEBUG']
 
 ALLOWED_HOSTS = ['*']
 
-AUTH_USER_MODEL = 'voltix.User'
+AUTH_USER_MODEL = 'general.User'
 
 # Application definition
 
@@ -82,7 +82,7 @@ BASE_APPS = [
 
 LOCAL_APPS = [
     'site_app',
-    'apps.voltix',
+    'apps.general',
     'apps.authentication',
     'apps.invoices',
     'apps.measurements',
@@ -142,22 +142,29 @@ from pathlib import Path
 
 schema = os.environ.get('DB_SCHEMA', "public") # si no encuentra el schema enviado por el .env, es publico por defecto
 
+#for production
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'OPTIONS': {
+#              'options': f'-c search_path={schema}'  # Usar un schema diferente
+#          },
+#         'NAME': os.environ['DB_NAME'],  # Base de datos de desarrollo
+#         'USER': os.environ['DB_USER'],
+#         'PASSWORD': os.environ['DATABASE_PASSWORD'],
+#         'HOST': os.environ['DB_HOST'],
+#         'PORT': int(os.environ['DB_PORT']),
+#         'CONN_MAX_AGE': 0,  # Deshabilita conexiones persistentes
+        
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'OPTIONS': {
-             'options': f'-c search_path={schema}'  # Usar un schema diferente
-         },
-        'NAME': os.environ['DB_NAME'],  # Base de datos de desarrollo
-        'USER': os.environ['DB_USER'],
-        'PASSWORD': os.environ['DATABASE_PASSWORD'],
-        'HOST': os.environ['DB_HOST'],
-        'PORT': int(os.environ['DB_PORT']),
-        'CONN_MAX_AGE': 0,  # Deshabilita conexiones persistentes
-        
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',  # Path to SQLite database file
     }
 }
-
 
 
 AUTH_PASSWORD_VALIDATORS = [

@@ -2,9 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from apps.voltix.models import Invoice
+from apps.general.models import Invoice
 from .serializers import InvoiceSerializer
-from apps.voltix.utils.comparison_status import annotate_comparison_status  #utility function
+from apps.general.utils.comparison_status import annotate_comparison_status  #utility function
 # Swagger
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi

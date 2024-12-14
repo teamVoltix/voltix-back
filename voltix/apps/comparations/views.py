@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
-from apps.voltix.models import Invoice, Measurement, InvoiceComparison
+from apps.general.models import Invoice, Measurement, InvoiceComparison
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 

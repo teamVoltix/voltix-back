@@ -4,10 +4,10 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi # cambios
-from apps.voltix.models import Measurement
+from apps.general.models import Measurement
 from .schemas import measurement_schema
 from rest_framework.views import APIView
-from apps.voltix.utils.comparison_status import annotate_comparison_status
+from apps.general.utils.comparison_status import annotate_comparison_status
 from rest_framework import status
 
 

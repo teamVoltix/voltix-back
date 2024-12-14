@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.mail import send_mail
 from django.utils.timezone import now, timedelta
-from apps.voltix.models import EmailVerification, User
+from apps.general.models import EmailVerification, User
 import random
 import string
 from rest_framework.permissions import AllowAny

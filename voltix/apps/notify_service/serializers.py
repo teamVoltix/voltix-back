@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.voltix.models import Notification
+from apps.general.models import Notification
 
 class NotificationSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()

@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "site_app.settings")  
 django.setup()
 
-from voltix.models import Measurement, User  
+from general.models import Measurement, User  
 
 def load_measurements(file_path):
     """
