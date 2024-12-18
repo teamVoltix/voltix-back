@@ -12,7 +12,7 @@ import os
 from celery import Celery
 
 # Establece el módulo de configuración de Django como predeterminado
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'site_app.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'site_app.settings.base')
 
 # Crea la aplicación de Celery
 #app = Celery('site_app', broker='redis://localhost:6379/0', backend='redis://localhost:6379/0')
