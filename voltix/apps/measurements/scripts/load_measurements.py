@@ -7,7 +7,7 @@ from django.utils.timezone import make_aware
 
 # Añade el directorio raíz del proyecto al PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "site_app.settings")  
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "site_app.settings.base")  
 django.setup()
 
 from general.models import Measurement, User  
