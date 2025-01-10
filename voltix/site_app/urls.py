@@ -1,19 +1,3 @@
-"""
-URL configuration for site_app project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
 from apps.general.views import index
@@ -21,8 +5,33 @@ from django.urls import re_path
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from apps.pdf_measurement.views import download_report
-from apps.notify_service.views import NotificationListView
+from django.http import HttpResponse
+import httpx  # Usaremos httpx para llamar al microservicio
+
+# Definimos una función que llama al microservicio voltix-reporte
+def download_report(request):
+    comparison_id = request.GET.get('id')  # Obtiene el ID de comparación desde los parámetros de la URL
+    user = request.user.username  # Simula el usuario autenticado
+    if not comparison_id:
+        return HttpResponse("ID de comparación requerido", status=400)
+
+    try:
+        # Llama al microservicio voltix-reporte
+        url = "http://localhost:8000/download_report"  # Cambia esto si voltix-reporte está en un servidor diferente
+        params = {"id": comparison_id, "user": user}
+        response = httpx.get(url, params=params)
+
+        if response.status_code == 200:
+            # Devuelve el PDF como respuesta HTTP
+            pdf_content = response.content
+            resp = HttpResponse(pdf_content, content_type="application/pdf")
+            resp["Content-Disposition"] = "attachment; filename=report.pdf"
+            return resp
+        else:
+            return HttpResponse(f"Error {response.status_code}: {response.text}", status=response.status_code)
+
+    except Exception as e:
+        return HttpResponse(f"Error al generar el reporte: {str(e)}", status=500)
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -46,6 +55,7 @@ urlpatterns = [
     path("api/invoices/", include("apps.invoices.urls")),
     path('api/measurements/', include('apps.measurements.urls')),
     path('comparations/', include('apps.comparations.urls')),
+    # Cambiamos la referencia de pdf_measurement a la nueva función que llama al microservicio
     path('api/measurements/report/download/', download_report, name='download_report'),
     #notifications
     path('api/notifications/general/', include('apps.notifications.urls')),

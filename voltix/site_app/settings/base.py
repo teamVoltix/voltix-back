@@ -32,7 +32,6 @@ LOCAL_APPS = [
     'apps.notifications',
     'apps.userprofile',
     'apps.users',
-    'apps.pdf_measurement',
     'apps.notify_service',
     'apps.tesseract',
 ]

@@ -15,7 +15,7 @@ redis
 django-celery-results
 django-cors-headers
 pymupdf
-
+httpx==0.28.1
 
 #crear tablas en sqlite
 #python manage.py makemigrations
