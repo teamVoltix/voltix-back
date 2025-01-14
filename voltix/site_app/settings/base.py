@@ -95,6 +95,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.1/howto/static-files/
 # Archivos estáticos y multimedia
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
@@ -102,6 +104,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Internationalization
+# https://docs.djangoproject.com/en/5.1/topics/i18n/
 # Configuración de internacionalización
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -109,6 +113,19 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+from .drf_settings import REST_FRAMEWORK, SIMPLE_JWT
+
+
+
+
+
+
 
 # Configuración de Celery
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
