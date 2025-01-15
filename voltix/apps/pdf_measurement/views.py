@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -22,7 +22,7 @@ def download_report(request):
 
         # Preparar datos para el microservicio
         comparison_data = {
-            "user": request.user.username,
+            "user": request.user.fullname,
             "billing_period_start": comparison.invoice.billing_period_start.isoformat(),
             "billing_period_end": comparison.invoice.billing_period_end.isoformat(),
             "measurement_start": comparison.measurement.measurement_start.isoformat(),
