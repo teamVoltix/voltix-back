@@ -1,11 +1,10 @@
-import os
-import tempfile
-from django.conf import settings
-from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from rest_framework.decorators import api_view
 import requests
+import os
+from django.conf import settings
 from apps.general.models import InvoiceComparison
+from .utils import save_pdf_temporarily, get_existing_pdf, cleanup_old_pdfs
 
 @api_view(['GET'])
 def download_report(request):
@@ -19,6 +18,14 @@ def download_report(request):
         comparison = InvoiceComparison.objects.filter(id=comparison_id, user=request.user).first()
         if not comparison:
             return JsonResponse({"error": "No comparison data found for the provided ID."}, status=404)
+
+        # Verificar si ya existe un PDF para el usuario y la comparación
+        existing_pdf_path = get_existing_pdf(request.user.id, comparison_id)
+        if existing_pdf_path:
+            # Si el archivo existe y no ha expirado, devolverlo
+            with open(existing_pdf_path, 'rb') as f:
+                pdf = f.read()
+            return HttpResponse(pdf, content_type="application/pdf")
 
         # Preparar datos para el microservicio
         comparison_data = {
@@ -35,26 +42,17 @@ def download_report(request):
         microservice_url = "http://127.0.0.1:8002/download_report"
         response = requests.post(microservice_url, json=comparison_data)
 
+        # Si la solicitud al microservicio fue exitosa
         if response.status_code == 200:
-            pdf = response.content
+            pdf_data = response.content
 
-            # Guardar el PDF temporalmente en la carpeta "reports" de MEDIA_ROOT
-            reports_dir = os.path.join(settings.MEDIA_ROOT, 'reports')
-            if not os.path.exists(reports_dir):
-                os.makedirs(reports_dir)  # Crear la carpeta si no existe
+            # Guardar el PDF de forma temporal
+            pdf_path = save_pdf_temporarily(pdf_data, request.user.id, comparison_id)
 
-            # Crear un archivo temporal en la carpeta reports
-            file_path = os.path.join(reports_dir, f"comparison_report_{comparison_id}.pdf")
-
-            # Escribir el contenido del PDF en el archivo
-            with open(file_path, 'wb') as f:
-                f.write(pdf)
-
-            # Devolver el PDF generado al cliente como archivo descargable
-            http_response = HttpResponse(pdf, content_type="application/pdf")
-            http_response['Content-Disposition'] = f'attachment; filename="comparison_report_{comparison_id}.pdf"'
-            return http_response
-
+            # Devolver el archivo al cliente
+            with open(pdf_path, 'rb') as f:
+                pdf = f.read()
+            return HttpResponse(pdf, content_type="application/pdf")
         else:
             return JsonResponse({"error": "Failed to generate PDF."}, status=500)
 
