@@ -22,6 +22,7 @@ BASE_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab',
 ]
 
 LOCAL_APPS = [
@@ -121,8 +122,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 from .drf_settings import REST_FRAMEWORK, SIMPLE_JWT
 
-
-
+# to add a job python voltix/manage.py crontab add
+# verify crontab jobs: python manage.py crontab show
+CRONJOBS = [
+    ('0 0 * * *', 'django.core.management.call_command', ['clean_upload_logs']),
+]
+# to test: python voltix/manage.py clean_upload_logs
 
 
 
