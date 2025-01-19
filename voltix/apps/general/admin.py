@@ -1,7 +1,7 @@
 from django.contrib import admin
 from apps.general.models import (
     User, Profile, Invoice, Measurement, Notification, 
-    NotificationSettings, InvoiceComparison, EmailVerification
+    NotificationSettings, InvoiceComparison, EmailVerification, UploadLog
 )
 
 class UserAdmin(admin.ModelAdmin):
@@ -14,8 +14,8 @@ class UserAdmin(admin.ModelAdmin):
 admin.site.register(User, UserAdmin)
 
 class ProfileAdmin(admin.ModelAdmin):
-    fields = ['user', 'birth_date', 'address', 'phone_number', 'photo_url', 'created_at', 'updated_at']
-    list_display = ['profile_id', 'user', 'birth_date', 'address', 'phone_number', 'photo_url','created_at', 'updated_at']
+    fields = ['user', 'birth_date', 'address', 'phone_number', 'photo', 'created_at', 'updated_at']
+    list_display = ['profile_id', 'user', 'birth_date', 'address', 'phone_number', 'photo','created_at', 'updated_at']
     search_fields = ['user__dni', 'user__fullname']
     list_filter = ['birth_date', 'created_at']
     readonly_fields = ['created_at', 'updated_at']
@@ -124,3 +124,11 @@ class EmailVerificationAdmin(admin.ModelAdmin):
 admin.site.register(EmailVerification, EmailVerificationAdmin)
 
 
+class UploadLogAdmin(admin.ModelAdmin):
+    list_display = ['user', 'file_name', 'file_size', 'file_hash', 'timestamp']
+    search_fields = ['user__fullname','file_name']
+    list_filter = ['timestamp',]
+    ordering = ['-timestamp',]
+    readonly_fields = ['file_hash', 'timestamp']
+
+admin.site.register(UploadLog, UploadLogAdmin)
