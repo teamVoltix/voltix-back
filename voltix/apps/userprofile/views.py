@@ -14,8 +14,8 @@ from PIL import Image
 from rest_framework.parsers import MultiPartParser, FormParser
 from datetime import datetime
 from apps.general.utils.upload_cloudinary import process_and_upload_image
-
-
+from django.conf import settings
+import os
 
 # Endpoint para obtener el perfil del usuario (GET)
 @swagger_auto_schema(
@@ -57,7 +57,7 @@ def profile_view(request):
             birth_date=None,
             address="",
             phone_number="",
-            photo_url=""
+            photo=""
         )
 
     profile_data = {
@@ -67,7 +67,7 @@ def profile_view(request):
         'birth_date': profile.birth_date,
         'address': profile.address,
         'phone_number': profile.phone_number,
-        'photo': profile.photo_url, 
+        'photo': request.build_absolute_uri(profile.photo.url) if profile.photo else None,
     }
 
     return Response(profile_data)
@@ -198,67 +198,62 @@ def patch_profile(request):
 
 
 
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.decorators import parser_classes
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from cloudinary.uploader import upload
-from cloudinary.exceptions import Error as CloudinaryError
+# from rest_framework.parsers import MultiPartParser, FormParser
+# from rest_framework.decorators import parser_classes
+# from drf_yasg.utils import swagger_auto_schema
+# from drf_yasg import openapi
+# from rest_framework.decorators import api_view, permission_classes
+# from rest_framework.response import Response
+# from rest_framework.permissions import IsAuthenticated
+# from cloudinary.uploader import upload
+# from cloudinary.exceptions import Error as CloudinaryError
 
-@swagger_auto_schema(
-    method="post",
-    operation_summary="Subir foto de perfil",
-    operation_description="""
-        Permite a un usuario autenticado subir una foto de perfil. 
-        La imagen se almacena en Cloudinary, y la URL resultante se guarda en el perfil del usuario.
-    """,
-    manual_parameters=[
-        openapi.Parameter(
-            name="photo",
-            in_=openapi.IN_FORM,
-            type=openapi.TYPE_FILE,
-            description="El archivo de imagen que se subirá como foto de perfil.",
-        ),
-    ],
-    responses={
-        200: openapi.Response(
-            description="Foto subida exitosamente.",
-            examples={
-                "application/json": {
-                    "message": "Foto subida exitosamente.",
-                    "photo_url": "https://res.cloudinary.com/example/profiles/photo.jpg"
-                }
-            },
-        ),
-        400: openapi.Response(
-            description="Solicitud inválida.",
-            examples={
-                "application/json": {
-                    "error": "No se encontró un archivo para subir."
-                }
-            },
-        ),
-        404: openapi.Response(
-            description="Perfil no encontrado.",
-            examples={
-                "application/json": {
-                    "error": "El perfil no existe."
-                }
-            },
-        ),
-        500: openapi.Response(
-            description="Error interno del servidor.",
-            examples={
-                "application/json": {
-                    "error": "Error de Cloudinary: Detalle del error..."
-                }
-            },
-        ),
-    }
-)
+
+
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# @parser_classes([MultiPartParser, FormParser])
+# def upload_profile_photo(request):
+#     try:
+#         # Obtener el perfil del usuario autenticado
+#         profile = Profile.objects.get(user=request.user)
+
+#         if 'photo' not in request.FILES:
+#             return Response({"error": "No se encontró un archivo para subir."}, status=400)
+
+#         photo = request.FILES['photo']
+
+#         try:
+#             # Eliminar la imagen anterior de Cloudinary (si existe)
+#             if profile.photo_url:
+#                 public_id = profile.photo_url.split('/')[-1].split('.')[0]  # Extraer el public_id de la URL
+#                 destroy(public_id)  # Elimina la imagen anterior en Cloudinary
+
+#             # Validar, procesar y subir la nueva imagen
+#             # Aquí llamamos a la función `process_and_upload_image`
+#             photo_url = process_and_upload_image(photo)
+
+#             # Actualizar el perfil con la URL de la nueva foto
+#             profile.photo_url = photo_url
+#             profile.save()
+
+#             return Response({
+#                 "message": "Foto subida exitosamente.",
+#                 "photo_url": photo_url
+#             }, status=200)
+
+#         except ValueError as e:  # Errores de validación o procesamiento
+#             return Response({"error": str(e)}, status=400)
+#         except CloudinaryError as e:  # Errores específicos de Cloudinary
+#             return Response({"error": f"Error de Cloudinary: {str(e)}"}, status=500)
+
+#     except Profile.DoesNotExist:
+#         return Response({"error": "El perfil no existe."}, status=404)
+
+#     except Exception as e:  # Cualquier otro error no manejado
+#         return Response({"error": f"Error inesperado: {str(e)}"}, status=500)
+
+
 
 
 @api_view(['POST'])
@@ -266,42 +261,32 @@ from cloudinary.exceptions import Error as CloudinaryError
 @parser_classes([MultiPartParser, FormParser])
 def upload_profile_photo(request):
     try:
-        # Obtener el perfil del usuario autenticado
+        # Get the authenticated user's profile
         profile = Profile.objects.get(user=request.user)
 
         if 'photo' not in request.FILES:
-            return Response({"error": "No se encontró un archivo para subir."}, status=400)
+            return Response({"error": "No file found."}, status=400)
 
         photo = request.FILES['photo']
 
-        try:
-            # Eliminar la imagen anterior de Cloudinary (si existe)
-            if profile.photo_url:
-                public_id = profile.photo_url.split('/')[-1].split('.')[0]  # Extraer el public_id de la URL
-                destroy(public_id)  # Elimina la imagen anterior en Cloudinary
+        # Delete the old photo if it exists
+        if profile.photo:
+            old_photo_path = os.path.join(settings.MEDIA_ROOT, profile.photo.name)
+            if os.path.exists(old_photo_path):
+                os.remove(old_photo_path)
 
-            # Validar, procesar y subir la nueva imagen
-            # Aquí llamamos a la función `process_and_upload_image`
-            photo_url = process_and_upload_image(photo)
+        # Save the new photo
+        profile.photo = photo  # Automatically saves to MEDIA_ROOT/profile_photos/
+        profile.save()
 
-            # Actualizar el perfil con la URL de la nueva foto
-            profile.photo_url = photo_url
-            profile.save()
-
-            return Response({
-                "message": "Foto subida exitosamente.",
-                "photo_url": photo_url
-            }, status=200)
-
-        except ValueError as e:  # Errores de validación o procesamiento
-            return Response({"error": str(e)}, status=400)
-        except CloudinaryError as e:  # Errores específicos de Cloudinary
-            return Response({"error": f"Error de Cloudinary: {str(e)}"}, status=500)
+        return Response({
+            "message": "Photo uploaded successfully.",
+            "photo_url": request.build_absolute_uri(profile.photo.url)
+        }, status=200)
 
     except Profile.DoesNotExist:
-        return Response({"error": "El perfil no existe."}, status=404)
+        return Response({"error": "Profile not found."}, status=404)
 
-    except Exception as e:  # Cualquier otro error no manejado
-        return Response({"error": f"Error inesperado: {str(e)}"}, status=500)
-
+    except Exception as e:  # Handle unexpected errors
+        return Response({"error": f"Unexpected error: {str(e)}"}, status=500)
 

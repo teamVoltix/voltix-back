@@ -14,8 +14,8 @@ class UserAdmin(admin.ModelAdmin):
 admin.site.register(User, UserAdmin)
 
 class ProfileAdmin(admin.ModelAdmin):
-    fields = ['user', 'birth_date', 'address', 'phone_number', 'photo_url', 'created_at', 'updated_at']
-    list_display = ['profile_id', 'user', 'birth_date', 'address', 'phone_number', 'photo_url','created_at', 'updated_at']
+    fields = ['user', 'birth_date', 'address', 'phone_number', 'photo', 'created_at', 'updated_at']
+    list_display = ['profile_id', 'user', 'birth_date', 'address', 'phone_number', 'photo','created_at', 'updated_at']
     search_fields = ['user__dni', 'user__fullname']
     list_filter = ['birth_date', 'created_at']
     readonly_fields = ['created_at', 'updated_at']

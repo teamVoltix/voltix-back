@@ -55,7 +55,8 @@ class Profile(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     address = models.TextField()
     phone_number = models.CharField(max_length=20)
-    photo_url = models.URLField(max_length=500, null=True, blank=True) 
+    photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True) 
+    # photo_url = models.URLField(max_length=500, null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
