@@ -3,19 +3,18 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from apps.general.models import Profile
+from apps.general.models import Profile, UploadLog
 from datetime import date
 from django.core.exceptions import ValidationError
-from cloudinary.uploader import upload, destroy
-from cloudinary.exceptions import Error as CloudinaryError
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from PIL import Image
 from rest_framework.parsers import MultiPartParser, FormParser
 from datetime import datetime
 from apps.general.utils.upload_cloudinary import process_and_upload_image
 from django.conf import settings
 import os
+from django.utils.timezone import now
+from datetime import timedelta
 
 # Endpoint para obtener el perfil del usuario (GET)
 @swagger_auto_schema(
@@ -196,25 +195,55 @@ def patch_profile(request):
 
 
 
+
+
+
+
+
+from rest_framework import serializers
+from .serializers import CombinedValidatorSerializer
+import os
+
+
+
+def delete_file(path):
+    """Safely delete a file if it exists."""
+    if os.path.exists(path):
+        os.remove(path)
+
+
+def flatten_errors(errors):
+    """Flatten nested validation errors for simplicity."""
+    if isinstance(errors, dict):
+        return {key: value[0] for key, value in errors.items()}
+    return errors
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def upload_profile_photo(request):
     try:
+        serializer = CombinedValidatorSerializer(data=request.FILES)
+        serializer.is_valid(raise_exception=True)
+
+        photo = serializer.validated_data['photo']
+        file_hash = serializer.validated_data['file_hash']
+
         profile = Profile.objects.get(user=request.user)
 
-        if 'photo' not in request.FILES:
-            return Response({"error": "No file found."}, status=400)
-
-        photo = request.FILES['photo']
-
         if profile.photo:
-            old_photo_path = os.path.join(settings.MEDIA_ROOT, profile.photo.name)
-            if os.path.exists(old_photo_path):
-                os.remove(old_photo_path)
+            delete_file(os.path.join(settings.MEDIA_ROOT, profile.photo.name))
 
         profile.photo = photo
         profile.save()
+        
+        UploadLog.objects.create(
+            user=request.user,
+            file_name=photo.name,
+            file_size=photo.size,
+            file_hash=file_hash,
+        )
 
         return Response({
             "message": "Photo uploaded successfully.",
@@ -224,6 +253,8 @@ def upload_profile_photo(request):
     except Profile.DoesNotExist:
         return Response({"error": "Profile not found."}, status=404)
 
+    except serializers.ValidationError as ve:
+        return Response({"error": flatten_errors(ve.detail)}, status=400)
+
     except Exception as e:
         return Response({"error": f"Unexpected error: {str(e)}"}, status=500)
-
