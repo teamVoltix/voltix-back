@@ -63,22 +63,22 @@ class CombinedValidatorSerializer(serializers.Serializer):
         4. File type validation (FileTypeValidatorSerializer).
         """
 
-        # Step 1: Validate the number of files using SingleFileValidatorSerializer
+        # Step 1: Validate the number of files
         file_count_validator = SingleFileValidatorSerializer(data=self.initial_data)
         file_count_validator.is_valid(raise_exception=True)
 
-        # Extract the single file
+        # Extract the single file ???
         photo = next(iter(self.initial_data.values()))
 
-        # Step 2: Validate duplicate file using DuplicateFileValidatorSerializer
+        # Step 2: Validate duplicate file
         duplicate_validator = DuplicateFileValidatorSerializer(data={'photo': photo})
         duplicate_validator.is_valid(raise_exception=True)
 
-        # Step 3: Validate file size using FileSizeValidatorSerializer
+        # Step 3: Validate file size
         size_validator = FileSizeValidatorSerializer(data={'photo': photo})
         size_validator.is_valid(raise_exception=True)
 
-        # Step 4: Validate file type using FileTypeValidatorSerializer
+        # Step 4: Validate file type
         type_validator = FileTypeValidatorSerializer(data={'photo': photo})
         type_validator.is_valid(raise_exception=True)
 
