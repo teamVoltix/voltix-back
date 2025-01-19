@@ -218,10 +218,13 @@ def flatten_errors(errors):
         return {key: value[0] for key, value in errors.items()}
     return errors
 
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
+from rest_framework.decorators import permission_classes, throttle_classes
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
+# @throttle_classes([UserRateThrottle, AnonRateThrottle])
 def upload_profile_photo(request):
     try:
         serializer = CombinedValidatorSerializer(data=request.FILES)
