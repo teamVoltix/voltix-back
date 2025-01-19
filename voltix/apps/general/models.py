@@ -181,3 +181,13 @@ class UploadLog(models.Model):
 
     def __str__(self):
         return f"{self.user.fullname} - {self.file_name} - {self.timestamp}"
+    
+
+class ReminderSchedule(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    invoice_comparison = models.ForeignKey(InvoiceComparison, on_delete=models.CASCADE)
+    scheduled_time = models.DateTimeField(default=now)
+
+    def __str__(self):
+        return f"Reminder scheduled for {self.user.email} at {self.scheduled_time}"
+

@@ -1,7 +1,8 @@
 from django.contrib import admin
 from apps.general.models import (
     User, Profile, Invoice, Measurement, Notification, 
-    NotificationSettings, InvoiceComparison, EmailVerification, UploadLog
+    NotificationSettings, InvoiceComparison, EmailVerification, 
+    UploadLog, ReminderSchedule
 )
 
 class UserAdmin(admin.ModelAdmin):
@@ -132,3 +133,16 @@ class UploadLogAdmin(admin.ModelAdmin):
     readonly_fields = ['file_hash', 'timestamp']
 
 admin.site.register(UploadLog, UploadLogAdmin)
+
+
+@admin.register(ReminderSchedule)
+class ReminderScheduleAdmin(admin.ModelAdmin):
+    list_display = ('user', 'invoice_comparison', 'scheduled_time')
+    list_filter = ('scheduled_time',)
+    search_fields = ('user__email', 'invoice_comparison__id')
+    ordering = ('-scheduled_time',)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ['user', 'invoice_comparison', 'scheduled_time']
+        return []

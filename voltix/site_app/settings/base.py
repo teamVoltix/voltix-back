@@ -126,18 +126,18 @@ from .drf_settings import REST_FRAMEWORK, SIMPLE_JWT
 # verify crontab jobs: python manage.py crontab show
 CRONJOBS = [
     ('0 0 * * *', 'django.core.management.call_command', ['clean_upload_logs']),
+    ('*/1 * * * *', 'django.core.management.call_command', ['create_reminders']),
 ]
 # to test: python voltix/manage.py clean_upload_logs
 
 
 
 
-
 # Configuración de Celery
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
+# CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+# CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
 
 # Configuración de Cloudinary
 # CLOUDINARY = {
