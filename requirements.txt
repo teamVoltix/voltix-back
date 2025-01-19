@@ -10,11 +10,11 @@ Pillow==11.0.0
 pytesseract==0.3.13
 python-dotenv==1.0.1
 weasyprint==63.1
-celery
 redis
-django-celery-results
 django-cors-headers
 pymupdf
+django-crontab
+requests
 # pip install requests
 
 
