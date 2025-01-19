@@ -15,6 +15,7 @@ redis
 django-celery-results
 django-cors-headers
 pymupdf
+# pip install requests
 
 
 #crear tablas en sqlite
