@@ -33,7 +33,6 @@ Este documento proporciona una guía paso a paso para configurar el entorno del 
 - [Comandos de PostgreSQL](https://www.postgresql.org/docs/current/app-psql.html)
 - [Documenatción de Docker](https://docs.docker.com/)
 - [Documentacion de Tesseract](https://tesseract-ocr.github.io/)
-- [Documentacion de Celery](https://docs.celeryq.dev/en/stable/)
 
 ### Configuración del Entorno
 

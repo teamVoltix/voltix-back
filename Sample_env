@@ -9,8 +9,6 @@ DB_PORT=5432
 DB_USER='postgres'
 DATABASE_PASSWORD='voltix'
 
-CELERY_BROKER_URL='redis://redis-voltix:6379/0'
-CELERY_RESULT_BACKEND='redis://redis-voltix:6379/0'
 
 #SECRET KEY
 SECRET_KEY=QgxQ^frI1bS2MUPUkYzwG0HFsLpkV0b*eIikX*ctr00x-^zoHi

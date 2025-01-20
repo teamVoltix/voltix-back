@@ -1,8 +1,10 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
-from .models import User, Profile, InvoiceComparison, Notification, NotificationSettings
-from apps.notifications.tasks import send_reminder_to_user
+from .models import User, Profile, InvoiceComparison, Notification, NotificationSettings, ReminderSchedule
+from django.contrib.contenttypes.models import ContentType
+from datetime import timedelta
+from django.utils import timezone
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -50,4 +52,9 @@ def create_notification_for_discrepancies(sender, instance, created, **kwargs):
                 object_id=instance.id
             )
             
-            send_reminder_to_user.apply_async((instance.id,), countdown=60)  # 1 minuto (60 segundos)
+                    # Placeholder or scheduled record to process reminders later
+            ReminderSchedule.objects.create(
+                user=instance.user,
+                invoice_comparison=instance,
+                scheduled_time=timezone.now() + timedelta(minutes=1)
+            )
