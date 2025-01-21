@@ -50,7 +50,7 @@ urlpatterns = [
     path('comparations/', include('apps.comparations.urls')),
     path('api/measurements/report/download/', download_report, name='download_report'),
     # Notifications
-    path('api/notifications/general/', include('apps.notifications.urls')),
+    path('api/notifications/settings/', include('apps.notifications.urls')),
     path('api/notifications/service/', include('apps.notify_service.urls')),   
     # Rutas de Swagger
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),

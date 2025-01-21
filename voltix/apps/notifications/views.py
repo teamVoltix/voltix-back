@@ -7,97 +7,55 @@ from drf_yasg import openapi
 from apps.general.models import NotificationSettings
 from .serializers import NotificationSettingsSerializer
 
-
-
-class NotificationSettingsView(APIView):
+class NotificationSettingsRetrieveView(APIView):
     permission_classes = [IsAuthenticated]
 
     """
-    Notification Settings API
-    
-    Allows users to manage their notification settings.
+    API to retrieve notification settings for the authenticated user.
     """
 
-    @swagger_auto_schema(
-        operation_summary="Actualizar configuración de notificaciones",
-        operation_description="""
-            Permite a un usuario autenticado actualizar o crear su configuración de notificaciones. 
-            Si no existe una configuración previa, se crea una nueva asociada al usuario.
-        """,
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            additional_properties=True,
-            description="Cuerpo de la solicitud con las configuraciones a actualizar o crear.",
-            example={
-                "enable_alerts": True,
-                "enable_recommendations": False,
-                "enable_reminders": True,
-            },
-        ),
-        responses={
-            200: openapi.Response(
-                description="Configuración actualizada exitosamente.",
-                examples={
-                    "application/json": {
-                        "status": "success",
-                        "message": "Configuración actualizada exitosamente.",
-                        "data": {
-                            "enable_alerts": True,
-                            "enable_recommendations": False,
-                            "enable_reminders": True,
-                        },
-                    }
+    def get(self, request):
+        try:
+            settings = NotificationSettings.objects.get(user=request.user)
+            serializer = NotificationSettingsSerializer(settings)
+            return Response(
+                {
+                    "status": "success",
+                    "message": "Configuración recuperada exitosamente.",
+                    "data": serializer.data,
                 },
-            ),
-            400: openapi.Response(
-                description="Datos inválidos.",
-                examples={
-                    "application/json": {
-                        "status": "error",
-                        "message": "Datos inválidos.",
-                        "errors": {
-                            "enable_alerts": ["Este campo es obligatorio."],
-                        },
-                    }
+                status=status.HTTP_200_OK,
+            )
+        except NotificationSettings.DoesNotExist:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "Configuración de notificaciones no encontrada.",
                 },
-            ),
-            500: openapi.Response(
-                description="Error interno del servidor.",
-                examples={
-                    "application/json": {
-                        "status": "error",
-                        "message": "Error al procesar la solicitud.",
-                        "details": "Detalles del error...",
-                    }
-                },
-            ),
-        },
-    )
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+class NotificationSettingsUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    """
+    API to update or create notification settings for the authenticated user.
+    """
+
     def post(self, request):
         user = request.user
         try:
-            # Asegurarnos de que solo exista una configuración por usuario
+            # Ensure only one configuration exists per user
             settings_queryset = NotificationSettings.objects.filter(user=user)
             if settings_queryset.count() > 1:
-                # Si hay duplicados, eliminamos todos menos el primero
+                # If duplicates exist, delete all but the first
                 settings_queryset.exclude(pk=settings_queryset.first().pk).delete()
 
-            # Obtenemos o creamos la configuración
+            # Retrieve or create the user's settings
             settings, created = NotificationSettings.objects.get_or_create(user=user)
             serializer = NotificationSettingsSerializer(settings, data=request.data, partial=True)
 
-            # Validar cantidad de campos
-            max_allowed_fields = 3  # Número máximo de campos permitidos
-            if len(request.data.keys()) > max_allowed_fields:
-                return Response(
-                    {
-                        "status": "error",
-                        "message": f"Demasiados campos. Se permiten hasta {max_allowed_fields} campos.",
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Validar los datos del serializer
+            # Validate the data
             if not serializer.is_valid():
                 return Response(
                     {
@@ -108,7 +66,7 @@ class NotificationSettingsView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Guardar la configuración actualizada
+            # Save the updated configuration
             serializer.save()
             return Response(
                 {
@@ -118,9 +76,7 @@ class NotificationSettingsView(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
-
         except serializers.ValidationError as ve:
-            # Manejar errores de validación explícitamente
             return Response(
                 {
                     "status": "error",
@@ -130,8 +86,6 @@ class NotificationSettingsView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
-            # Manejar errores generales y registrar para depuración
-            print(f"Error en NotificationSettingsView: {e}")
             return Response(
                 {
                     "status": "error",
