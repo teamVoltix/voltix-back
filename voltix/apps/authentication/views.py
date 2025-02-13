@@ -317,3 +317,88 @@ def password_reset_view(request, uidb64, token):
         return JsonResponse({"detail": "Tu contraseña ha sido restablecida exitosamente."}, status=status.HTTP_200_OK)
     else:
         return JsonResponse({"error": "El enlace de restablecimiento no es válido o ha expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Delete User",
+        operation_description="Delete a user by their user ID. Only authenticated users can perform this action.",
+        responses={
+            200: openapi.Response(description="User deleted successfully."),
+            403: openapi.Response(description="Forbidden: You do not have permission to delete this user."),
+            404: openapi.Response(description="User not found."),
+        },
+    )
+    def delete(self, request, user_id):
+        try:
+            user = User.objects.get(pk=user_id)
+            
+            # Verificar permisos (solo el usuario o un superusuario pueden eliminar la cuenta)
+            if request.user != user and not request.user.is_superuser:
+                return Response({"error": "No tienes permiso para eliminar este usuario."}, status=status.HTTP_403_FORBIDDEN)
+            
+            user.delete()
+            return Response({"message": "Usuario eliminado exitosamente."}, status=status.HTTP_200_OK)
+        
+        except User.DoesNotExist:
+            return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class DeactivateAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Desactivar Cuenta",
+        operation_description="Permite a un usuario autenticado desactivar su cuenta. La cuenta se marcará como inactiva, lo que impedirá futuros inicios de sesión.",
+        responses={
+            200: openapi.Response(description="Cuenta desactivada exitosamente."),
+            401: openapi.Response(description="No autorizado."),
+        },
+    )
+    def post(self, request):
+        user = request.user
+        user.is_active = False
+        user.save()
+        return Response({"detail": "Cuenta desactivada exitosamente."}, status=status.HTTP_200_OK)
+
+
+
+@swagger_auto_schema(
+    method="post",
+    operation_summary="Reactivar Cuenta",
+    operation_description="Permite reactivar una cuenta desactivada verificando con DNI o Email.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["dni"],
+        properties={
+            "dni": openapi.Schema(type=openapi.TYPE_STRING, description="DNI del usuario."),
+        },
+    ),
+    responses={
+        200: openapi.Response(description="Cuenta reactivada exitosamente."),
+        404: openapi.Response(description="Usuario no encontrado."),
+        400: openapi.Response(description="La cuenta ya está activa o hubo un error."),
+    },
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Público
+def public_reactivate_account(request):
+    dni = request.data.get('dni')
+    if not dni:
+        return Response({"error": "El DNI es requerido."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = User.objects.get(dni=dni)
+        
+        if user.is_active:
+            return Response({"detail": "La cuenta ya está activa."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.is_active = True
+        user.save()
+        
+        return Response({"detail": "Cuenta reactivada exitosamente."}, status=status.HTTP_200_OK)
+    
+    except User.DoesNotExist:
+        return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)

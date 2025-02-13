@@ -7,7 +7,7 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 from .views import UserRegistrationView, LoginView
-from .views import protected_view, logout_view, ChangePasswordView, password_reset_request_view, password_reset_view
+from .views import protected_view, logout_view, ChangePasswordView, password_reset_request_view, password_reset_view, DeleteUserView, DeactivateAccountView, public_reactivate_account
 # nueva logica de registracion
 from .validation_views import (
     RequestVerificationCodeView,
@@ -26,7 +26,9 @@ urlpatterns = [
     path('profile/change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('password/reset/', password_reset_request_view, name='password_reset_request'),
     path('password/reset/<uidb64>/<token>/', password_reset_view, name='password_reset'),
-
+    path('users/delete/<int:user_id>/', DeleteUserView.as_view(), name='delete_user'),
+    path('deactivate/', DeactivateAccountView.as_view(), name='deactivate_account'),
+    path('reactivate/', public_reactivate_account, name='public_reactivate_account'),
 
     # paths de tokens and to do cheks + con fns de Django
     # path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
