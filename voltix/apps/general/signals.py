@@ -15,8 +15,7 @@ def create_user_profile(sender, instance, created, **kwargs):
             user=instance,
             birth_date=None,
             address="",
-            phone_number="",
-            photo_url=""
+            phone_number=""
         )
         # Crear configuraciones de notificaciones predeterminadas
         NotificationSettings.objects.create(
