@@ -103,6 +103,23 @@ class LoginView(APIView):
         dni = serializer.validated_data['dni']
         password = serializer.validated_data['password']
 
+        # Verificar si el usuario existe antes de autenticar
+        try:
+            user = User.objects.get(dni=dni)
+        except User.DoesNotExist:
+            return Response({"error": "Invalid credentials. Please try again."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Si el usuario está inactivo, verificamos la razón
+        if not user.is_active:
+            if user.deactivation_reason == 'deletion_pending':
+                # Reactivar automáticamente si estaba marcado para eliminación
+                user.is_active = True
+                user.deactivation_reason = 'none'
+                user.save()
+            elif user.deactivation_reason == 'user_request':
+                return Response({"error": "Your account is deactivated. Please contact support to reactivate."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Autenticar al usuario
         user = authenticate(request, username=dni, password=password)
         if user is not None:
             refresh = RefreshToken.for_user(user)
@@ -113,7 +130,9 @@ class LoginView(APIView):
                 "user_id": user.user_id,
                 "fullname": user.fullname,
             }, status=status.HTTP_200_OK)
+
         return Response({"error": "Invalid credentials. Please try again."}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 # ==========================================================
 # Token Verification
@@ -319,15 +338,17 @@ def password_reset_view(request, uidb64, token):
         return JsonResponse({"error": "El enlace de restablecimiento no es válido o ha expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# authentication/views.py
+
 class DeleteUserView(APIView):
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
-        operation_summary="Delete User",
-        operation_description="Delete a user by their user ID. Only authenticated users can perform this action.",
+        operation_summary="Deactivate User for Deletion",
+        operation_description="Marks a user as pending deletion. If the user does not log in within 30 days, they will be permanently deleted.",
         responses={
-            200: openapi.Response(description="User deleted successfully."),
-            403: openapi.Response(description="Forbidden: You do not have permission to delete this user."),
+            200: openapi.Response(description="User marked for deletion."),
+            403: openapi.Response(description="Forbidden: You do not have permission to perform this action."),
             404: openapi.Response(description="User not found."),
         },
     )
@@ -335,12 +356,15 @@ class DeleteUserView(APIView):
         try:
             user = User.objects.get(pk=user_id)
             
-            # Verificar permisos (solo el usuario o un superusuario pueden eliminar la cuenta)
+            # Verificar permisos
             if request.user != user and not request.user.is_superuser:
                 return Response({"error": "No tienes permiso para eliminar este usuario."}, status=status.HTTP_403_FORBIDDEN)
             
-            user.delete()
-            return Response({"message": "Usuario eliminado exitosamente."}, status=status.HTTP_200_OK)
+            # Marcar para eliminación
+            user.is_active = False
+            user.deactivation_reason = 'deletion_pending'
+            user.save()
+            return Response({"message": "Usuario marcado para eliminación. Se eliminará en 30 días si no inicia sesión."}, status=status.HTTP_200_OK)
         
         except User.DoesNotExist:
             return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
@@ -350,19 +374,19 @@ class DeactivateAccountView(APIView):
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
-        operation_summary="Desactivar Cuenta",
-        operation_description="Permite a un usuario autenticado desactivar su cuenta. La cuenta se marcará como inactiva, lo que impedirá futuros inicios de sesión.",
+        operation_summary="Desactivar Cuenta Temporalmente",
+        operation_description="Permite a un usuario autenticado desactivar su cuenta temporalmente. La cuenta se marcará como inactiva, lo que impedirá futuros inicios de sesión, pero no se eliminará.",
         responses={
-            200: openapi.Response(description="Cuenta desactivada exitosamente."),
+            200: openapi.Response(description="Cuenta desactivada temporalmente."),
             401: openapi.Response(description="No autorizado."),
         },
     )
     def post(self, request):
         user = request.user
         user.is_active = False
+        user.deactivation_reason = 'user_request' 
         user.save()
-        return Response({"detail": "Cuenta desactivada exitosamente."}, status=status.HTTP_200_OK)
-
+        return Response({"detail": "Cuenta desactivada temporalmente."}, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(

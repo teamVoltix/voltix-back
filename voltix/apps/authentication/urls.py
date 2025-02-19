@@ -27,8 +27,8 @@ urlpatterns = [
     path('password/reset/', password_reset_request_view, name='password_reset_request'),
     path('password/reset/<uidb64>/<token>/', password_reset_view, name='password_reset'),
     path('users/delete/<int:user_id>/', DeleteUserView.as_view(), name='delete_user'),
-    path('deactivate/', DeactivateAccountView.as_view(), name='deactivate_account'),
-    path('reactivate/', public_reactivate_account, name='public_reactivate_account'),
+    #path('deactivate/', DeactivateAccountView.as_view(), name='deactivate_account'),
+    #path('reactivate/', public_reactivate_account, name='public_reactivate_account'),
 
     # paths de tokens and to do cheks + con fns de Django
     # path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

@@ -35,16 +35,21 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    deactivation_reason = models.CharField(
+        max_length=50,
+        choices=[
+            ('none', 'None'),
+            ('user_request', 'User Request'),   # Desactivación temporal
+            ('deletion_pending', 'Deletion Pending')  # Desactivación para eliminación
+        ],
+        default='none'
+    )
 
     objects = UserManager()
-
-    # Set the unique identifier for the User model
-    USERNAME_FIELD = 'dni'  # This tells Django to use DNI for authentication
+    
+    USERNAME_FIELD = 'dni'
     REQUIRED_FIELDS = ['fullname', 'email']
-
-    @property
-    def id(self):
-        return self.user_id
 
     def __str__(self):
         return f"{self.fullname} ({self.email})"
