@@ -126,7 +126,8 @@ from .drf_settings import REST_FRAMEWORK, SIMPLE_JWT
 # verify crontab jobs: python manage.py crontab show
 CRONJOBS = [
     ('0 0 * * *', 'django.core.management.call_command', ['clean_upload_logs']),
-    ('*/1 * * * *', 'django.core.management.call_command', ['create_reminders']),
+    # ('*/1 * * * *', 'django.core.management.call_command', ['create_reminders']),
     ('*/1 * * * *', 'django.core.management.call_command', ['delete_inactive_users']),
 ]
 # to test: python voltix/manage.py clean_upload_logs
+#*/1 * * * * triggers every minute 

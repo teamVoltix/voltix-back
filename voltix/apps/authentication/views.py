@@ -33,10 +33,6 @@ def inicio(request):
     """Renders a sample HTML page."""
     return render(request, 'auth/inicio.html')
 
-# ==========================================================
-# User Registration
-# ==========================================================
-
 class UserRegistrationView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]

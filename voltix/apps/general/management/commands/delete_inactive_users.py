@@ -1,4 +1,4 @@
-"""from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import timedelta
 from apps.general.models import User
@@ -19,4 +19,3 @@ class Command(BaseCommand):
             user.delete()
 
         self.stdout.write(self.style.SUCCESS("Proceso de eliminación completado."))
-"""
