@@ -18,7 +18,9 @@ from drf_yasg import openapi
 from .serializers import UserRegistrationSerializer, LoginSerializer, ChangePasswordSerializer
 import json
 import os
-
+from django.utils import timezone
+from datetime import timedelta
+from django_q.tasks import schedule
 
 User = get_user_model()
 
@@ -345,7 +347,7 @@ class DeleteUserView(APIView):
 
     @swagger_auto_schema(
         operation_summary="Deactivate User for Deletion",
-        operation_description="Marks a user as pending deletion. If the user does not log in within 30 days, they will be permanently deleted.",
+        operation_description="Marks a user as pending deletion. If the user does not log in within 20 seconds, they will be permanently deleted.",
         responses={
             200: openapi.Response(description="User marked for deletion."),
             403: openapi.Response(description="Forbidden: You do not have permission to perform this action."),
@@ -355,21 +357,30 @@ class DeleteUserView(APIView):
     def delete(self, request, user_id):
         try:
             user = User.objects.get(pk=user_id)
-            
+
             # Verificar permisos
             if request.user != user and not request.user.is_superuser:
                 return Response({"error": "No tienes permiso para eliminar este usuario."}, status=status.HTTP_403_FORBIDDEN)
-            
+
             # Marcar para eliminación
             user.is_active = False
             user.deactivation_reason = 'deletion_pending'
             user.save()
-            return Response({"message": "Usuario marcado para eliminación. Se eliminará en 30 días si no inicia sesión."}, status=status.HTTP_200_OK)
-        
+
+            # Programar eliminación en 20 segundos
+            schedule(
+                'apps.general.views.delete_user',  # Llamada a la función directamente
+                user_id,  # Argumento a pasar a la función
+                next_run=timezone.now() + timedelta(seconds=20),  # Programar para dentro de 20 segundos
+                schedule_type='O'  # Se ejecuta solo una vez
+            )
+
+            return Response({"message": "Usuario marcado para eliminación. Se eliminará en 20 segundos si no inicia sesión."}, status=status.HTTP_200_OK)
+
         except User.DoesNotExist:
             return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
-
+            
 class DeactivateAccountView(APIView):
     permission_classes = [IsAuthenticated]
 
