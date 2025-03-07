@@ -51,6 +51,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'dni'
     REQUIRED_FIELDS = ['fullname', 'email']
 
+    @property
+    def id(self):
+        return self.user_id
+
     def __str__(self):
         return f"{self.fullname} ({self.email})"
 
