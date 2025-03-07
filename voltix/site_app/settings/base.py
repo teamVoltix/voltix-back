@@ -46,18 +46,7 @@ THIRD_APPS = [
     'corsheaders',
 ]
 
-INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS + [
-    'django_q',  # Agrega esta línea
-]
-Q_CLUSTER = {
-    'name': 'DjangoQ',
-    'workers': 2,
-    'timeout': 90,
-    'retry': 120,
-    'queue_limit': 50,
-    'bulk': 10,
-    'orm': 'default'
-}
+INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS
 
 # Middleware
 MIDDLEWARE = [
