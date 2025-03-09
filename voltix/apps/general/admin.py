@@ -6,8 +6,8 @@ from apps.general.models import (
 )
 
 class UserAdmin(admin.ModelAdmin):
-    fields = ['dni', 'fullname', 'email', 'is_staff', 'is_superuser', 'is_active', 'created_at', 'updated_at']
-    list_display = ['user_id', 'dni', 'fullname', 'email', 'is_staff', 'is_superuser', 'is_active', 'created_at', 'updated_at']
+    fields = ['dni', 'fullname', 'email', 'is_staff', 'is_superuser', 'is_active','deactivation_reason', 'created_at', 'updated_at']
+    list_display = ['user_id', 'dni', 'fullname', 'email', 'is_staff', 'is_superuser', 'is_active', 'deactivation_reason', 'created_at', 'updated_at']
     list_filter = ['is_staff', 'is_superuser', 'is_active']
     search_fields = ['dni', 'fullname', 'email']
     readonly_fields = ['created_at', 'updated_at']

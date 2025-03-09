@@ -8,10 +8,11 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 
 class UserManager(BaseUserManager):
-    def create_user(self, dni, fullname, email, password=None, **extra_fields):
+    def create_user(self, dni, fullname, email, password=None, deactivation_reason='none', **extra_fields):
         if not email:
             raise ValueError('The Email field must be set')
         email = self.normalize_email(email)
+        extra_fields.setdefault('deactivation_reason', deactivation_reason) 
         user = self.model(dni=dni, fullname=fullname, email=email, **extra_fields)
         user.set_password(password)  # This hashes the password
         user.save(using=self._db)
@@ -20,6 +21,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, dni, fullname, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields['deactivation_reason'] = 'none'
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
@@ -35,7 +37,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
     deactivation_reason = models.CharField(
         max_length=50,
         choices=[

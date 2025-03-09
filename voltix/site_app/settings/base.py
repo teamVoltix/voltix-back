@@ -126,8 +126,48 @@ from .drf_settings import REST_FRAMEWORK, SIMPLE_JWT
 # verify crontab jobs: python manage.py crontab show
 CRONJOBS = [
     ('0 0 * * *', 'django.core.management.call_command', ['clean_upload_logs']),
-    # ('*/1 * * * *', 'django.core.management.call_command', ['create_reminders']),
-    ('*/1 * * * *', 'django.core.management.call_command', ['delete_inactive_users']),
+    ('*/1 * * * *', 'django.core.management.call_command', ['create_reminders']),
+    ('*/1 * * * *', 'django.core.management.call_command', ['delete_inactive_users'])
 ]
 # to test: python voltix/manage.py clean_upload_logs
 #*/1 * * * * triggers every minute 
+
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# |  |  |  |  |
+# *  *  *  *  *   command to be executed
+# *  *  *  *  *     echo 'Hello world!'
+
+import os
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),  # Define log file path
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
