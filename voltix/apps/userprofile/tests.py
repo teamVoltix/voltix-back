@@ -415,3 +415,44 @@
 #         # Verificar que la respuesta es 401 Unauthorized
 #         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)   
         
+import pytest
+from rest_framework.test import APIClient
+from rest_framework import status
+from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
+import io
+
+@pytest.mark.django_db
+def test_upload_profile_photo():
+    # Crear un usuario de prueba
+    user = get_user_model().objects.create_user(
+        dni="123456789",
+        fullname="Test User",
+        email="testuser@example.com",
+        password="testpassword"
+    )
+
+    # Autenticar al usuario
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    # Crear una imagen válida usando Pillow
+    image = Image.new('RGB', (100, 100), color='red')  # Crear una imagen de 100x100 px roja
+    image_file = io.BytesIO()  # Usar BytesIO para guardar la imagen en memoria
+    image.save(image_file, format='JPEG')  # Guardar la imagen como JPEG en el archivo en memoria
+    image_file.seek(0)  # Volver al inicio del archivo para leerlo
+
+    # Convertir la imagen a un SimpleUploadedFile
+    photo = SimpleUploadedFile("test_photo.jpg", image_file.read(), content_type="image/jpeg")
+
+    # Realizar la solicitud de subida
+    response = client.post('/api/profile/upload-photo/', {'photo': photo}, format='multipart')
+
+    # Imprimir la respuesta para ver más detalles del error
+    print(response.status_code)
+    print(response.data)
+
+    # Verificar que la respuesta sea correcta
+    assert response.status_code == status.HTTP_200_OK
+    assert 'photo_url' in response.data  # Verificar que el campo 'photo_url' esté presente en la respuesta
