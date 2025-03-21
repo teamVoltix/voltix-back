@@ -423,24 +423,37 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 import io
 import os
+import logging
 from django.conf import settings
 from apps.general.models import Profile, UploadLog
+
+# Configuración del logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 @pytest.mark.django_db
 def test_upload_profile_photo():
     # Crear un usuario de prueba
+    logger.info("Creando un usuario de prueba.")
     user = get_user_model().objects.create_user(
         dni="123456789",
         fullname="Test User",
         email="testuser@example.com",
         password="testpassword"
     )
-
+    logger.info(f"Usuario creado con el correo: {user.email}")
+    
     # Autenticar al usuario
     client = APIClient()
     client.force_authenticate(user=user)
+    logger.info(f"Usuario autenticado: {user.email}")
 
     # Crear una imagen válida usando Pillow
+    logger.info("Creando una imagen de prueba.")
     image = Image.new('RGB', (100, 100), color='red')  # Crear una imagen de 100x100 px roja
     image_file = io.BytesIO()  # Usar BytesIO para guardar la imagen en memoria
     image.save(image_file, format='JPEG')  # Guardar la imagen como JPEG en el archivo en memoria
@@ -448,29 +461,32 @@ def test_upload_profile_photo():
 
     # Convertir la imagen a un SimpleUploadedFile
     photo = SimpleUploadedFile("test_photo.jpg", image_file.read(), content_type="image/jpeg")
+    logger.info("Imagen de prueba convertida a SimpleUploadedFile.")
 
     # 1. Validación de los datos (se hace automáticamente al llamar el serializer)
+    logger.info("Realizando la solicitud POST para cargar la foto.")
     response = client.post('/api/profile/upload-photo/', {'photo': photo}, format='multipart')
 
     # Comprobar que la validación fue correcta y la respuesta es 200 OK
-    assert response.status_code == status.HTTP_200_OK
-    assert 'photo_url' in response.data  # Comprobamos que la URL de la foto esté en la respuesta
+    assert response.status_code == status.HTTP_200_OK, f"Se esperaba el código 200, pero obtuvimos: {response.status_code}"
+    assert 'photo_url' in response.data, "La respuesta no contiene la URL de la foto"
 
     # 2. Verificar que el perfil del usuario ahora tiene una foto
+    logger.info("Verificando que el perfil tiene una foto.")
     profile = Profile.objects.get(user=user)
     assert profile.photo is not None, "El perfil debería tener una foto después de la subida."
-    
+
     # Verificar que la foto se guardó correctamente en el sistema de archivos
     photo_path = os.path.join(settings.MEDIA_ROOT, profile.photo.name)
     assert os.path.exists(photo_path), f"Imagen no guardada en el sistema de archivos: {photo_path}"
 
     # 3. Verificar que la foto previa fue eliminada si existía
-    previous_photo = None
-    if profile.photo:
-        previous_photo = profile.photo.name
+    previous_photo = profile.photo.name if profile.photo else None
+    logger.info(f"Foto previa: {previous_photo}")
 
     # 4. Subir una nueva foto
-    new_image = Image.new('RGB', (100, 100), color='blue')
+    logger.info("Subiendo una nueva foto.")
+    new_image = Image.new('RGB', (100, 100), color='blue')  # Nueva imagen azul
     new_image_file = io.BytesIO()
     new_image.save(new_image_file, format='JPEG')
     new_image_file.seek(0)
@@ -480,11 +496,12 @@ def test_upload_profile_photo():
     response = client.post('/api/profile/upload-photo/', {'photo': new_photo}, format='multipart')
 
     # Comprobar que la respuesta es correcta para la nueva foto
-    assert response.status_code == status.HTTP_200_OK
-    assert 'photo_url' in response.data  # Verificar que la URL de la nueva foto esté en la respuesta
+    assert response.status_code == status.HTTP_200_OK, f"Se esperaba el código 200, pero obtuvimos: {response.status_code}"
+    assert 'photo_url' in response.data, "La respuesta no contiene la URL de la nueva foto."
 
     # 5. Verificar que la foto anterior fue eliminada
     profile.refresh_from_db()  # Recargar el perfil desde la base de datos
+    logger.info(f"Verificando que la foto anterior fue eliminada. Foto previa: {previous_photo}, nueva foto: {profile.photo.name}")
     assert profile.photo.name != previous_photo, "La foto anterior no ha sido eliminada correctamente."
 
     # Verificar que la nueva foto se guarda correctamente en el sistema de archivos
@@ -500,3 +517,5 @@ def test_upload_profile_photo():
     photo_url = response.data['photo_url']
     assert photo_url.startswith('http://') or photo_url.startswith('https://'), \
         f"Se esperaba una URL válida, pero se obtuvo: {photo_url}"
+
+    logger.info("Test completado con éxito.")
