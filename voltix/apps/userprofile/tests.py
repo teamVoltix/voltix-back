@@ -422,6 +422,9 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 import io
+import os
+from django.conf import settings
+from apps.general.models import Profile, UploadLog
 
 @pytest.mark.django_db
 def test_upload_profile_photo():
@@ -446,13 +449,54 @@ def test_upload_profile_photo():
     # Convertir la imagen a un SimpleUploadedFile
     photo = SimpleUploadedFile("test_photo.jpg", image_file.read(), content_type="image/jpeg")
 
-    # Realizar la solicitud de subida
+    # 1. Validación de los datos (se hace automáticamente al llamar el serializer)
     response = client.post('/api/profile/upload-photo/', {'photo': photo}, format='multipart')
 
-    # Imprimir la respuesta para ver más detalles del error
-    print(response.status_code)
-    print(response.data)
-
-    # Verificar que la respuesta sea correcta
+    # Comprobar que la validación fue correcta y la respuesta es 200 OK
     assert response.status_code == status.HTTP_200_OK
-    assert 'photo_url' in response.data  # Verificar que el campo 'photo_url' esté presente en la respuesta
+    assert 'photo_url' in response.data  # Comprobamos que la URL de la foto esté en la respuesta
+
+    # 2. Verificar que el perfil del usuario ahora tiene una foto
+    profile = Profile.objects.get(user=user)
+    assert profile.photo is not None, "El perfil debería tener una foto después de la subida."
+    
+    # Verificar que la foto se guardó correctamente en el sistema de archivos
+    photo_path = os.path.join(settings.MEDIA_ROOT, profile.photo.name)
+    assert os.path.exists(photo_path), f"Imagen no guardada en el sistema de archivos: {photo_path}"
+
+    # 3. Verificar que la foto previa fue eliminada si existía
+    previous_photo = None
+    if profile.photo:
+        previous_photo = profile.photo.name
+
+    # 4. Subir una nueva foto
+    new_image = Image.new('RGB', (100, 100), color='blue')
+    new_image_file = io.BytesIO()
+    new_image.save(new_image_file, format='JPEG')
+    new_image_file.seek(0)
+
+    new_photo = SimpleUploadedFile("test_new_photo.jpg", new_image_file.read(), content_type="image/jpeg")
+
+    response = client.post('/api/profile/upload-photo/', {'photo': new_photo}, format='multipart')
+
+    # Comprobar que la respuesta es correcta para la nueva foto
+    assert response.status_code == status.HTTP_200_OK
+    assert 'photo_url' in response.data  # Verificar que la URL de la nueva foto esté en la respuesta
+
+    # 5. Verificar que la foto anterior fue eliminada
+    profile.refresh_from_db()  # Recargar el perfil desde la base de datos
+    assert profile.photo.name != previous_photo, "La foto anterior no ha sido eliminada correctamente."
+
+    # Verificar que la nueva foto se guarda correctamente en el sistema de archivos
+    new_photo_path = os.path.join(settings.MEDIA_ROOT, profile.photo.name)
+    assert os.path.exists(new_photo_path), f"Imagen nueva no guardada en el sistema de archivos: {new_photo_path}"
+
+    # 6. Verificar que el registro de UploadLog se ha creado
+    upload_log = UploadLog.objects.filter(user=user, file_name=new_photo.name).first()
+    assert upload_log is not None, "No se ha registrado la carga de la nueva foto en UploadLog."
+    assert upload_log.file_name == new_photo.name, f"Se esperaba que el nombre del archivo en UploadLog fuera {new_photo.name}, pero se obtuvo {upload_log.file_name}"
+
+    # 7. Verificar la URL proporcionada
+    photo_url = response.data['photo_url']
+    assert photo_url.startswith('http://') or photo_url.startswith('https://'), \
+        f"Se esperaba una URL válida, pero se obtuvo: {photo_url}"
